@@ -1,0 +1,403 @@
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\Gemotest.exe.config
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\Gemotest.exe
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.AssemblyReference.cache
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\obj\Debug\Gemotest.MainForm.resources
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\obj\Debug\Gemotest.Properties.Resources.resources
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.GenerateResource.cache
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.CoreCompileInputs.cache
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\obj\Debug\Gemotest.exe
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\obj\Debug\Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\BarcodeScannerMonitor.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\ClinicCommon.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\ClinicLaboratoryCommon.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\ClinicLogging.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\ClinicScannerManager.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\ClinicStatisticsCollectionSystemTitles.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\ContainerMarkerCommon.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\HL7Converter.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\ICSharpCode.SharpZipLib.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\itextsharp.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\Laboratory.Gemotest.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\PrintCommon.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\StatisticsCollectionSystemClient.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\WordReport.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\zxing.dll
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\bin\Debug\Laboratory.Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\ВКР\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.Up2Date
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\Gemotest.exe.config
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\Gemotest.exe
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\BarcodeScannerMonitor.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\ClinicCommon.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\ClinicLaboratoryCommon.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\ClinicLogging.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\ClinicScannerManager.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\ClinicStatisticsCollectionSystemTitles.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\ContainerMarkerCommon.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\HL7Converter.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\ICSharpCode.SharpZipLib.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\itextsharp.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\Laboratory.Gemotest.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\PrintCommon.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\StatisticsCollectionSystemClient.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\WordReport.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\zxing.dll
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\Laboratory.Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.AssemblyReference.cache
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\obj\Debug\Gemotest.MainForm.resources
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\obj\Debug\Gemotest.Properties.Resources.resources
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.GenerateResource.cache
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.CoreCompileInputs.cache
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.Up2Date
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\obj\Debug\Gemotest.exe
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\obj\Debug\Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\ВКР — копия\GemotestSolution\Gemotest\bin\Debug\Laboratory.Gemotest.dll.config
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\Gemotest.exe.config
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\Gemotest.exe
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\BarcodeScannerMonitor.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\ClinicCommon.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\ClinicLaboratoryCommon.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\ClinicLogging.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\ClinicScannerManager.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\ClinicStatisticsCollectionSystemTitles.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\ContainerMarkerCommon.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\HL7Converter.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\ICSharpCode.SharpZipLib.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\itextsharp.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\Laboratory.Gemotest.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\PrintCommon.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\StatisticsCollectionSystemClient.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\WordReport.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\zxing.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\Laboratory.Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\bin\Debug\Laboratory.Gemotest.dll.config
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.AssemblyReference.cache
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\obj\Debug\Gemotest.MainForm.resources
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\obj\Debug\Gemotest.Properties.Resources.resources
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.GenerateResource.cache
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.CoreCompileInputs.cache
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.Up2Date
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\obj\Debug\Gemotest.exe
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\obj\Debug\Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\Gemotest\GemotestSolution\Gemotest\obj\Debug\Laboratory.Gemotest.FormGemotestResult.resources
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\Gemotest.exe
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ClinicCommon.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ClinicLaboratoryCommon.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ClinicLogging.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ContainerMarkerCommon.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\Laboratory.Gemotest.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\PrintCommon.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\Gemotest.exe.config
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\BarcodeScannerMonitor.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ClinicScannerManager.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ClinicStatisticsCollectionSystemTitles.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\HL7Converter.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ICSharpCode.SharpZipLib.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\itextsharp.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\StatisticsCollectionSystemClient.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\WordReport.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\zxing.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\Laboratory.Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\Laboratory.Gemotest.dll.config
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.AssemblyReference.cache
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\obj\Debug\Laboratory.Gemotest.FormGemotestResult.resources
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\obj\Debug\Gemotest.MainForm.resources
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\obj\Debug\Gemotest.Properties.Resources.resources
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.GenerateResource.cache
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.CoreCompileInputs.cache
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\obj\Debug\Gemotest.csproj.Up2Date
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\obj\Debug\Gemotest.exe
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\obj\Debug\Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\SqlServerTypes\x64\msvcr120.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\SqlServerTypes\x64\SqlServerSpatial140.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\SqlServerTypes\x86\msvcr120.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\SqlServerTypes\x86\SqlServerSpatial140.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\Microsoft.ReportViewer.Common.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\Microsoft.ReportViewer.DataVisualization.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\Microsoft.ReportViewer.Design.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\Microsoft.ReportViewer.ProcessingObjectModel.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\Microsoft.ReportViewer.WinForms.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\Microsoft.SqlServer.Types.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\EnvDTE.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\stdole.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\EnvDTE.xml
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\de\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\es\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\it\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\de\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\es\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\it\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\de\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\es\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\it\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\de\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\es\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\it\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\Gemotest-main\Gemotest-main\GemotestSolution\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.WinForms.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\SqlServerTypes\x64\msvcr120.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\SqlServerTypes\x64\SqlServerSpatial140.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\SqlServerTypes\x86\msvcr120.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\SqlServerTypes\x86\SqlServerSpatial140.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\Gemotest.exe.config
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\Gemotest.exe
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\Gemotest.pdb
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\BarcodeScannerMonitor.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ClinicCommon.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ClinicLaboratoryCommon.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ClinicLogging.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ClinicScannerManager.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ContainerMarkerCommon.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\HL7Converter.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ICSharpCode.SharpZipLib.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\itextsharp.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\Laboratory.Gemotest.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.Common.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.DataVisualization.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.ProcessingObjectModel.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.WinForms.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\Microsoft.SqlServer.Types.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\Newtonsoft.Json.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\PrintCommon.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\StatisticsCollectionSystemClient.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\WordReport.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\zxing.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\Laboratory.Gemotest.pdb
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\Laboratory.Gemotest.dll.config
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\de\Microsoft.ReportViewer.Common.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\es\Microsoft.ReportViewer.Common.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.Common.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\it\Microsoft.ReportViewer.Common.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.Common.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.Common.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.Common.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.Common.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.Common.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.Common.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\de\Microsoft.ReportViewer.DataVisualization.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\es\Microsoft.ReportViewer.DataVisualization.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.DataVisualization.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\it\Microsoft.ReportViewer.DataVisualization.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.DataVisualization.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.DataVisualization.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.DataVisualization.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.DataVisualization.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.DataVisualization.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.DataVisualization.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\de\Microsoft.ReportViewer.WinForms.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\es\Microsoft.ReportViewer.WinForms.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.WinForms.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\it\Microsoft.ReportViewer.WinForms.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.WinForms.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.WinForms.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.WinForms.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.WinForms.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.WinForms.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.WinForms.resources.dll
+D:\СиМед\Лаборатории\Gemotest\Gemotest\obj\Debug\Gemotest.csproj.AssemblyReference.cache
+D:\СиМед\Лаборатории\Gemotest\Gemotest\obj\Debug\Laboratory.Gemotest.FormGemotestResult.resources
+D:\СиМед\Лаборатории\Gemotest\Gemotest\obj\Debug\Gemotest.MainForm.resources
+D:\СиМед\Лаборатории\Gemotest\Gemotest\obj\Debug\Gemotest.Properties.Resources.resources
+D:\СиМед\Лаборатории\Gemotest\Gemotest\obj\Debug\Gemotest.csproj.GenerateResource.cache
+D:\СиМед\Лаборатории\Gemotest\Gemotest\obj\Debug\Gemotest.csproj.CoreCompileInputs.cache
+D:\СиМед\Лаборатории\Gemotest\Gemotest\obj\Debug\Gemotest.csproj.CopyComplete
+D:\СиМед\Лаборатории\Gemotest\Gemotest\obj\Debug\Gemotest.exe
+D:\СиМед\Лаборатории\Gemotest\Gemotest\obj\Debug\Gemotest.pdb
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\SqlServerTypes\x64\msvcr120.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\SqlServerTypes\x64\SqlServerSpatial140.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\SqlServerTypes\x86\msvcr120.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\SqlServerTypes\x86\SqlServerSpatial140.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\Gemotest.exe.config
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\Gemotest.exe
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\Gemotest.pdb
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\BarcodeScannerMonitor.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ClinicCommon.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ClinicLaboratoryCommon.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ClinicLogging.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ClinicScannerManager.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ClinicStatisticsCollectionSystemTitles.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ContainerMarkerCommon.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\HL7Converter.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ICSharpCode.SharpZipLib.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\itextsharp.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\Laboratory.Gemotest.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.Common.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.DataVisualization.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.Design.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.ProcessingObjectModel.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.WinForms.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\Microsoft.SqlServer.Types.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\PrintCommon.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\StatisticsCollectionSystemClient.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\WordReport.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\zxing.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\EnvDTE.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\stdole.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\Laboratory.Gemotest.pdb
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\Laboratory.Gemotest.dll.config
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\EnvDTE.xml
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\de\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\es\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\it\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\de\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\es\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\it\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\de\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\es\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\it\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\de\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\es\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\it\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\obj\Debug\Gemotest.csproj.AssemblyReference.cache
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\obj\Debug\Laboratory.Gemotest.FormGemotestResult.resources
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\obj\Debug\Gemotest.MainForm.resources
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\obj\Debug\Gemotest.Properties.Resources.resources
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\obj\Debug\Gemotest.csproj.GenerateResource.cache
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\obj\Debug\Gemotest.csproj.CoreCompileInputs.cache
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\obj\Debug\Gemotest.csproj.Up2Date
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\obj\Debug\Gemotest.exe
+C:\Users\Night\Downloads\Гемотест_2026_04_20 (1)\Gemotest\Gemotest\obj\Debug\Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\SqlServerTypes\x64\msvcr120.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\SqlServerTypes\x64\SqlServerSpatial140.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\SqlServerTypes\x86\msvcr120.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\SqlServerTypes\x86\SqlServerSpatial140.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\Gemotest.exe.config
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\Gemotest.exe
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\BarcodeScannerMonitor.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ClinicCommon.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ClinicLaboratoryCommon.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ClinicLogging.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ClinicScannerManager.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ContainerMarkerCommon.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\HL7Converter.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ICSharpCode.SharpZipLib.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\itextsharp.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\Laboratory.Gemotest.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.Common.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.DataVisualization.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.Design.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.ProcessingObjectModel.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\Microsoft.ReportViewer.WinForms.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\Microsoft.SqlServer.Types.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\Newtonsoft.Json.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\PrintCommon.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\StatisticsCollectionSystemClient.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\WordReport.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\zxing.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\EnvDTE.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\stdole.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\Laboratory.Gemotest.pdb
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\Laboratory.Gemotest.dll.config
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\EnvDTE.xml
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\de\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\es\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\it\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.Common.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\de\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\es\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\it\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.DataVisualization.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\de\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\es\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\it\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.Design.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\de\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\es\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\fr\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\it\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ja\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ko\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\pt\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\ru\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\zh-CHS\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\bin\Debug\zh-CHT\Microsoft.ReportViewer.WinForms.resources.dll
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\obj\Debug\Gemotest.csproj.AssemblyReference.cache
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\obj\Debug\Laboratory.Gemotest.FormGemotestResult.resources
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\obj\Debug\Gemotest.MainForm.resources
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\obj\Debug\Gemotest.Properties.Resources.resources
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\obj\Debug\Gemotest.csproj.GenerateResource.cache
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\obj\Debug\Gemotest.csproj.CoreCompileInputs.cache
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\obj\Debug\Gemotest.csproj.Up2Date
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\obj\Debug\Gemotest.exe
+C:\Users\Night\OneDrive\Desktop\GemotestNew\Gemotest\Gemotest\obj\Debug\Gemotest.pdb
