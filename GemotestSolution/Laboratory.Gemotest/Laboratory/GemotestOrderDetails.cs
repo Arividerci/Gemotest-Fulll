@@ -39,11 +39,26 @@ namespace Laboratory.Gemotest.SourseClass
 
         public string LabCenterId;
 
+        public bool IsAliquot;
+        public bool IsUtilize;
+        public bool HasUtilizationService;
+        public bool HasRefusedService;
+
+        public string PrimarySampleIdentifier;
+        public string ParentSampleId;
+
+        public string SampleRole;
+        public string SampleAction;
+
         public List<string> OrderProductGuidList;
 
         public GemotestSampleDetail()
         {
             OrderProductGuidList = new List<string>();
+            PrimarySampleIdentifier = "";
+            ParentSampleId = "";
+            SampleRole = "";
+            SampleAction = "";
         }
     }
 
@@ -119,6 +134,8 @@ namespace Laboratory.Gemotest.SourseClass
         public string OrderProductGuid;
         public string OrderSampleGuid;
         public string DisplayName;
+        public string FileName;
+        public byte[] Data;
     }
 
     public class GemotestBioMaterial

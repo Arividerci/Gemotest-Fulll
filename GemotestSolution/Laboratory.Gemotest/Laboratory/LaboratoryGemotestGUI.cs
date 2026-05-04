@@ -3937,44 +3937,83 @@ namespace Laboratory.Gemotest
 
         private string BuildSubOrderInfo(GemotestSampleDetail sample)
         {
+            if (sample == null)
+                return "Информация по образцу отсутствует";
+
             var lines = new List<string>();
 
+            Action<string> addLine = text =>
+            {
+                if (string.IsNullOrWhiteSpace(text))
+                    return;
+
+                text = text.Trim();
+
+                if (!lines.Any(x => string.Equals(x, text, StringComparison.OrdinalIgnoreCase)))
+                    lines.Add(text);
+            };
+
             var line1Parts = new List<string>();
+
             if (!string.IsNullOrWhiteSpace(sample.Barcode))
                 line1Parts.Add("ШК: " + sample.Barcode);
 
-            if (!string.IsNullOrWhiteSpace(sample.SampleId))
-                line1Parts.Add("Проба №" + sample.SampleId);
-
             if (!string.IsNullOrWhiteSpace(sample.SampleIdentifier) &&
                 !string.Equals(sample.SampleIdentifier, sample.Barcode, StringComparison.OrdinalIgnoreCase))
+            {
                 line1Parts.Add("Идентификатор: " + sample.SampleIdentifier);
+            }
 
             if (line1Parts.Count > 0)
-                lines.Add(string.Join(", ", line1Parts));
+                addLine(string.Join(", ", line1Parts));
 
-            var line2Parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(sample.SampleId))
+                addLine("ID типа пробы в ЛИС: " + sample.SampleId);
+
+            var materialParts = new List<string>();
+
             if (!string.IsNullOrWhiteSpace(sample.BiomName))
-                line2Parts.Add("Биоматериал: " + sample.BiomName);
+                materialParts.Add("биоматериал: " + sample.BiomName);
 
             if (!string.IsNullOrWhiteSpace(sample.ContName))
-                line2Parts.Add("Контейнер: " + sample.ContName);
+                materialParts.Add("контейнер: " + sample.ContName);
 
-            if (line2Parts.Count > 0)
-                lines.Add(string.Join(", ", line2Parts));
+            if (materialParts.Count > 0)
+                addLine("Материал: " + string.Join(", ", materialParts));
 
-            var line3Parts = new List<string>();
             if (!string.IsNullOrWhiteSpace(sample.LocalizationName))
-                line3Parts.Add("Локализация: " + sample.LocalizationName);
+                addLine("Локализация: " + sample.LocalizationName);
 
             if (!string.IsNullOrWhiteSpace(sample.LabCenterId))
-                line3Parts.Add("Лаборатория: " + sample.LabCenterId);
+                addLine("Лаборатория-исполнитель: " + sample.LabCenterId);
 
-            if (line3Parts.Count > 0)
-                lines.Add(string.Join(", ", line3Parts));
+            string role = sample.SampleRole;
 
-            if (!string.IsNullOrWhiteSpace(sample.SampleDescription))
-                lines.Add("Описание: " + sample.SampleDescription);
+            if (string.IsNullOrWhiteSpace(role))
+                role = "обычная рабочая проба";
+
+            addLine("Тип образца: " + role);
+
+            if (!string.IsNullOrWhiteSpace(sample.SampleAction))
+                addLine("Действие: " + sample.SampleAction);
+
+            if (sample.IsAliquot && !string.IsNullOrWhiteSpace(sample.PrimarySampleIdentifier))
+                addLine("Родительская проба: " + sample.PrimarySampleIdentifier);
+
+            if (sample.IsUtilize || sample.HasUtilizationService)
+                addLine("Особенность: есть признак утилизации");
+
+            if (sample.HasRefusedService &&
+                !string.Equals(sample.SampleRole ?? "", "родительская проба для аликвоты", StringComparison.OrdinalIgnoreCase))
+            {
+                addLine("Особенность: часть услуги не выполняется на этой пробе напрямую");
+            }
+
+            if (!string.IsNullOrWhiteSpace(sample.SampleDescription) &&
+                !IsTechnicalSampleDescription(sample.SampleDescription))
+            {
+                addLine("Комментарий ЛИС: " + sample.SampleDescription);
+            }
 
             if (lines.Count == 0)
                 return "Информация по образцу отсутствует";
@@ -3982,6 +4021,25 @@ namespace Laboratory.Gemotest
             return string.Join(Environment.NewLine, lines);
         }
 
+        private static bool IsTechnicalSampleDescription(string value)
+        {
+            value = (value ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(value))
+                return true;
+
+            if (value.IndexOf("_", StringComparison.Ordinal) >= 0)
+                return true;
+
+            if (value.StartsWith("Конт", StringComparison.OrdinalIgnoreCase) &&
+                value.Length <= 30 &&
+                value.IndexOf(" ", StringComparison.Ordinal) < 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
         private void AddPatientParameter(GemotestBlankReportDataSetV2 dataset, string name, string value)
         {
             if (dataset == null || string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(value))

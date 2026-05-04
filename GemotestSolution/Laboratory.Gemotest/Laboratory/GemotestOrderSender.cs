@@ -424,6 +424,17 @@ namespace Laboratory.Gemotest.GemotestRequests
                     ContCode = t.TransportId ?? "",
                     ContName = "",
 
+                    IsAliquot = t.Parent != null,
+                    IsUtilize = t.Utilize,
+                    HasUtilizationService = t.Services != null && t.Services.Any(x => x != null && x.UtilizationFlag == 1),
+                    HasRefusedService = t.Services != null && t.Services.Any(x => x != null && x.RefuseFlag == 1),
+
+                    PrimarySampleIdentifier = t.PrimarySampleIdentifier ?? "",
+                    ParentSampleId = t.Parent != null ? t.Parent.SampleId.ToString(CultureInfo.InvariantCulture) : "",
+
+                    SampleRole = BuildSampleRole(t),
+                    SampleAction = BuildSampleAction(t),
+
                     OrderProductGuidList = new List<string>()
                 };
 
@@ -435,8 +446,8 @@ namespace Laboratory.Gemotest.GemotestRequests
                         if (s == null || string.IsNullOrWhiteSpace(s.ServiceId))
                             continue;
 
-                        var prod = details.Products.FirstOrDefault(p => p != null && string.Equals(p.ProductId ?? "", s.ServiceId ?? "", StringComparison.OrdinalIgnoreCase));
-
+                        var prod = details.Products.FirstOrDefault(p =>  p != null && ( string.Equals(p.ProductId ?? "", s.ServiceId ?? "", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(p.ProductId ?? "", s.ComplexId ?? "", StringComparison.OrdinalIgnoreCase)));
                         if (prod != null && !string.IsNullOrWhiteSpace(prod.OrderProductGuid))
                             sample.OrderProductGuidList.Add(prod.OrderProductGuid);
                     }
@@ -444,6 +455,67 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                 details.Samples.Add(sample);
             }
+        }
+
+        private static string BuildSampleRole(TubePlan tube)
+        {
+            if (tube == null)
+                return "";
+
+            bool hasUtilization = tube.Services != null &&
+                tube.Services.Any(x => x != null && x.UtilizationFlag == 1);
+
+            bool allRefused = tube.Services != null &&
+                tube.Services.Count > 0 &&
+                tube.Services.All(x => x != null && x.RefuseFlag == 1);
+
+            if (tube.Parent != null)
+                return "аликвота, дочерняя проба";
+
+            if (allRefused)
+                return "родительская проба для аликвоты";
+
+            if (tube.Utilize)
+                return "утильная проба";
+
+            if (hasUtilization)
+                return "рабочая проба с признаком утилизации";
+
+            return "обычная рабочая проба";
+        }
+
+        private static string BuildSampleAction(TubePlan tube)
+        {
+            if (tube == null)
+                return "";
+
+            bool hasUtilization = tube.Services != null &&
+                tube.Services.Any(x => x != null && x.UtilizationFlag == 1);
+
+            bool allRefused = tube.Services != null &&
+                tube.Services.Count > 0 &&
+                tube.Services.All(x => x != null && x.RefuseFlag == 1);
+
+            if (tube.Parent != null)
+            {
+                string parent = tube.PrimarySampleIdentifier ?? "";
+
+                if (!string.IsNullOrWhiteSpace(parent))
+                    return "выполнить исследование на этой аликвоте; она подготовлена из родительской пробы " + parent + ".";
+
+                return "выполнить исследование на этой аликвоте; она подготовлена из родительской пробы.";
+            }
+
+            if (allRefused)
+                return "забрать и промаркировать эту пробу; из нее подготовить аликвоту. Исследование выполняется на дочерней пробе.";
+
+            if (tube.Utilize)
+                return "передать как пробу с признаком утилизации; не заменять обычной рабочей пробой.";
+
+            if (hasUtilization)
+                return "отправить в лабораторию; для части услуги передан признак утилизации.";
+
+            return "отправить в лабораторию для выполнения указанной услуги.";
         }
 
         private List<SoapTopServiceItem> BuildTopLevelServices(GemotestOrderDetail details, List<TubePlan> tubes)

@@ -454,7 +454,6 @@ namespace Laboratory.Gemotest
             if (details.BioMaterials == null)
                 details.BioMaterials = new List<GemotestBioMaterial>();
 
-            // Запоминаем выбранные биоматериалы по каждой услуге ДО пересборки
             var oldSelectedByProductIndex = new Dictionary<int, HashSet<string>>();
 
             for (int productIndex = 0; productIndex < details.Products.Count; productIndex++)
@@ -485,22 +484,12 @@ namespace Laboratory.Gemotest
                 if (productIndex < 0 || productIndex >= details.Products.Count)
                     continue;
 
-                var linkedForProduct = details.BioMaterials
-                    .Where(b =>
-                        b != null &&
-                        (b.Mandatory.Contains(productIndex) ||
-                         b.Chosen.Contains(productIndex) ||
-                         b.Another.Contains(productIndex)))
-                    .ToList();
+                var linkedForProduct = details.BioMaterials .Where(b => b != null && (b.Mandatory.Contains(productIndex) || b.Chosen.Contains(productIndex) || b.Another.Contains(productIndex))) .ToList();
 
                 if (linkedForProduct.Count == 0)
                     continue;
 
-                var validSelectedIds = new HashSet<string>(
-                    linkedForProduct
-                        .Where(b => b != null && oldSelectedIds.Contains(b.Id))
-                        .Select(b => b.Id),
-                    StringComparer.OrdinalIgnoreCase);
+                var validSelectedIds = new HashSet<string>( linkedForProduct.Where(b => b != null && oldSelectedIds.Contains(b.Id)).Select(b => b.Id), StringComparer.OrdinalIgnoreCase);
 
                 if (validSelectedIds.Count == 0)
                     continue;
@@ -562,9 +551,7 @@ namespace Laboratory.Gemotest
                 string initContractorCode;
                 ResolveContractorForServiceInit(Options, out initContractorName, out initContractorCode);
 
-                Gemotest = new GemotestService(
-                    Options.UrlAdress, Options.Login, Options.Password,
-                    initContractorName, initContractorCode, Options.Salt);
+                Gemotest = new GemotestService( Options.UrlAdress, Options.Login, Options.Password,initContractorName, initContractorCode, Options.Salt);
             }
             else
             {
@@ -573,8 +560,6 @@ namespace Laboratory.Gemotest
         }
         public bool Init()
         {
-             AllocConsole();
-
             last_exception = null;
             try
             {
@@ -744,15 +729,9 @@ namespace Laboratory.Gemotest
 
         private static bool IsGemotestOptionsValid(SystemOptions o)
         {
-            return o != null &&
-                   !string.IsNullOrWhiteSpace(o.UrlAdress) &&
-                   !string.IsNullOrWhiteSpace(o.Login) &&
-                   !string.IsNullOrWhiteSpace(o.Password) &&
-                   !string.IsNullOrWhiteSpace(o.Salt) &&
-                   (
-                       !string.IsNullOrWhiteSpace(o.Contractor_Code) ||
-                       (o.PriceLists != null && o.PriceLists.Any(x => x != null && !string.IsNullOrWhiteSpace(x.ContractorCode)))
-                   );
+            return o != null && !string.IsNullOrWhiteSpace(o.UrlAdress) && !string.IsNullOrWhiteSpace(o.Login) && !string.IsNullOrWhiteSpace(o.Password) &&
+                   !string.IsNullOrWhiteSpace(o.Salt) && ( !string.IsNullOrWhiteSpace(o.Contractor_Code) ||
+                       (o.PriceLists != null && o.PriceLists.Any(x => x != null && !string.IsNullOrWhiteSpace(x.ContractorCode))));
         }
 
         public bool CheckResult(Order _Order, ref ResultsCollection _Results)
@@ -799,7 +778,7 @@ namespace Laboratory.Gemotest
                  OrderState statusBefore = _Order.State;
 
                  string hash = BuildContractorHash(contractorCode, Options.Salt);
-                 string requestXml = BuildGetAnalysisResultEnvelope(contractorCode, hash, "", extNum); //"1038137269"
+                 string requestXml = BuildGetAnalysisResultEnvelope(contractorCode, hash, "", extNum);
 
 
 
@@ -837,9 +816,7 @@ namespace Laboratory.Gemotest
 
                 if (response.ErrorCode != 0)
                 {
-                    last_exception = new Exception(
-                        $"Гемотест вернул ошибку при запросе результатов. Код={response.ErrorCode}. " +
-                        $"{response.ErrorDescription}");
+                    last_exception = new Exception( $"Гемотест вернул ошибку при запросе результатов. Код={response.ErrorCode}. " + $"{response.ErrorDescription}");
                     return false;
                 }
 
@@ -855,21 +832,20 @@ namespace Laboratory.Gemotest
 
                 if (response.Status == 1)
                 {
-                    if (hasAttachments)
-                    {
-                        fileExtNum = !string.IsNullOrWhiteSpace(details.ExtNum) ? details.ExtNum : extNum;
-                        fileOrderNum = !string.IsNullOrWhiteSpace(details.OrderNum) ? details.OrderNum : details.ResultsOrderNum;
+                    fileExtNum = !string.IsNullOrWhiteSpace(details.ExtNum) ? details.ExtNum : extNum;
 
-
-                        DownloadResultPdfFiles(response, MakeSafeFileNamePart(fileExtNum));
-                    }
+                    int addedResultsCount = AddGemotestResultItemsToCollection( _Order, details, response, _Results, fileExtNum);
 
                     _Order.State = OrderState.FullResultReceived;
-                    return hasResults || hasAttachments || _Order.State != statusBefore;
+                    return addedResultsCount > 0 || hasResults || hasAttachments || _Order.State != statusBefore;
                 }
 
                 if (hasResults || hasAttachments)
                 {
+                    fileExtNum = !string.IsNullOrWhiteSpace(details.ExtNum) ? details.ExtNum : extNum;
+
+                    AddGemotestResultItemsToCollection( _Order, details, response, _Results, fileExtNum);
+
                     _Order.State = OrderState.PartialResultReceived;
                     return true;
                 }
@@ -882,6 +858,263 @@ namespace Laboratory.Gemotest
                 SiMed.Clinic.Logger.LogEvent.SaveErrorToLog(ex.Message, "Gemotest");
                 return false;
             }
+        }
+
+        private int AddGemotestResultItemsToCollection( Order order, GemotestOrderDetail details, GemotestAnalysisResultResponse response, ResultsCollection resultsCollection, string extNum)
+        {
+            if (details == null || response == null || resultsCollection == null)
+                return 0;
+
+            string safeExtNum = MakeSafeFileNamePart(extNum);
+            string baseId = "Gemotest_Order_" + safeExtNum;
+
+            List<ProductParameter> parameters = BuildGemotestProductParameters(order, details);
+
+            int added = 0;
+
+            if (response.Attachments != null && response.Attachments.Count > 0)
+            {
+                for (int i = 0; i < response.Attachments.Count; i++)
+                {
+                    var attachment = response.Attachments[i];
+                    if (attachment == null || string.IsNullOrWhiteSpace(attachment.FileUrl))
+                        continue;
+
+                    byte[] pdfBytes = DownloadAttachmentBytes(attachment.FileUrl);
+
+                    string itemId = response.Attachments.Count == 1 ? baseId : baseId + "_" + (i + 1).ToString(CultureInfo.InvariantCulture);
+
+                    string fileName = itemId + ".pdf";
+
+                    SaveBytesToLog(fileName, pdfBytes);
+
+                    if (details.Attachments != null && i < details.Attachments.Count && details.Attachments[i] != null)
+                    {
+                        details.Attachments[i].FileName = fileName;
+                        details.Attachments[i].Data = pdfBytes;
+                    }
+
+                    ResultItem resultItem = BuildGemotestResultItem( itemId, fileName, pdfBytes, parameters, "PDF результатов Гемотест", safeExtNum);
+
+                    AddResultItemIfNotExists(resultsCollection, resultItem);
+                    added++;
+                }
+
+                return added;
+            }
+
+            if (parameters.Count > 0)
+            {
+                ResultItem resultItem = BuildGemotestResultItem( baseId, baseId + ".pdf", new byte[0], parameters, "", safeExtNum);
+
+                AddResultItemIfNotExists(resultsCollection, resultItem);
+                added++;
+            }
+
+            return added;
+        }
+
+        private byte[] DownloadAttachmentBytes(string fileUrl)
+        {
+            if (string.IsNullOrWhiteSpace(fileUrl))
+                return new byte[0];
+
+            string url = fileUrl.Replace("&amp;", "&").Trim();
+
+            using (WebClient client = new WebClient())
+            {
+                if (Options != null)
+                    client.Credentials = new NetworkCredential(Options.Login ?? "", Options.Password ?? "");
+
+                return client.DownloadData(url);
+            }
+        }
+
+        private ResultItem BuildGemotestResultItem(
+            string id,
+            string fileName,
+            byte[] data,
+            List<ProductParameter> parameters,
+            string comment,
+            string num)
+        {
+            ResultItem item = new ResultItem(id ?? string.Empty, data ?? new byte[0]);
+
+            item.ID = id ?? string.Empty;
+            item.Name = "Гемотест: заказ" + num;
+            item.FileName = fileName ?? string.Empty;
+            item.Comment = comment ?? string.Empty;
+
+            if (parameters != null)
+            {
+                foreach (ProductParameter parameter in parameters)
+                {
+                    item.ProductParametersList.Add(parameter);
+
+                    if (parameter.Product != null &&
+                        !item.ProductList.Any(p => IsSameProduct(p, parameter.Product)))
+                    {
+                        item.ProductList.Add(parameter.Product);
+                    }
+                }
+            }
+
+            return item;
+        }
+
+        private List<ProductParameter> BuildGemotestProductParameters(Order order, GemotestOrderDetail details)
+        {
+            List<ProductParameter> result = new List<ProductParameter>();
+
+            if (details == null || details.Results == null)
+                return result;
+
+            foreach (GemotestResultDetail r in details.Results)
+            {
+                if (r == null)
+                    continue;
+
+                Product product = ResolveProductForResult(order, details, r);
+
+                string name = !string.IsNullOrWhiteSpace(r.TestRusName)
+                    ? r.TestRusName
+                    : r.Name;
+
+                string bioName = !string.IsNullOrWhiteSpace(r.SectionName)
+                    ? r.SectionName
+                    : "Биоматериал не указан";
+
+                ProductParameter parameter = new ProductParameter
+                {
+                    Code = r.Id ?? string.Empty,
+                    Name = name ?? string.Empty,
+                    Value = r.Value ?? string.Empty,
+                    Measure = r.MeasurementUnit ?? string.Empty,
+                    RefMin = r.RefMin ?? string.Empty,
+                    RefMax = r.RefMax ?? string.Empty,
+                    RefText = !string.IsNullOrWhiteSpace(r.RefText) ? r.RefText : (r.RefRange ?? string.Empty),
+                    Comment = BuildResultComment(r),
+                    TestName = product != null ? product.Name : string.Empty,
+                    SubBioMaterialName = bioName,
+                    Product = product
+                };
+
+                result.Add(parameter);
+            }
+
+            return result;
+        }
+
+        private string BuildResultComment(GemotestResultDetail r)
+        {
+            if (r == null)
+                return string.Empty;
+
+            List<string> parts = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(r.Status))
+                parts.Add("Статус: " + r.Status);
+
+            if (!string.IsNullOrWhiteSpace(r.ResultDate))
+                parts.Add("Дата результата: " + r.ResultDate);
+
+            return string.Join("; ", parts);
+        }
+
+        private Product ResolveProductForResult(Order order, GemotestOrderDetail details, GemotestResultDetail result)
+        {
+            GemotestProductDetail productDetail = null;
+
+            if (details != null && details.Products != null && result != null)
+            {
+                productDetail = details.Products.FirstOrDefault(p =>
+                    p != null &&
+                    !string.IsNullOrWhiteSpace(p.OrderProductGuid) &&
+                    string.Equals(p.OrderProductGuid, result.OrderProductGuid, StringComparison.OrdinalIgnoreCase));
+
+                if (productDetail == null)
+                {
+                    productDetail = details.Products.FirstOrDefault(p =>
+                        p != null &&
+                        !string.IsNullOrWhiteSpace(p.ProductId) &&
+                        string.Equals(p.ProductId, result.ServiceId, StringComparison.OrdinalIgnoreCase));
+                }
+
+                if (productDetail == null)
+                {
+                    productDetail = details.Products.FirstOrDefault(p =>
+                        p != null &&
+                        !string.IsNullOrWhiteSpace(p.ProductCode) &&
+                        string.Equals(p.ProductCode, result.ServiceId, StringComparison.OrdinalIgnoreCase));
+                }
+            }
+
+            if (order != null && order.Items != null && productDetail != null)
+            {
+                foreach (var orderItem in order.Items)
+                {
+                    if (orderItem == null || orderItem.Product == null)
+                        continue;
+
+                    Product p = orderItem.Product;
+
+                    if (!string.IsNullOrWhiteSpace(productDetail.ProductId) &&
+                        string.Equals(p.ID, productDetail.ProductId, StringComparison.OrdinalIgnoreCase))
+                        return p;
+
+                    if (!string.IsNullOrWhiteSpace(productDetail.ProductCode) &&
+                        string.Equals(p.Code, productDetail.ProductCode, StringComparison.OrdinalIgnoreCase))
+                        return p;
+                }
+            }
+
+            if (productDetail != null)
+            {
+                return new Product
+                {
+                    ID = productDetail.ProductId ?? string.Empty,
+                    Code = productDetail.ProductCode ?? string.Empty,
+                    Name = productDetail.ProductName ?? string.Empty
+                };
+            }
+
+            return new Product
+            {
+                ID = result != null ? (result.ServiceId ?? string.Empty) : string.Empty,
+                Code = result != null ? (result.ServiceId ?? string.Empty) : string.Empty,
+                Name = result != null ? (result.Name ?? result.TestRusName ?? string.Empty) : string.Empty
+            };
+        }
+
+        private bool IsSameProduct(Product a, Product b)
+        {
+            if (a == null || b == null)
+                return false;
+
+            if (!string.IsNullOrWhiteSpace(a.ID) && !string.IsNullOrWhiteSpace(b.ID))
+                return string.Equals(a.ID, b.ID, StringComparison.OrdinalIgnoreCase);
+
+            if (!string.IsNullOrWhiteSpace(a.Code) && !string.IsNullOrWhiteSpace(b.Code))
+                return string.Equals(a.Code, b.Code, StringComparison.OrdinalIgnoreCase);
+
+            return string.Equals(a.Name ?? string.Empty, b.Name ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private void AddResultItemIfNotExists(ResultsCollection results, ResultItem item)
+        {
+            if (results == null || item == null)
+                return;
+
+            foreach (ResultItem existing in results)
+            {
+                if (existing != null &&
+                    string.Equals(existing.ID, item.ID, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+            }
+
+            results.Add(item);
         }
 
         private static void SaveTextToLog(string fileName, string text)
@@ -1126,6 +1359,23 @@ namespace Laboratory.Gemotest
                 if (_Results == null)
                     _Results = new ResultsCollection();
 
+                GemotestOrderDetail details = _Order.OrderDetail as GemotestOrderDetail;
+                if (details == null)
+                    return false;
+
+                bool hasSavedResults = details.Results != null && details.Results.Count > 0;
+                bool hasSavedAttachments = details.Attachments != null && details.Attachments.Count > 0;
+
+                if (hasSavedResults || hasSavedAttachments)
+                {
+                    string extNum = !string.IsNullOrWhiteSpace(details.ExtNum)
+                        ? details.ExtNum
+                        : (!string.IsNullOrWhiteSpace(details.ResultsExtNum) ? details.ResultsExtNum : (_Order.Number ?? string.Empty));
+
+                    int added = AddGemotestResultItemsFromDetails(_Order, details, _Results, extNum);
+                    return added > 0;
+                }
+
                 return CheckResult(_Order, ref _Results);
             }
             catch (Exception e)
@@ -1133,7 +1383,64 @@ namespace Laboratory.Gemotest
                 last_exception = e;
                 return false;
             }
+        }
+
+        private int AddGemotestResultItemsFromDetails( Order order, GemotestOrderDetail details, ResultsCollection resultsCollection, string extNum)
+        {
+            if (details == null || resultsCollection == null)
+                return 0;
+
+            string safeExtNum = MakeSafeFileNamePart(extNum);
+            string baseId = "Gemotest_Order_" + safeExtNum;
+
+            List<ProductParameter> parameters = BuildGemotestProductParameters(order, details);
+
+            int added = 0;
+
+            if (details.Attachments != null && details.Attachments.Count > 0)
+            {
+                for (int i = 0; i < details.Attachments.Count; i++)
+                {
+                    GemotestAttachmentDetail attachment = details.Attachments[i];
+                    if (attachment == null)
+                        continue;
+
+                    string itemId = details.Attachments.Count == 1
+                        ? baseId
+                        : baseId + "_" + (i + 1).ToString(CultureInfo.InvariantCulture);
+
+                    string fileName = !string.IsNullOrWhiteSpace(attachment.FileName)
+                        ? attachment.FileName
+                        : itemId + ".pdf";
+
+                    byte[] data = attachment.Data;
+
+                    if ((data == null || data.Length == 0) && !string.IsNullOrWhiteSpace(attachment.FileUrl))
+                    {
+                        data = DownloadAttachmentBytes(attachment.FileUrl);
+                        attachment.Data = data;
+                        attachment.FileName = fileName;
+                    }
+
+                    ResultItem item = BuildGemotestResultItem( itemId, fileName, data ?? new byte[0], parameters, "PDF результатов Гемотест", safeExtNum);
+
+                    AddResultItemIfNotExists(resultsCollection, item);
+                    added++;
+                }
+
+                return added;
             }
+
+            if (parameters.Count > 0)
+            {
+                ResultItem item = BuildGemotestResultItem( baseId, baseId + ".pdf", new byte[0], parameters, "", safeExtNum);
+
+                AddResultItemIfNotExists(resultsCollection, item);
+                added++;
+            }
+
+            return added;
+        }
 
         public void SetContainerMarkerList(List<IContainerMarker> _ContainerMarkerList) { }
 
@@ -1147,16 +1454,13 @@ namespace Laboratory.Gemotest
 
         private static bool HasConfiguredPriceLists(SystemOptions o)
         {
-            return o != null &&
-                   o.PriceLists != null &&
-                   o.PriceLists.Any(x => x != null && !string.IsNullOrWhiteSpace(x.ContractorCode));
+            return o != null && o.PriceLists != null && o.PriceLists.Any(x => x != null && !string.IsNullOrWhiteSpace(x.ContractorCode));
         }
 
         private IEnumerable<GemotestPriceList> GetInitCandidates()
         {
             var result = new List<GemotestPriceList>();
 
-            // 1. Сначала текущий выбранный в настройках
             if (Options != null && !string.IsNullOrWhiteSpace(Options.Contractor_Code))
             {
                 result.Add(new GemotestPriceList
@@ -1166,7 +1470,6 @@ namespace Laboratory.Gemotest
                 });
             }
 
-            // 2. Потом все остальные прайсы
             if (Options != null && Options.PriceLists != null)
             {
                 foreach (var pl in Options.PriceLists)
