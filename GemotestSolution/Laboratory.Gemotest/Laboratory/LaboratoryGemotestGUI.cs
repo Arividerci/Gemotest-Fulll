@@ -1329,7 +1329,6 @@ namespace Laboratory.Gemotest
                         int nextNumber = numerator.GetNextNumber("GemotestOrderNum", DateTime.Now, priceListCode, priceListNum, "");
                         long nextNum = nextNumber + long.Parse(priceListNum) - 1;
 
-                        Console.WriteLine("\n\n-------------", nextNumber.ToString(), " ", priceListCode ," ",priceListNum, "-----------\n") ;
                         if (nextNum <= 0)
                             throw new Exception("Не удалось получить номер заказа Gemotest через numerator.");
 

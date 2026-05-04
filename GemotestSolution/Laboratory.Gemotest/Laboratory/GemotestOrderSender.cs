@@ -80,21 +80,15 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                 string createHash = BuildCreateOrderHash( extNum, orderNum, _contractor, patient.Surname ?? "", birthDate, _salt);
 
-                DumpUserSelection(details);
-
                 var rows = BuildSampleServiceRows(details);
 
                 if (rows == null || rows.Count == 0)
                     throw new InvalidOperationException("Не удалось определить пробы для выбранных услуг (rows=0).");
 
-                DumpRows(rows);
-
                 var tubes = GemotestSamplePacker.Pack(rows);
                 NormalizeTubeServices(tubes);
                 if (tubes == null || tubes.Count == 0)
                     throw new InvalidOperationException("Упаковка не дала ни одной пробирки (tubes=0).");
-
-                DumpPacking(tubes);
 
                 long rangeStart;
                 long rangeEnd;
@@ -110,7 +104,6 @@ namespace Laboratory.Gemotest.GemotestRequests
                 var topServices = BuildTopLevelServices(details, tubes);
                 var supplementals = BuildServiceSupplementals(details);
 
-                DumpSupplementals(supplementals);
                 string doctor = "";
 
                 if (order != null && order.Worker != null)
@@ -686,11 +679,7 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                 if (svc.type == 2)
                 {
-                    Console.WriteLine("\n### MICRO SERVICE BEFORE ADDROWS ### productId=" + prod.ProductId + " biomaterialId=" + biomaterialId);
-
                     AddRowsForMicrobiologyComplex(prod.ProductId, biomaterialId, rows);
-
-                    Console.WriteLine("### MICRO SERVICE AFTER ADDROWS ### rows.Count=" + rows.Count);
 
                     for (int r = 0; r < rows.Count; r++)
                     {
@@ -719,10 +708,6 @@ namespace Laboratory.Gemotest.GemotestRequests
                             if (string.Equals(row.ServiceId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase) &&
                                 !string.Equals(row.MicroBioBiomaterialId ?? "", biomaterialId, StringComparison.OrdinalIgnoreCase))
                             {
-                                Console.WriteLine("\n### REMOVE WRONG MICRO ROW ### svc=" + row.ServiceId +
-                                                  "\n MB=" + row.MicroBioBiomaterialId +
-                                                  "\n loc=" + row.LocalizationId);
-
                                 rows.RemoveAt(r);
                             }
                         }
@@ -736,10 +721,6 @@ namespace Laboratory.Gemotest.GemotestRequests
                             if (string.Equals(row.ServiceId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase) &&
                                 row.ExecutionSampleId == 53)
                             {
-                                Console.WriteLine("\n### REMOVE EXTRA MICRO SAMPLE 53 ### svc=" + row.ServiceId +
-                                                  "\n MB=" + row.MicroBioBiomaterialId +
-                                                  "\n loc=" + row.LocalizationId);
-
                                 rows.RemoveAt(r);
                             }
                         }
@@ -764,18 +745,10 @@ namespace Laboratory.Gemotest.GemotestRequests
                             if (string.Equals(row.ServiceId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase) &&
                                 !string.Equals(row.LocalizationId ?? "", selectedLocalizationId, StringComparison.OrdinalIgnoreCase))
                             {
-                                Console.WriteLine("\n### REMOVE EXTRA MICRO LOCALIZATION ### svc=" + row.ServiceId +
-                                                  "\n keepLoc=" + selectedLocalizationId +
-                                                  "\n removeLoc=" + row.LocalizationId +
-                                                  "\n sample=" + row.ExecutionSampleId);
-
                                 rows.RemoveAt(r);
                             }
                         }
                     }
-
-                    Console.WriteLine("\n### MICRO SERVICE AFTER FILTER ### rows.Count=" + rows.Count);
-
                     continue;
                 }
 
@@ -800,13 +773,6 @@ namespace Laboratory.Gemotest.GemotestRequests
                                 !string.Equals(row.MicroBioBiomaterialId ?? "", biomaterialId, StringComparison.OrdinalIgnoreCase) &&
                                 !string.Equals(row.BiomaterialId ?? "", biomaterialId, StringComparison.OrdinalIgnoreCase))
                             {
-                                Console.WriteLine("\n### REMOVE WRONG MK ROW ### complex=" + row.ComplexId +
-                                                  "\n svc=" + row.ServiceId +
-                                                  "\n bio=" + row.BiomaterialId +
-                                                  "\n MB=" + row.MicroBioBiomaterialId +
-                                                  "\n chosen=" + biomaterialId +
-                                                  "\n loc=" + row.LocalizationId);
-
                                 rows.RemoveAt(r);
                             }
                         }
@@ -823,7 +789,6 @@ namespace Laboratory.Gemotest.GemotestRequests
 
         private void AddRowsForMicrobiologyComplex(string complexId, string chosenBioId, List<SampleServiceRow> rows)
         {
-            Console.WriteLine("\n### ENTER AddRowsForMicrobiologyComplex ### \ncomplexId=" + complexId + " \nchosenBioId=" + chosenBioId + "\n");
             if (string.IsNullOrEmpty(complexId))
                 return;
 
@@ -883,11 +848,6 @@ namespace Laboratory.Gemotest.GemotestRequests
                     }
                 }
             }
-
-            Console.WriteLine(
-                "\n[AddRowsForMicrobiologyComplex] complex=" + complexId +
-                " \nchosenBioId=" + chosenBioId +
-                " \naddedRows=" + (rows.Count - startIndex));
         }
 
         private DictionaryMarketingComplex ResolveMicrobiologyMainRow(string complexId, string chosenBioId)
@@ -1215,10 +1175,6 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                 if (parentSampleExists)
                 {
-                    Console.WriteLine(
-                        "### REMOVE CHILD SAMPLE WHEN PARENT EXISTS ### " +
-                        "sample_id=" + sampleId.ToString(CultureInfo.InvariantCulture) +
-                        " primary_sample_id=" + primarySampleId.ToString(CultureInfo.InvariantCulture));
                     continue;
                 }
 
@@ -1228,52 +1184,6 @@ namespace Laboratory.Gemotest.GemotestRequests
             return result;
         }
 
-        /*private static List<DictionarySamplesServices> RemoveChildAliquotRowsWhenParentPresent(List<DictionarySamplesServices> rows)
-        {
-            if (rows == null || rows.Count == 0)
-                return rows ?? new List<DictionarySamplesServices>();
-
-            var result = new List<DictionarySamplesServices>();
-
-            for (int i = 0; i < rows.Count; i++)
-            {
-                DictionarySamplesServices row = rows[i];
-
-                if (row == null)
-                    continue;
-
-                int sampleId = ToInt(row.sample_id, 0);
-                int primarySampleId = ToInt(row.primary_sample_id, 0);
-
-                bool isChildAliquot = primarySampleId > 0;
-
-                if (!isChildAliquot)
-                {
-                    result.Add(row);
-                    continue;
-                }
-
-                bool parentExists = rows.Any(parent => parent != null && !object.ReferenceEquals(parent, row) && ToInt(parent.sample_id, 0) == primarySampleId &&
-                    string.Equals(parent.service_id ?? "", row.service_id ?? "", StringComparison.OrdinalIgnoreCase) && SameId(parent.biomaterial_id, row.biomaterial_id) &&
-                    SameId(parent.microbiology_biomaterial_id, row.microbiology_biomaterial_id) && SameId(parent.localization_id, row.localization_id));
-
-                if (!parentExists)
-                {
-                    result.Add(row);
-                }
-                else
-                {
-                    Console.WriteLine(
-                        "\n### REMOVE CHILD ALIQUOT ROW ### svc=" + (row.service_id ?? "") +
-                        "\n sample=" + sampleId.ToString(CultureInfo.InvariantCulture) +
-                        "\n primary=" + primarySampleId.ToString(CultureInfo.InvariantCulture) +
-                        "\n bio=" + (row.biomaterial_id ?? "") +
-                        "\n loc=" + (row.localization_id ?? ""));
-                }
-            }
-            return result;
-        }
-*/
         private List<DictionarySamplesServices> SelectSampleServiceRowsForSending( List<DictionarySamplesServices> source, string selectedBiomaterialId, string forcedLocalizationId)
         {
             var all = source.Where(p => p != null).ToList();
@@ -1760,11 +1670,6 @@ namespace Laboratory.Gemotest.GemotestRequests
         private string SendSoapRequest(string method, string xmlBody)
         {
             string soapAction = "\"urn:OdoctorControllerwsdl#" + method + "\"";
-
-            Console.WriteLine("\n========== Gemotest SOAP REQUEST (" + method + ")  ==========");
-            Console.WriteLine(xmlBody);
-            Console.WriteLine("============================================================\n");
-
             var request = (HttpWebRequest)WebRequest.Create(_url);
             request.Method = "POST";
             request.ContentType = "text/xml; charset=utf-8";
@@ -1790,11 +1695,6 @@ namespace Laboratory.Gemotest.GemotestRequests
                 using (var reader = new StreamReader(respStream, Encoding.UTF8))
                 {
                     string responseText = reader.ReadToEnd();
-
-                    Console.WriteLine("\n========== Gemotest SOAP RESPONSE (" + method + ") ==========");
-                    Console.WriteLine(responseText);
-                    Console.WriteLine("=============================================================\n");
-
                     return responseText;
                 }
             }
@@ -1811,9 +1711,6 @@ namespace Laboratory.Gemotest.GemotestRequests
                 }
 
                 string shortError = ExtractShortSoapError(responseText);
-                Console.WriteLine("\n========== Error ==========");
-                Console.WriteLine(shortError);
-                Console.WriteLine("=============================================================\n");
 
                 if (string.IsNullOrWhiteSpace(shortError))
                     shortError = ex.Message;
@@ -1874,57 +1771,6 @@ namespace Laboratory.Gemotest.GemotestRequests
                 return "";
             }
         }
-
-        /*private List<SoapSupplementalItem> BuildServiceSupplementals(GemotestOrderDetail details)
-        {
-            var result = new List<SoapSupplementalItem>();
-
-            if (details == null || details.Details == null)
-                return result;
-
-            var sentKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            for (int i = 0; i < details.Details.Count; i++)
-            {
-                var d = details.Details[i];
-
-                if (d == null)
-                    continue;
-
-                string soapId = GetSupplementalSoapId(d);
-
-                if (string.IsNullOrWhiteSpace(soapId))
-                    continue;
-
-                if (IsStdInfoField(soapId))
-                    continue;
-
-                string sendValue = NormalizeSupplementalValue(d);
-
-                if (string.IsNullOrWhiteSpace(sendValue))
-                    continue;
-
-                string guiCode = !string.IsNullOrWhiteSpace(d.Code)
-                    ? d.Code.Trim()
-                    : soapId;
-
-                string uniqueKey = guiCode + "|" + sendValue;
-
-                if (sentKeys.Contains(uniqueKey))
-                    continue;
-
-                sentKeys.Add(uniqueKey);
-
-                result.Add(new SoapSupplementalItem
-                {
-                    Id = soapId,
-                    Name = string.IsNullOrWhiteSpace(d.Name) ? soapId : d.Name,
-                    Value = sendValue
-                });
-            }
-
-            return result;
-        }*/
 
         public static void SaveTextToLog(string fileName, string text)
         {
@@ -2329,97 +2175,6 @@ namespace Laboratory.Gemotest.GemotestRequests
             return text.Trim();
         }
 
-        private void DumpUserSelection(GemotestOrderDetail details)
-        {
-            Console.WriteLine("\n=== Выбор пользователя (услуги) ===");
-            for (int i = 0; i < details.Products.Count; i++)
-            {
-                var p = details.Products[i];
-
-                DictionaryService svc;
-                _dictionaries.Directory.TryGetValue(p.ProductId ?? "", out svc);
-                if (svc != null)
-                    Console.WriteLine("    -> type=" + svc.type + ", service_type=" + (svc.service_type.HasValue ? svc.service_type.Value.ToString(CultureInfo.InvariantCulture) : "null"));
-
-                Console.WriteLine("[" + i.ToString(CultureInfo.InvariantCulture) + "] " + (p.ProductId ?? "") + " | " + (p.ProductName ?? ""));
-            }
-            Console.WriteLine("\n=== Выбор пользователя (биоматериал по услугам) ===");
-            var chosen = BuildChosenBiomaterialByProductIndex(details);
-
-            for (int i = 0; i < details.Products.Count; i++)
-            {
-                string bio = chosen.ContainsKey(i) ? chosen[i] : "";
-                string bioName = "";
-                if (!string.IsNullOrEmpty(bio))
-                {
-                    var b = details.BioMaterials.FirstOrDefault(x => x.Id == bio);
-                    bioName = b != null ? (b.Name ?? "") : "";
-                }
-
-                Console.WriteLine("[" + i.ToString(CultureInfo.InvariantCulture) + "] bio=" + bio + " " + bioName);
-            }
-        }
-
-        private void DumpRows(List<SampleServiceRow> rows)
-        {
-            Console.WriteLine();
-            Console.WriteLine("=== Требования проб (samples_services / marketing composition) ===");
-
-            for (int i = 0; i < rows.Count; i++)
-            {
-                var r = rows[i];
-
-                string bioKey = !string.IsNullOrWhiteSpace(r.MicroBioBiomaterialId) ? ("MB:" + r.MicroBioBiomaterialId) : ("BM:" + r.BiomaterialId);
-
-                Console.WriteLine(
-                    "[" + i.ToString(CultureInfo.InvariantCulture) + "] svc=" + r.ServiceId +
-                    (string.IsNullOrEmpty(r.ComplexId) ? "" : (" complex=" + r.ComplexId)) +
-                    " sample=" + r.ExecutionSampleId.ToString(CultureInfo.InvariantCulture) +
-                    (r.PrimarySampleId.HasValue ? (" primary=" + r.PrimarySampleId.Value.ToString(CultureInfo.InvariantCulture)) : "") +
-                    " loc=" + (r.LocalizationId ?? "") +
-                    " " + bioKey +
-                    " sc=" + r.ServiceCount.ToString(CultureInfo.InvariantCulture) +
-                    " execTr=" + (r.ExecutionTransportId ?? "")
-                );
-            }
-        }
-
-        private void DumpPacking(List<TubePlan> tubes)
-        {
-            Console.WriteLine();
-            Console.WriteLine("=== Итоговая упаковка (пробирки) ===");
-
-            for (int i = 0; i < tubes.Count; i++)
-            {
-                var t = tubes[i];
-                string parent = t.Parent != null ? (" parentSample=" + t.Parent.SampleId.ToString(CultureInfo.InvariantCulture)) : "";
-                Console.WriteLine(
-                    "[" + i.ToString(CultureInfo.InvariantCulture) + "] sample=" + t.SampleId.ToString(CultureInfo.InvariantCulture) +
-                    parent +
-                    " tr=" + (t.TransportId ?? "") +
-                    " loc=" + (t.LocalizationId ?? "") +
-                    " bio=" + (string.IsNullOrEmpty(t.MicroBioBiomaterialId) ? (t.BiomaterialId ?? "") : ("MB:" + t.MicroBioBiomaterialId)) +
-                    " used=" + t.UsedPercent.ToString("0.##", CultureInfo.InvariantCulture) + "%"
-                );
-
-                if (t.Services != null)
-                {
-                    for (int k = 0; k < t.Services.Count; k++)
-                    {
-                        var s = t.Services[k];
-                        Console.WriteLine("    - " + (s.ServiceId ?? "") +
-                                          (string.IsNullOrEmpty(s.ComplexId) ? "" : (" (complex " + s.ComplexId + ")")) +
-                                          " share=" + s.SharePercent.ToString("0.##", CultureInfo.InvariantCulture) +
-                                          "% util=" + s.UtilizationFlag.ToString(CultureInfo.InvariantCulture) +
-                                          " refuse=" + s.RefuseFlag.ToString(CultureInfo.InvariantCulture));
-                    }
-                }
-            }
-
-            Console.WriteLine();
-            Console.WriteLine("Всего контейнеров для отправки: " + tubes.Count.ToString(CultureInfo.InvariantCulture));
-        }
-
         private static bool IsStandalonePrimaryRow(DictionarySamplesServices row, List<DictionarySamplesServices> list)
         {
             if (row == null || list == null)
@@ -2494,27 +2249,5 @@ namespace Laboratory.Gemotest.GemotestRequests
             return fallback;
         }
             
-        private void DumpSupplementals(List<SoapSupplementalItem> supplementals)
-        {
-            Console.WriteLine();
-            Console.WriteLine("=== Дополнительные поля (services_supplementals) ===");
-
-            if (supplementals == null || supplementals.Count == 0)
-            {
-                Console.WriteLine("(пусто)");
-                return;
-            }
-
-            for (int i = 0; i < supplementals.Count; i++)
-            {
-                var s = supplementals[i];
-                if (s == null) continue;
-
-                Console.WriteLine("[" + i.ToString(CultureInfo.InvariantCulture) + "] " +
-                                  (s.Id ?? "") +
-                                  " | " + (s.Name ?? "") +
-                                  " | " + (s.Value ?? ""));
-            }
-        }
     }
 }

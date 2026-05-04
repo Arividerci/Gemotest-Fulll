@@ -23,9 +23,6 @@ namespace Laboratory.Gemotest
 
     public class LaboratoryGemotest : ILaboratory
     {
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool AllocConsole();
-
         List<DictionaryService> ProductsGemotest;
 
         public List<ProductGemotest> product;
@@ -35,9 +32,11 @@ namespace Laboratory.Gemotest
         public LocalOptions LocalOptions { get; set; }
         public SystemOptions Options { get; set; }
         public Dictionaries Dicts { get; } = new Dictionaries();
-        private const string TestResultExtNum = "118569168";
+
         private Exception last_exception = new Exception("неизвестная ошибка");
+
         private INumerator numerator;
+
         private LaboratoryGemotestGUI laboratoryGUI;
         public LaboratoryType GetLaboratoryType()
         {
@@ -381,15 +380,7 @@ namespace Laboratory.Gemotest
 
                 var contractorCode = !string.IsNullOrEmpty(details.PriceListCode) ? details.PriceListCode : Options.Contractor_Code;
 
-                Console.WriteLine("### SENDORDER ДОШЕЛ ДО СОЗДАНИЯ GemotestOrderSender ### " + DateTime.Now.ToString("HH:mm:ss.fff"));
-
-                var sender = new GemotestOrderSender(
-                    Options.UrlAdress,
-                    contractorCode,
-                    Options.Salt,
-                    Options.Login,
-                    Options.Password
-                );
+                var sender = new GemotestOrderSender( Options.UrlAdress, contractorCode, Options.Salt, Options.Login, Options.Password);
 
                 string errorMessage;
                 if (!sender.CreateOrder(_Order, out errorMessage))
@@ -931,18 +922,13 @@ namespace Laboratory.Gemotest
         }
 
         private ResultItem BuildGemotestResultItem(
-            string id,
-            string fileName,
-            byte[] data,
-            List<ProductParameter> parameters,
-            string comment,
-            string num)
+            string id, string fileName, byte[] data, List<ProductParameter> parameters,string comment, string num)
         {
             ResultItem item = new ResultItem(id ?? string.Empty, data ?? new byte[0]);
 
             item.ID = id ?? string.Empty;
-            item.Name = "Гемотест: заказ" + num;
             item.FileName = fileName ?? string.Empty;
+            item.Name = "Гемотест: Заказ " + num;
             item.Comment = comment ?? string.Empty;
 
             if (parameters != null)
@@ -993,7 +979,6 @@ namespace Laboratory.Gemotest
                     RefMin = r.RefMin ?? string.Empty,
                     RefMax = r.RefMax ?? string.Empty,
                     RefText = !string.IsNullOrWhiteSpace(r.RefText) ? r.RefText : (r.RefRange ?? string.Empty),
-                    Comment = BuildResultComment(r),
                     TestName = product != null ? product.Name : string.Empty,
                     SubBioMaterialName = bioName,
                     Product = product
@@ -1003,22 +988,6 @@ namespace Laboratory.Gemotest
             }
 
             return result;
-        }
-
-        private string BuildResultComment(GemotestResultDetail r)
-        {
-            if (r == null)
-                return string.Empty;
-
-            List<string> parts = new List<string>();
-
-            if (!string.IsNullOrWhiteSpace(r.Status))
-                parts.Add("Статус: " + r.Status);
-
-            if (!string.IsNullOrWhiteSpace(r.ResultDate))
-                parts.Add("Дата результата: " + r.ResultDate);
-
-            return string.Join("; ", parts);
         }
 
         private Product ResolveProductForResult(Order order, GemotestOrderDetail details, GemotestResultDetail result)
@@ -1231,9 +1200,7 @@ namespace Laboratory.Gemotest
                         RefMax = item.RefMax ?? string.Empty,
                         RefRange = item.RefRange ?? string.Empty,
                         RefText = item.RefText ?? string.Empty,
-                        ResultDate = item.ResultDate ?? string.Empty,
                         ServiceId = item.ServiceId ?? string.Empty,
-                        Status = item.Status ?? string.Empty,
                         OrderProductGuid = orderProductGuid ?? string.Empty
                     });
                 }
