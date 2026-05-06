@@ -14,7 +14,6 @@ namespace Laboratory.Gemotest.Options
     [Serializable]
     public class LocalOptions : BaseOptions
     {
-        public bool PrintAtOnce { get; set; }
         public bool PrintStikersAtOnce { get; set; }
         public bool PrintBlankAtOnce { get; set; }
         [XmlIgnore] public PaperSource PaperSource { get; set; }
@@ -47,10 +46,15 @@ namespace Laboratory.Gemotest.Options
 ^FS^XZ
 ^XA
 ^CI28
-^FO20,15^AZN,25,20^FD{0}^FS
-^FO20,45^AZN,25,20^FD{1}^FS
-^FO20,75^BY2^BCN,60,Y^FD>;{2}^FS
-^FO20,160^AZN,25,20^FD{3}^FS
+^FO10,15^AZN,25,20^FD{1}^FS
+^FO10,35^AZN,25,20^FD{2}^FS
+^FO190,15^AZN,25,20^FDMSC^FS
+^FO25,60^BY2^B2N,60,N,N,N^FD{0}^FS
+^FO10,130^AZN,25,20^FD{0}^FS
+^FO135,130^AZN,25,20^FD{3}^FS
+^FO10,150^AZN,25,20^FD{4}^FS
+^FO10,170^AZN,25,20^FD{5}^FS
+^FO135,170^AZN,25,20^FD{6}^FS
 ^XZ";
                 case LabelType.EPL:
                     return
@@ -61,10 +65,15 @@ ZB
 I8,10
 q335
 Q200,24
-A20,0,0,3,1,1,N,""{0}""
-A20,25,0,3,1,1,N,""{1}""
-B20,50,0,1C,2,30,70,B,""{2}""
-A20,150,0,3,1,1,N,""{3}""
+A10,0,0,3,1,1,N,""{1}""
+A10,20,0,3,1,1,N,""{2}""
+A190,0,0,3,1,1,N,""MSC""
+B35,40,0,2,2,5,60,N,""{0}""
+A10,110,0,3,1,1,N,""{0}""
+A170,110,0,3,1,1,N,""{3}""
+A10,130,0,3,1,1,N,""{4}""
+A10,150,0,3,1,1,N,""{5}""
+A120,150,0,3,1,1,N,""{6}""
 P1,1
 ";
                 default:

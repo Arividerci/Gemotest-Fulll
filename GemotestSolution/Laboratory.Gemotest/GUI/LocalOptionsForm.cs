@@ -33,7 +33,6 @@ namespace Laboratory.Gemotest.Options
                     }
                     if (Options.StickerPrinterSettings != null)
                         printer2Label.Text = Options.StickerPrinterSettings.PrinterName;
-                    chbPrintatOnce.Checked = Options.PrintAtOnce;
                     chbPrintStinkersAtOnce.Checked = Options.PrintStikersAtOnce;
                     chbPrintBlankAtOnce.Checked = Options.PrintBlankAtOnce;
                 }
@@ -81,11 +80,6 @@ namespace Laboratory.Gemotest.Options
             pd.ShowDialog();
             Options.StickerPrinterSettings = pd.PrinterSettings;
             printer2Label.Text = pd.PrinterSettings.PrinterName;
-        }
-
-        private void chbPrintatOnce_CheckedChanged(object sender, EventArgs e)
-        {
-            Options.PrintAtOnce = chbPrintatOnce.Checked;
         }
 
         private void btClearPdfPrinter_Click(object sender, EventArgs e)
@@ -156,8 +150,10 @@ namespace Laboratory.Gemotest.Options
                 else
                     settings = PrintCommon.Print.GetDefaultPrinterSettingsAccorgingToFormat();
                 string LabelTemplate = txtCustomLabel.Text;
-                string str_to_print = string.Format(LabelTemplate, "ЛПУ-1111", "Биоматериал", "111111111111", "Иванов Иван");
+                string str_to_print = string.Format(LabelTemplate, "1234567890", "Тестов", "Тест Тестович", "01.01.2000", "Биоматериал", "Контейнер", "Контрагент");
                 PrintCommon.Print.SendStringToPrinter(settings, str_to_print, encoding);
+
+                
             }
             catch (Exception exc)
             {

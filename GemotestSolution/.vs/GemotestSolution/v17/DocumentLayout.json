@@ -3,15 +3,27 @@
   "WorkspaceRootPath": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|c:\\users\\night\\onedrive\\desktop\\gemotestnew\\gemotestsolution\\laboratory.gemotest\\gui\\gemotestsystemoptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|solutionrelative:laboratory.gemotest\\gui\\gemotestsystemoptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\laboratory.gemotest\\gui\\gemotestsystemoptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|solutionrelative:laboratory.gemotest\\gui\\gemotestsystemoptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|c:\\users\\night\\onedrive\\desktop\\gemotestnew\\gemotestsolution\\laboratory.gemotest\\options\\gemotestsystemoptions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|solutionrelative:laboratory.gemotest\\options\\gemotestsystemoptions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|c:\\users\\night\\onedrive\\desktop\\gemotestnew\\gemotestsolution\\laboratory.gemotest\\gui\\gemotestsystemoptionsform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|solutionrelative:laboratory.gemotest\\gui\\gemotestsystemoptionsform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|c:\\users\\night\\onedrive\\desktop\\gemotestnew\\gemotestsolution\\laboratory.gemotest\\gui\\gemotestchoiceofproductform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|solutionrelative:laboratory.gemotest\\gui\\gemotestchoiceofproductform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|c:\\users\\night\\onedrive\\desktop\\gemotestnew\\gemotestsolution\\laboratory.gemotest\\gui\\gemotestsystemoptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|solutionrelative:laboratory.gemotest\\gui\\gemotestsystemoptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|c:\\users\\night\\onedrive\\desktop\\gemotestnew\\gemotestsolution\\laboratory.gemotest\\gui\\localoptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "AbsoluteMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\laboratory.gemotest\\gui\\localoptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|solutionrelative:laboratory.gemotest\\gui\\localoptionsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
@@ -19,7 +31,7 @@
       "RelativeMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|solutionrelative:laboratory.gemotest\\laboratory\\laboratorygemotest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|c:\\users\\night\\onedrive\\desktop\\gemotestnew\\gemotestsolution\\laboratory.gemotest\\laboratory\\gemotestordersender.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\laboratory.gemotest\\laboratory\\gemotestordersender.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{DC9CCD6F-8C58-4810-8675-A6AF3866A135}|Laboratory.Gemotest\\Laboratory.Gemotest.csproj|solutionrelative:laboratory.gemotest\\laboratory\\gemotestordersender.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -151,11 +163,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 8,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 10,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Gemotest\\Program.cs",
               "RelativeDocumentMoniker": "Gemotest\\Program.cs",
@@ -168,7 +180,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 24,
               "Title": "LaboratoryGemotest.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\LaboratoryGemotest.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\LaboratoryGemotest.cs",
@@ -181,7 +193,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 25,
               "Title": "LaboratoryGemotestGUI.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\LaboratoryGemotestGUI.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\LaboratoryGemotestGUI.cs",
@@ -194,7 +206,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 26,
               "Title": "GemotestOrderDetails.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\GemotestOrderDetails.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\GemotestOrderDetails.cs",
@@ -207,7 +219,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 15,
               "Title": "MainForm.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Gemotest\\MainForm.cs",
               "RelativeDocumentMoniker": "Gemotest\\MainForm.cs",
@@ -220,7 +232,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 16,
               "Title": "MainForm.cs [\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440]",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Gemotest\\MainForm.cs",
               "RelativeDocumentMoniker": "Gemotest\\MainForm.cs",
@@ -232,15 +244,53 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "GemotestSystemOptionsForm.Designer.cs",
+              "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\GUI\\GemotestSystemOptionsForm.Designer.cs",
+              "RelativeDocumentMoniker": "Laboratory.Gemotest\\GUI\\GemotestSystemOptionsForm.Designer.cs",
+              "ToolTip": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\GUI\\GemotestSystemOptionsForm.Designer.cs",
+              "RelativeToolTip": "Laboratory.Gemotest\\GUI\\GemotestSystemOptionsForm.Designer.cs",
+              "ViewState": "AQIAALoAAAAAAAAAAADwv8oAAABkAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-06T09:17:09.362Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "GemotestSystemOptionsForm.cs",
+              "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\GUI\\GemotestSystemOptionsForm.cs",
+              "RelativeDocumentMoniker": "Laboratory.Gemotest\\GUI\\GemotestSystemOptionsForm.cs",
+              "ToolTip": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\GUI\\GemotestSystemOptionsForm.cs",
+              "RelativeToolTip": "Laboratory.Gemotest\\GUI\\GemotestSystemOptionsForm.cs",
+              "ViewState": "AQIAAH4AAAAAAAAAAAAIwI8AAABhAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-06T07:11:41.581Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "GemotestSystemOptions.cs",
+              "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Options\\GemotestSystemOptions.cs",
+              "RelativeDocumentMoniker": "Laboratory.Gemotest\\Options\\GemotestSystemOptions.cs",
+              "ToolTip": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Options\\GemotestSystemOptions.cs",
+              "RelativeToolTip": "Laboratory.Gemotest\\Options\\GemotestSystemOptions.cs",
+              "ViewState": "AQIAABYAAAAAAAAAAAAkwCoAAAAJAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-06T05:55:50.435Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
               "Title": "LocalOptionsForm.cs [\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440]",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\GUI\\LocalOptionsForm.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\GUI\\LocalOptionsForm.cs",
               "ToolTip": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\GUI\\LocalOptionsForm.cs [\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440]",
               "RelativeToolTip": "Laboratory.Gemotest\\GUI\\LocalOptionsForm.cs [\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-04T11:54:24.734Z",
-              "EditorCaption": " [\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440]"
+              "WhenOpened": "2026-05-04T11:54:24.734Z"
             },
             {
               "$type": "Document",
@@ -256,7 +306,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 4,
               "Title": "GemotestChoiceOfProductForm.cs [\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440]",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\GUI\\GemotestChoiceOfProductForm.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\GUI\\GemotestChoiceOfProductForm.cs",
@@ -268,7 +318,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 8,
               "Title": "LaboratoryGemotestGUI.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Laboratory\\LaboratoryGemotestGUI.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\Laboratory\\LaboratoryGemotestGUI.cs",
@@ -280,7 +330,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 9,
               "Title": "GemotestOrderDetails.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Laboratory\\GemotestOrderDetails.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\Laboratory\\GemotestOrderDetails.cs",
@@ -292,7 +342,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 7,
               "Title": "GemotestOrderSender.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Laboratory\\GemotestOrderSender.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\Laboratory\\GemotestOrderSender.cs",
@@ -300,12 +350,11 @@
               "RelativeToolTip": "Laboratory.Gemotest\\Laboratory\\GemotestOrderSender.cs",
               "ViewState": "AQIAALYAAAAAAAAAAAD4v8EAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-04T06:58:31.173Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-04T06:58:31.173Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": "LaboratoryGemotest.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Laboratory\\LaboratoryGemotest.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\Laboratory\\LaboratoryGemotest.cs",
@@ -313,12 +362,11 @@
               "RelativeToolTip": "Laboratory.Gemotest\\Laboratory\\LaboratoryGemotest.cs",
               "ViewState": "AQIAAI4DAAAAAAAAAIAwwKUDAAAjAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-30T09:54:50.385Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-30T09:54:50.385Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 22,
               "Title": "ChoiceOfProductFormCityLab.Designer.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\\u041F\u0440\u0430\u043A\u0442\u0438\u043A\u0430\\\u041F\u0440\u0438\u043C\u0435\u0440 \u0440\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u0438 \u043C\u043E\u0434\u0443\u043B\u044F\\\u0421\u0438\u0442\u0438\u041B\u0430\u0431\\VKR\\ChoiceOfProductFormCityLab.Designer.cs",
               "RelativeDocumentMoniker": "..\\..\\\u041F\u0440\u0430\u043A\u0442\u0438\u043A\u0430\\\u041F\u0440\u0438\u043C\u0435\u0440 \u0440\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u0438 \u043C\u043E\u0434\u0443\u043B\u044F\\\u0421\u0438\u0442\u0438\u041B\u0430\u0431\\VKR\\ChoiceOfProductFormCityLab.Designer.cs",
@@ -330,7 +378,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 21,
               "Title": "LaboratoryCityLab.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\\u041F\u0440\u0430\u043A\u0442\u0438\u043A\u0430\\\u041F\u0440\u0438\u043C\u0435\u0440 \u0440\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u0438 \u043C\u043E\u0434\u0443\u043B\u044F\\\u0421\u0438\u0442\u0438\u041B\u0430\u0431\\VKR\\LaboratoryCityLab.cs",
               "RelativeDocumentMoniker": "..\\..\\\u041F\u0440\u0430\u043A\u0442\u0438\u043A\u0430\\\u041F\u0440\u0438\u043C\u0435\u0440 \u0440\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u0438 \u043C\u043E\u0434\u0443\u043B\u044F\\\u0421\u0438\u0442\u0438\u041B\u0430\u0431\\VKR\\LaboratoryCityLab.cs",
@@ -342,7 +390,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 11,
               "Title": "ProductGemotest.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\SourseClass\\ProductGemotest.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\SourseClass\\ProductGemotest.cs",
@@ -354,7 +402,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 27,
               "Title": "GemotestOrderSender.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\GemotestOrderSender.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\GemotestOrderSender.cs",
@@ -366,7 +414,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 12,
               "Title": "FormGemotestResult.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Gemotest\\FormGemotestResult.cs",
               "RelativeDocumentMoniker": "Gemotest\\FormGemotestResult.cs",
@@ -378,7 +426,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 28,
               "Title": "FormAdditionalPatientInfo.cs [\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440]",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\FormAdditionalPatientInfo.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\FormAdditionalPatientInfo.cs",
@@ -389,7 +437,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 29,
               "Title": "FormAdditionalPatientInfo.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\FormAdditionalPatientInfo.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\FormAdditionalPatientInfo.cs",
@@ -401,7 +449,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 13,
               "Title": "FormGemotestResult.cs [\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440]",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Gemotest\\FormGemotestResult.cs",
               "RelativeDocumentMoniker": "Gemotest\\FormGemotestResult.cs",
@@ -412,7 +460,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 14,
               "Title": "MainForm.Designer.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Gemotest\\MainForm.Designer.cs",
               "RelativeDocumentMoniker": "Gemotest\\MainForm.Designer.cs",
@@ -424,7 +472,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 17,
               "Title": "FormGemotestResult.Designer.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Gemotest\\FormGemotestResult.Designer.cs",
               "RelativeDocumentMoniker": "Gemotest\\FormGemotestResult.Designer.cs",
@@ -436,7 +484,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 18,
               "Title": "GemotestAnalysisResultParser.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Gemotest\\GemotestAnalysisResultParser.cs",
               "RelativeDocumentMoniker": "Gemotest\\GemotestAnalysisResultParser.cs",
@@ -448,7 +496,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 19,
               "Title": "Dictionaries.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\SourseClass\\Dictionaries.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\SourseClass\\Dictionaries.cs",
@@ -460,7 +508,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 30,
               "Title": "OptionsGemotest.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Options\\OptionsGemotest.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\Options\\OptionsGemotest.cs",
@@ -472,7 +520,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 31,
               "Title": "FormAdditionalPatientInfo.Designer.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\FormAdditionalPatientInfo.Designer.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\FormAdditionalPatientInfo.Designer.cs",
@@ -484,7 +532,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 20,
               "Title": "GemotestService.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Options\\GemotestService.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\Options\\GemotestService.cs",
@@ -496,7 +544,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
+              "DocumentIndex": 32,
               "Title": "LocalOptionsGemotest.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Options\\LocalOptionsGemotest.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\Options\\LocalOptionsGemotest.cs",
@@ -508,7 +556,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 33,
               "Title": "OptionsFormsGemotest.cs [\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440]",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Options\\OptionsFormsGemotest.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\Options\\OptionsFormsGemotest.cs",
@@ -519,7 +567,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 34,
               "Title": "LocalOptionsForm.cs [\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440]",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Options\\LocalOptionsForm.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\Options\\LocalOptionsForm.cs",
@@ -530,7 +578,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 23,
               "Title": "ChoiceOfProductFormCityLab.resx",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\\u041F\u0440\u0430\u043A\u0442\u0438\u043A\u0430\\\u041F\u0440\u0438\u043C\u0435\u0440 \u0440\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u0438 \u043C\u043E\u0434\u0443\u043B\u044F\\\u0421\u0438\u0442\u0438\u041B\u0430\u0431\\VKR\\ChoiceOfProductFormCityLab.resx",
               "RelativeDocumentMoniker": "..\\..\\\u041F\u0440\u0430\u043A\u0442\u0438\u043A\u0430\\\u041F\u0440\u0438\u043C\u0435\u0440 \u0440\u0435\u0430\u043B\u0438\u0437\u0430\u0446\u0438\u0438 \u043C\u043E\u0434\u0443\u043B\u044F\\\u0421\u0438\u0442\u0438\u041B\u0430\u0431\\VKR\\ChoiceOfProductFormCityLab.resx",
@@ -541,7 +589,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 35,
               "Title": "OptionsFormsGemotest.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Options\\OptionsFormsGemotest.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\Options\\OptionsFormsGemotest.cs",
@@ -553,7 +601,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 36,
               "Title": "LocalOptionsForm.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Options\\LocalOptionsForm.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\Options\\LocalOptionsForm.cs",
@@ -565,7 +613,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 37,
               "Title": "OptionsFormsGemotest.Designer.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Options\\OptionsFormsGemotest.Designer.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\Options\\OptionsFormsGemotest.Designer.cs",
@@ -577,7 +625,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
+              "DocumentIndex": 38,
               "Title": "LocalOptionsForm.Designer.cs",
               "DocumentMoniker": "C:\\Users\\Night\\OneDrive\\Desktop\\GemotestNew\\GemotestSolution\\Laboratory.Gemotest\\Options\\LocalOptionsForm.Designer.cs",
               "RelativeDocumentMoniker": "Laboratory.Gemotest\\Options\\LocalOptionsForm.Designer.cs",

@@ -49,8 +49,8 @@ namespace Laboratory.Gemotest
         public string ServiceId { get; set; }
         public string ComplexId { get; set; }
 
-        public int UtilizationFlag { get; set; } // 0/1
-        public int RefuseFlag { get; set; }      // 0/1
+        public int UtilizationFlag { get; set; } 
+        public int RefuseFlag { get; set; }      
 
         public int ServiceCount { get; set; }
         public double SharePercent { get; set; }
@@ -74,11 +74,10 @@ namespace Laboratory.Gemotest
         public string MicroBioBiomaterialId { get; set; }
         public string LocalizationId { get; set; }
 
-        // присваивается в sender-е после get_sample_identifiers
         public string SampleIdentifier { get; set; }
         public string PrimarySampleIdentifier { get; set; }
 
-        public TubePlan Parent { get; set; } // null для первичной
+        public TubePlan Parent { get; set; } 
 
         public double UsedPercent { get; set; }
         public List<TubeServicePlan> Services { get; set; }
@@ -112,7 +111,7 @@ namespace Laboratory.Gemotest
             public string DrawTransportId;
             public bool DrawUtilize;
 
-            public int UtilizationFlag; // 0/1
+            public int UtilizationFlag; 
 
             public double Share;
         }

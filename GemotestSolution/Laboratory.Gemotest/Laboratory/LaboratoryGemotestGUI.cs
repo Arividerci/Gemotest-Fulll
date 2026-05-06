@@ -658,7 +658,6 @@ namespace Laboratory.Gemotest
                         ProductGroupGuid = null
                     };
 
-                    PrintServiceMetaToConsole(p.Id);
                     _Model.ProductsInfo.Add(p);
                 }
 
@@ -1000,7 +999,7 @@ namespace Laboratory.Gemotest
                 });
             }
 
-            bool hasResults = (details.Results != null && details.Results.Count > 0) || !string.IsNullOrWhiteSpace(details.ResultsRawXml);
+            bool hasResults = details.Results != null && details.Results.Any(x => x != null);
             bool hasAttachments = details.Attachments != null && details.Attachments.Any(x => x != null && !string.IsNullOrWhiteSpace(x.FileUrl));
 
             if (hasResults)
@@ -1289,7 +1288,6 @@ namespace Laboratory.Gemotest
                     if (!SaveOrderModelForGUIToDetails(_Order, _OrderModel))
                         return false;
 
-                    PrintServiceMetaToConsole(productNew.Id);
                     return true;
                 }
 
@@ -1421,11 +1419,7 @@ namespace Laboratory.Gemotest
                         "\r\n\r\nУдалить эти основные услуги вместе с ней?";
                 }
 
-                DialogResult answer = MessageBox.Show(
-                    text,
-                    "Удаление автодобавляемой услуги",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question);
+                DialogResult answer = MessageBox.Show(text, "Удаление автодобавляемой услуги", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
                 if (answer == DialogResult.Yes)
                 {
@@ -1447,11 +1441,7 @@ namespace Laboratory.Gemotest
                     BuildServiceListText(model, orphanAutoServiceIds) +
                     "\r\n\r\nУдалить их вместе с выбранной услугой?";
 
-                DialogResult answer = MessageBox.Show(
-                    text,
-                    "Удаление связанных автодобавляемых услуг",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Question);
+                DialogResult answer = MessageBox.Show(text, "Удаление связанных автодобавляемых услуг", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
                 if (answer == DialogResult.Yes)
                 {
@@ -2305,41 +2295,30 @@ namespace Laboratory.Gemotest
         public bool PrintStikers(Order _Order, List<SampleInfoForGUI> _SelectedSamples)
         {
             LastException = null;
-
             try
             {
-                if (_Order == null)
-                    throw new ArgumentNullException(nameof(_Order));
-
-                if (_SelectedSamples == null || _SelectedSamples.Count == 0)
-                    return true;
-
                 Encoding encoding = Encoding.UTF8;
-                if (localOptions != null)
-                {
-                    if (localOptions.LabelEncoding == Options.LabelEncoding.Code866)
-                        encoding = Encoding.GetEncoding(866);
-                    else if (localOptions.LabelEncoding == Options.LabelEncoding.Windows1251)
-                        encoding = Encoding.GetEncoding("windows-1251");
-                }
-
+                if (localOptions.LabelEncoding == LabelEncoding.UTF8)
+                    encoding = Encoding.UTF8;
+                else if (localOptions.LabelEncoding == LabelEncoding.Code866)
+                    encoding = Encoding.GetEncoding(866);
+                else if (localOptions.LabelEncoding == LabelEncoding.Windows1251)
+                    encoding = Encoding.GetEncoding("windows-1251");
                 PrinterSettings settings;
-                if (localOptions != null &&
-                    localOptions.StickerPrinterSettings != null &&
-                    localOptions.StickerPrinterSettings.IsValid)
-                {
+                if (localOptions != null && localOptions.StickerPrinterSettings != null)
                     settings = localOptions.StickerPrinterSettings;
-                }
                 else
-                {
                     settings = Print.GetDefaultPrinterSettingsAccorgingToFormat();
-                }
 
-                string labelTemplate = ResolveStickerTemplate();
-                if (string.IsNullOrWhiteSpace(labelTemplate))
-                    throw new InvalidOperationException("Не задан шаблон печати этикеток.");
+                string labelTemplate = "";
+                if (localOptions.LabelType == LabelType.ZPL)
+                    labelTemplate = LocalOptions.GetDefaultLabelTemplate(LabelType.ZPL);
+                else if (localOptions.LabelType == LabelType.EPL)
+                    labelTemplate = LocalOptions.GetDefaultLabelTemplate(LabelType.EPL);
+                else if (localOptions.LabelType == LabelType.Custom)
+                    labelTemplate = localOptions.CustomLabelTemplate;
 
-                var details = _Order.OrderDetail as GemotestOrderDetail;
+                GemotestOrderDetail details = (GemotestOrderDetail)_Order.OrderDetail;
                 var detailSamples = details != null ? details.Samples : new List<GemotestSampleDetail>();
 
                 foreach (var sample in _SelectedSamples)
@@ -2354,21 +2333,16 @@ namespace Laboratory.Gemotest
                             (!string.IsNullOrWhiteSpace(x.Barcode) && x.Barcode == sample.Barcode)
                         ));
 
-                    string line1 = BuildStickerLine1(_Order);
-                    string line2 = BuildStickerLine2(sample, fullSample);
-                    string barcode = sample.Barcode ?? "";
-                    string line4 = BuildStickerLine4(_Order, fullSample);
+                    if (fullSample == null)
+                        continue;
 
-                    string raw = string.Format(
-                        labelTemplate,
-                        EscapeLabel(line1),
-                        EscapeLabel(line2),
-                        EscapeLabel(barcode),
-                        EscapeLabel(line4));
-
-                    Print.SendStringToPrinter(settings, raw, encoding);
+                    //string.Format(LabelTemplate, "1234567890", "Тестов", "Тест Тестович", "01.01.2000", "Биоматериал", "Контейнер", "Контрагент");
+                    string contName = fullSample.ContName;
+                    if (!string.IsNullOrEmpty(contName) && contName.Length > 10)
+                        contName = contName.Substring(0, 10);
+                    string str_to_print = string.Format(labelTemplate, fullSample.Barcode, _Order.Patient.Surname, $"{_Order.Patient.Name} {_Order.Patient.Patronimic}", _Order.Date.ToString("dd.MM.yyyy"), fullSample.BiomName, contName, $"{globalOptions.Contractor_Code}.{globalOptions.Contractor}");
+                    Print.SendStringToPrinter(settings, str_to_print, encoding);
                 }
-
                 return true;
             }
             catch (Exception exc)
@@ -2376,69 +2350,6 @@ namespace Laboratory.Gemotest
                 LastException = exc;
                 return false;
             }
-        }
-        private string ResolveStickerTemplate()
-        {
-            if (localOptions == null)
-                return Options.LocalOptions.GetDefaultLabelTemplate(Options.LabelType.EPL);
-
-            if (localOptions.LabelType == Options.LabelType.ZPL)
-                return Options.LocalOptions.GetDefaultLabelTemplate(Options.LabelType.ZPL);
-
-            if (localOptions.LabelType == Options.LabelType.EPL)
-                return Options.LocalOptions.GetDefaultLabelTemplate(Options.LabelType.EPL);
-
-            if (localOptions.LabelType == Options.LabelType.Custom)
-                return localOptions.CustomLabelTemplate ?? "";
-
-            return Options.LocalOptions.GetDefaultLabelTemplate(Options.LabelType.EPL);
-        }
-
-        private string BuildStickerLine1(Order order)
-        {
-            if (order == null || order.Patient == null)
-                return "";
-
-            string fio =
-                ((order.Patient.Surname ?? "") + " " +
-                 (order.Patient.Name ?? "") + " " +
-                 (order.Patient.Patronimic ?? "")).Trim();
-
-            return fio;
-        }
-
-        private string BuildStickerLine2(SampleInfoForGUI guiSample, GemotestSampleDetail fullSample)
-        {
-            string biom = guiSample?.Biomaterial?.BiomaterialName ?? "";
-            string cont = guiSample?.Biomaterial?.ContainerName ?? "";
-
-            if (string.IsNullOrWhiteSpace(cont))
-                cont = fullSample?.ContName ?? "";
-
-            if (!string.IsNullOrWhiteSpace(fullSample?.LocalizationName))
-                return (biom + " / " + cont + " / " + fullSample.LocalizationName).Trim(' ', '/');
-
-            return (biom + " / " + cont).Trim(' ', '/');
-        }
-
-        private string BuildStickerLine4(Order order, GemotestSampleDetail fullSample)
-        {
-            string orderNum = order != null ? (order.Number ?? "") : "";
-            string date = order != null ? order.Date.ToString("dd.MM.yy") : "";
-
-            if (!string.IsNullOrWhiteSpace(fullSample?.LabCenterId))
-                return (orderNum + " " + date + " ЛЦ:" + fullSample.LabCenterId).Trim();
-
-            return (orderNum + " " + date).Trim();
-        }
-
-        private string EscapeLabel(string value)
-        {
-            return (value ?? "")
-                .Replace("\"", "'")
-                .Replace("\r", " ")
-                .Replace("\n", " ")
-                .Trim();
         }
 
         public void ShowOrderDetail(Order _Order)
@@ -2522,22 +2433,14 @@ namespace Laboratory.Gemotest
                 {
                     if (_Order.State == OrderState.NotSended)
                     {
-                        MessageBox.Show(
-                            "Сначала необходимо подготовить или отправить заказ, чтобы получить штрихкоды.",
-                            "Гемотест",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Information);
+                        MessageBox.Show( "Сначала необходимо подготовить или отправить заказ, чтобы получить штрихкоды.", "Гемотест", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return false;
                     }
 
                     var samplesForGui = BuildStickerSamplesForGui(_Order);
                     if (samplesForGui == null || samplesForGui.Count == 0)
                     {
-                        MessageBox.Show(
-                            "Для заказа нет образцов для печати наклеек.",
-                            "Гемотест",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Information);
+                        MessageBox.Show( "Для заказа нет образцов для печати наклеек.", "Гемотест", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return false;
                     }
 
@@ -2666,15 +2569,6 @@ namespace Laboratory.Gemotest
 
             if (globalOptions != null && globalOptions.PriceLists != null && globalOptions.PriceLists.Count > 0)
             {
-                /*if (globalOptions.PriceLists.Count > 1)
-                {
-                    model.PriceLists.Add(new PriceListForGUI()
-                    {
-                        Id = string.Empty,
-                        Name = "не определен"
-                    });
-                }*/
-
                 for (int i = 0; i < globalOptions.PriceLists.Count; i++)
                 {
                     var pl = globalOptions.PriceLists[i];
@@ -2783,7 +2677,7 @@ namespace Laboratory.Gemotest
             return !string.IsNullOrWhiteSpace(d.Name) ? d.Name : string.Empty;
         }
 
-        private List<SampleInfoForGUI> BuildStickerSamplesForGui(Order _Order)
+        public List<SampleInfoForGUI> BuildStickerSamplesForGui(Order _Order)
         {
             var result = new List<SampleInfoForGUI>();
 
@@ -2879,11 +2773,8 @@ namespace Laboratory.Gemotest
                 var product = model.ProductsInfo[productIndex];
                 var group = product?.BiomaterialGroups?.FirstOrDefault();
 
-                var selectedIds = new HashSet<string>(
-                    (group?.BiomaterialsSelected ?? new List<BiomaterialInfoForGUI>())
-                        .Where(x => x != null && !string.IsNullOrWhiteSpace(x.BiomaterialId))
-                        .Select(x => x.BiomaterialId),
-                    StringComparer.OrdinalIgnoreCase);
+                var selectedIds = new HashSet<string>( (group?.BiomaterialsSelected ?? new List<BiomaterialInfoForGUI>())
+                        .Where(x => x != null && !string.IsNullOrWhiteSpace(x.BiomaterialId)).Select(x => x.BiomaterialId), StringComparer.OrdinalIgnoreCase);
 
                 foreach (var biom in details.BioMaterials.Where(b =>
                              b != null &&
@@ -2996,20 +2887,6 @@ namespace Laboratory.Gemotest
             }
         }
 
-        private void PrintServiceMetaToConsole(string serviceId)
-        {
-            try
-            {
-                if (laboratory?.Dicts?.Directory != null && laboratory.Dicts.Directory.TryGetValue(serviceId, out var svc) && svc != null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Gemotest service: id={svc.id}; code={svc.code}; type={svc.type}; service_type={svc.service_type}");
-                }
-            }
-            catch
-            {
-            }
-        }
-
         private static string BuildBiomaterialDisplayName(string biomaterialName, string containerName)
         {
             biomaterialName = (biomaterialName ?? string.Empty).Trim();
@@ -3076,10 +2953,7 @@ namespace Laboratory.Gemotest
                 dicts.ServiceParameters.TryGetValue(service.id, out var parameters) &&
                 parameters != null)
             {
-                var ids = parameters
-                    .Select(p => p?.biomaterial_id)
-                    .Where(id => !string.IsNullOrEmpty(id))
-                    .Distinct(StringComparer.OrdinalIgnoreCase);
+                var ids = parameters.Select(p => p?.biomaterial_id).Where(id => !string.IsNullOrEmpty(id)).Distinct(StringComparer.OrdinalIgnoreCase);
 
                 foreach (var id in ids)
                 {
@@ -3093,17 +2967,13 @@ namespace Laboratory.Gemotest
                 }
             }
 
-            if (!string.IsNullOrEmpty(service.biomaterial_id) &&
-                dicts.Biomaterials != null &&
-                dicts.Biomaterials.TryGetValue(service.biomaterial_id, out var baseBiom) &&
-                baseBiom != null &&
-                !result.Any(r => string.Equals(r.id, baseBiom.id, StringComparison.OrdinalIgnoreCase)))
+            if (!string.IsNullOrEmpty(service.biomaterial_id) && dicts.Biomaterials != null && dicts.Biomaterials.TryGetValue(service.biomaterial_id, out var baseBiom) 
+                && baseBiom != null && !result.Any(r => string.Equals(r.id, baseBiom.id, StringComparison.OrdinalIgnoreCase)))
             {
                 result.Add(baseBiom);
             }
 
-            if (string.Equals(service.biomaterial_id, "Drugoe", StringComparison.OrdinalIgnoreCase) &&
-                !string.IsNullOrEmpty(service.other_biomaterial) &&
+            if (string.Equals(service.biomaterial_id, "Drugoe", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(service.other_biomaterial) &&
                 !result.Any(r => string.Equals(r.id, "Drugoe", StringComparison.OrdinalIgnoreCase)))
             {
                 result.Add(new DictionaryBiomaterials
@@ -3127,17 +2997,11 @@ namespace Laboratory.Gemotest
 
             if (complexItems.Count > 0)
             {
-                var mcBiomIds = complexItems
-                    .Select(m => m?.biomaterial_id)
-                    .Where(id => !string.IsNullOrEmpty(id))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
+                var mcBiomIds = complexItems.Select(m => m?.biomaterial_id).Where(id => !string.IsNullOrEmpty(id)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
                 foreach (var id in mcBiomIds)
                 {
-                    if (dicts.Biomaterials != null &&
-                        dicts.Biomaterials.TryGetValue(id, out var biom) &&
-                        biom != null &&
+                    if (dicts.Biomaterials != null && dicts.Biomaterials.TryGetValue(id, out var biom) && biom != null &&
                         !result.Any(r => string.Equals(r.id, biom.id, StringComparison.OrdinalIgnoreCase)))
                     {
                         result.Add(biom);
@@ -3147,17 +3011,11 @@ namespace Laboratory.Gemotest
                 if (result.Count > 0)
                     return result;
 
-                var mainServiceIds = complexItems
-                    .Select(m => m?.main_service)
-                    .Where(id => !string.IsNullOrEmpty(id))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
+                var mainServiceIds = complexItems.Select(m => m?.main_service).Where(id => !string.IsNullOrEmpty(id)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
                 foreach (var mainServiceId in mainServiceIds)
                 {
-                    if (dicts.Directory != null &&
-                        dicts.Directory.TryGetValue(mainServiceId, out var mainService) &&
-                        mainService != null)
+                    if (dicts.Directory != null && dicts.Directory.TryGetValue(mainServiceId, out var mainService) && mainService != null)
                     {
                         AddBiomaterialsFromBaseService(mainService, result);
                     }
@@ -3179,23 +3037,15 @@ namespace Laboratory.Gemotest
             if (string.IsNullOrEmpty(serviceId) || laboratory?.Dicts == null)
                 return false;
 
-            if (laboratory.Dicts.SamplesServices == null ||
-                !laboratory.Dicts.SamplesServices.TryGetValue(serviceId, out var rows) ||
-                rows == null || rows.Count == 0)
+            if (laboratory.Dicts.SamplesServices == null || !laboratory.Dicts.SamplesServices.TryGetValue(serviceId, out var rows) || rows == null || rows.Count == 0)
                 return false;
 
-            var row = rows.FirstOrDefault(r =>
-                r != null &&
-                string.Equals(r.service_id, serviceId, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(r.biomaterial_id ?? string.Empty, biomaterialId ?? string.Empty, StringComparison.OrdinalIgnoreCase) &&
-                r.sample_id > 0);
+            var row = rows.FirstOrDefault(r => r != null && string.Equals(r.service_id, serviceId, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(r.biomaterial_id ?? string.Empty, biomaterialId ?? string.Empty, StringComparison.OrdinalIgnoreCase) && r.sample_id > 0);
 
             if (row == null)
             {
-                row = rows.FirstOrDefault(r =>
-                    r != null &&
-                    string.Equals(r.service_id, serviceId, StringComparison.OrdinalIgnoreCase) &&
-                    r.sample_id > 0);
+                row = rows.FirstOrDefault(r => r != null && string.Equals(r.service_id, serviceId, StringComparison.OrdinalIgnoreCase) && r.sample_id > 0);
             }
 
             if (row == null || laboratory.Dicts.Samples == null)
@@ -3217,32 +3067,21 @@ namespace Laboratory.Gemotest
             if (string.IsNullOrEmpty(serviceId) || laboratory?.Dicts == null)
                 return false;
 
-            if (laboratory.Dicts.ServiceParameters != null &&
-                laboratory.Dicts.ServiceParameters.TryGetValue(serviceId, out var paramsList) &&
+            if (laboratory.Dicts.ServiceParameters != null && laboratory.Dicts.ServiceParameters.TryGetValue(serviceId, out var paramsList) &&
                 paramsList != null && paramsList.Count > 0)
             {
-                var param = paramsList.FirstOrDefault(p =>
-                    p != null &&
-                    string.Equals(p.service_id, serviceId, StringComparison.OrdinalIgnoreCase) &&
+                var param = paramsList.FirstOrDefault(p => p != null && string.Equals(p.service_id, serviceId, StringComparison.OrdinalIgnoreCase) &&
                     string.Equals(p.biomaterial_id ?? string.Empty, biomaterialId ?? string.Empty, StringComparison.OrdinalIgnoreCase));
 
-                if (param != null &&
-                    !string.IsNullOrEmpty(param.transport_id) &&
-                    laboratory.Dicts.Transport != null &&
-                    laboratory.Dicts.Transport.TryGetValue(param.transport_id, out transport) &&
-                    transport != null)
+                if (param != null && !string.IsNullOrEmpty(param.transport_id) && laboratory.Dicts.Transport != null &&
+                    laboratory.Dicts.Transport.TryGetValue(param.transport_id, out transport) && transport != null)
                 {
                     return true;
                 }
             }
 
-            if (laboratory.Dicts.Directory != null &&
-                laboratory.Dicts.Directory.TryGetValue(serviceId, out var svc) &&
-                svc != null &&
-                !string.IsNullOrEmpty(svc.transport_id) &&
-                laboratory.Dicts.Transport != null &&
-                laboratory.Dicts.Transport.TryGetValue(svc.transport_id, out transport) &&
-                transport != null)
+            if (laboratory.Dicts.Directory != null && laboratory.Dicts.Directory.TryGetValue(serviceId, out var svc) && svc != null && !string.IsNullOrEmpty(svc.transport_id) &&
+                laboratory.Dicts.Transport != null && laboratory.Dicts.Transport.TryGetValue(svc.transport_id, out transport) && transport != null)
             {
                 return true;
             }
@@ -3264,25 +3103,15 @@ namespace Laboratory.Gemotest
 
             if (complexItems.Count > 0)
             {
-                var mcItem = complexItems.FirstOrDefault(m =>
-                    m != null &&
-                    !string.IsNullOrEmpty(m.transport_id) &&
-                    (string.Equals(m.biomaterial_id ?? string.Empty, biomaterialId ?? string.Empty, StringComparison.OrdinalIgnoreCase)
-                     || string.IsNullOrEmpty(m.biomaterial_id)));
+                var mcItem = complexItems.FirstOrDefault(m => m != null && !string.IsNullOrEmpty(m.transport_id) &&
+                    (string.Equals(m.biomaterial_id ?? string.Empty, biomaterialId ?? string.Empty, StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(m.biomaterial_id)));
 
-                if (mcItem != null &&
-                    laboratory.Dicts.Transport != null &&
-                    laboratory.Dicts.Transport.TryGetValue(mcItem.transport_id, out transport) &&
-                    transport != null)
+                if (mcItem != null && laboratory.Dicts.Transport != null && laboratory.Dicts.Transport.TryGetValue(mcItem.transport_id, out transport) && transport != null)
                 {
                     return transport;
                 }
 
-                var mainServiceIds = complexItems
-                    .Select(m => m?.main_service)
-                    .Where(x => !string.IsNullOrEmpty(x))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
+                var mainServiceIds = complexItems.Select(m => m?.main_service).Where(x => !string.IsNullOrEmpty(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
                 foreach (var mainServiceId in mainServiceIds)
                 {
@@ -3376,9 +3205,7 @@ namespace Laboratory.Gemotest
 
             var productDetail = details.Products[productIndex];
 
-            var linkedBioms = details.BioMaterials
-                .Where(b => b.Mandatory.Contains(productIndex) || b.Chosen.Contains(productIndex) || b.Another.Contains(productIndex))
-                .ToList();
+            var linkedBioms = details.BioMaterials.Where(b => b.Mandatory.Contains(productIndex) || b.Chosen.Contains(productIndex) || b.Another.Contains(productIndex)).ToList();
 
             foreach (var biom in linkedBioms)
             {
@@ -3409,8 +3236,7 @@ namespace Laboratory.Gemotest
                     continue;
 
                 bool selected =
-                    biom.Chosen.Contains(productIndex) ||
-                    biom.Mandatory.Contains(productIndex);
+                    biom.Chosen.Contains(productIndex) || biom.Mandatory.Contains(productIndex);
 
                 if (!selected)
                     continue;
@@ -3477,13 +3303,8 @@ namespace Laboratory.Gemotest
             if (product?.BiomaterialGroups == null)
                 return new List<string>();
 
-            return product.BiomaterialGroups
-                .Where(g => g?.BiomaterialsSelected != null)
-                .SelectMany(g => g.BiomaterialsSelected)
-                .Where(x => x != null && !string.IsNullOrWhiteSpace(x.BiomaterialId))
-                .Select(x => x.BiomaterialId)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            return product.BiomaterialGroups.Where(g => g?.BiomaterialsSelected != null).SelectMany(g => g.BiomaterialsSelected).Where(x => x != null && !string.IsNullOrWhiteSpace(x.BiomaterialId))
+                .Select(x => x.BiomaterialId).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         }
 
         private void ApplySelectedBiomaterialsToAddedProduct(Order order, OrderModelForGUI model, int productIndex, List<string> selectedBioIds)
@@ -3515,10 +3336,7 @@ namespace Laboratory.Gemotest
             do
             {
                 added = false;
-                var existingIds = new HashSet<string>(
-                 details.Products
-                     .Where(p => p != null && !string.IsNullOrWhiteSpace(p.ProductId))
-                     .Select(p => p.ProductId),
+                var existingIds = new HashSet<string>(details.Products.Where(p => p != null && !string.IsNullOrWhiteSpace(p.ProductId)).Select(p => p.ProductId),
                  StringComparer.OrdinalIgnoreCase);
                 var toInsert = new List<string>();
 
@@ -3574,7 +3392,6 @@ namespace Laboratory.Gemotest
             while (added);
         }
 
-        //----
         private GemotestBlankReportDataSetV2 FillDataSetForBlankReport(Order _Order)
         {
             var details = _Order.OrderDetail as GemotestOrderDetail;
@@ -3957,8 +3774,7 @@ namespace Laboratory.Gemotest
             if (!string.IsNullOrWhiteSpace(sample.Barcode))
                 line1Parts.Add("ШК: " + sample.Barcode);
 
-            if (!string.IsNullOrWhiteSpace(sample.SampleIdentifier) &&
-                !string.Equals(sample.SampleIdentifier, sample.Barcode, StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(sample.SampleIdentifier) && !string.Equals(sample.SampleIdentifier, sample.Barcode, StringComparison.OrdinalIgnoreCase))
             {
                 line1Parts.Add("Идентификатор: " + sample.SampleIdentifier);
             }
@@ -4002,14 +3818,12 @@ namespace Laboratory.Gemotest
             if (sample.IsUtilize || sample.HasUtilizationService)
                 addLine("Особенность: есть признак утилизации");
 
-            if (sample.HasRefusedService &&
-                !string.Equals(sample.SampleRole ?? "", "родительская проба для аликвоты", StringComparison.OrdinalIgnoreCase))
+            if (sample.HasRefusedService && !string.Equals(sample.SampleRole ?? "", "родительская проба для аликвоты", StringComparison.OrdinalIgnoreCase))
             {
                 addLine("Особенность: часть услуги не выполняется на этой пробе напрямую");
             }
 
-            if (!string.IsNullOrWhiteSpace(sample.SampleDescription) &&
-                !IsTechnicalSampleDescription(sample.SampleDescription))
+            if (!string.IsNullOrWhiteSpace(sample.SampleDescription) && !IsTechnicalSampleDescription(sample.SampleDescription))
             {
                 addLine("Комментарий ЛИС: " + sample.SampleDescription);
             }
@@ -4055,11 +3869,7 @@ namespace Laboratory.Gemotest
             if (order == null || order.Patient == null)
                 return string.Empty;
 
-            string fio = string.Format(
-                "{0} {1} {2}",
-                order.Patient.Surname ?? string.Empty,
-                order.Patient.Name ?? string.Empty,
-                order.Patient.Patronimic ?? string.Empty).Trim();
+            string fio = string.Format( "{0} {1} {2}", order.Patient.Surname ?? string.Empty, order.Patient.Name ?? string.Empty, order.Patient.Patronimic ?? string.Empty).Trim();
 
             string sex = string.Empty;
             if (order.Patient.Sex == Sex.Male)

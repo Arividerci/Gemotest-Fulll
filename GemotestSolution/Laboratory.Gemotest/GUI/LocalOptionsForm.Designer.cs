@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LocalOptionsForm));
             this.pdfPrinterLabel = new System.Windows.Forms.Label();
             this.printer1Label = new System.Windows.Forms.Label();
             this.btPdfPrinter = new System.Windows.Forms.Button();
@@ -37,10 +38,7 @@
             this.printer2Label = new System.Windows.Forms.Label();
             this.btSave = new System.Windows.Forms.Button();
             this.btCancel = new System.Windows.Forms.Button();
-            this.chbPrintatOnce = new System.Windows.Forms.CheckBox();
             this.receiverLabel = new System.Windows.Forms.Label();
-            this.btClearPdfPrinter = new System.Windows.Forms.Button();
-            this.btClearStickerPrinter = new System.Windows.Forms.Button();
             this.rdbtnLabelEncoding2 = new System.Windows.Forms.RadioButton();
             this.rdbtnLabelEncoding1 = new System.Windows.Forms.RadioButton();
             this.label2 = new System.Windows.Forms.Label();
@@ -54,6 +52,8 @@
             this.pEncoding = new System.Windows.Forms.Panel();
             this.chbPrintStinkersAtOnce = new System.Windows.Forms.CheckBox();
             this.chbPrintBlankAtOnce = new System.Windows.Forms.CheckBox();
+            this.btClearStickerPrinter = new System.Windows.Forms.Button();
+            this.btClearPdfPrinter = new System.Windows.Forms.Button();
             this.gbTemplate.SuspendLayout();
             this.panel4.SuspendLayout();
             this.pEncoding.SuspendLayout();
@@ -64,7 +64,7 @@
             this.pdfPrinterLabel.AutoSize = true;
             this.pdfPrinterLabel.Location = new System.Drawing.Point(12, 18);
             this.pdfPrinterLabel.Name = "pdfPrinterLabel";
-            this.pdfPrinterLabel.Size = new System.Drawing.Size(325, 16);
+            this.pdfPrinterLabel.Size = new System.Drawing.Size(252, 13);
             this.pdfPrinterLabel.TabIndex = 0;
             this.pdfPrinterLabel.Text = "Принтер для печати сопроводительных бланков";
             this.pdfPrinterLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -74,7 +74,7 @@
             this.printer1Label.AutoSize = true;
             this.printer1Label.Location = new System.Drawing.Point(298, 18);
             this.printer1Label.Name = "printer1Label";
-            this.printer1Label.Size = new System.Drawing.Size(164, 16);
+            this.printer1Label.Size = new System.Drawing.Size(127, 13);
             this.printer1Label.TabIndex = 1;
             this.printer1Label.Text = "Принтер по умолчанию ";
             this.printer1Label.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -84,7 +84,7 @@
             this.btPdfPrinter.AutoSize = true;
             this.btPdfPrinter.Location = new System.Drawing.Point(489, 13);
             this.btPdfPrinter.Name = "btPdfPrinter";
-            this.btPdfPrinter.Size = new System.Drawing.Size(26, 26);
+            this.btPdfPrinter.Size = new System.Drawing.Size(26, 24);
             this.btPdfPrinter.TabIndex = 0;
             this.btPdfPrinter.Text = "...";
             this.btPdfPrinter.UseVisualStyleBackColor = true;
@@ -95,7 +95,7 @@
             this.receptacleLabel.AutoSize = true;
             this.receptacleLabel.Location = new System.Drawing.Point(12, 46);
             this.receptacleLabel.Name = "receptacleLabel";
-            this.receptacleLabel.Size = new System.Drawing.Size(46, 16);
+            this.receptacleLabel.Size = new System.Drawing.Size(38, 13);
             this.receptacleLabel.TabIndex = 3;
             this.receptacleLabel.Text = "Лоток";
             this.receptacleLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -105,7 +105,7 @@
             this.stickerLabel.AutoSize = true;
             this.stickerLabel.Location = new System.Drawing.Point(12, 73);
             this.stickerLabel.Name = "stickerLabel";
-            this.stickerLabel.Size = new System.Drawing.Size(197, 16);
+            this.stickerLabel.Size = new System.Drawing.Size(153, 13);
             this.stickerLabel.TabIndex = 5;
             this.stickerLabel.Text = "Принтер для печати наклеек";
             this.stickerLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -115,7 +115,7 @@
             this.btStickerPrinter.AutoSize = true;
             this.btStickerPrinter.Location = new System.Drawing.Point(489, 68);
             this.btStickerPrinter.Name = "btStickerPrinter";
-            this.btStickerPrinter.Size = new System.Drawing.Size(26, 26);
+            this.btStickerPrinter.Size = new System.Drawing.Size(26, 24);
             this.btStickerPrinter.TabIndex = 2;
             this.btStickerPrinter.Text = "...";
             this.btStickerPrinter.UseVisualStyleBackColor = true;
@@ -126,7 +126,7 @@
             this.printer2Label.AutoSize = true;
             this.printer2Label.Location = new System.Drawing.Point(298, 73);
             this.printer2Label.Name = "printer2Label";
-            this.printer2Label.Size = new System.Drawing.Size(161, 16);
+            this.printer2Label.Size = new System.Drawing.Size(124, 13);
             this.printer2Label.TabIndex = 7;
             this.printer2Label.Text = "Принтер по умолчанию";
             this.printer2Label.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -136,7 +136,7 @@
             this.btSave.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.btSave.AutoSize = true;
             this.btSave.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btSave.Location = new System.Drawing.Point(173, 408);
+            this.btSave.Location = new System.Drawing.Point(133, 408);
             this.btSave.Name = "btSave";
             this.btSave.Size = new System.Drawing.Size(86, 26);
             this.btSave.TabIndex = 5;
@@ -148,68 +148,29 @@
             // 
             this.btCancel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.btCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btCancel.Location = new System.Drawing.Point(397, 409);
+            this.btCancel.Location = new System.Drawing.Point(357, 409);
             this.btCancel.Name = "btCancel";
             this.btCancel.Size = new System.Drawing.Size(70, 25);
             this.btCancel.TabIndex = 6;
             this.btCancel.Text = "Отмена";
             this.btCancel.UseVisualStyleBackColor = true;
             // 
-            // chbPrintatOnce
-            // 
-            this.chbPrintatOnce.AutoSize = true;
-            this.chbPrintatOnce.Location = new System.Drawing.Point(12, 100);
-            this.chbPrintatOnce.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
-            this.chbPrintatOnce.Name = "chbPrintatOnce";
-            this.chbPrintatOnce.Size = new System.Drawing.Size(627, 20);
-            this.chbPrintatOnce.TabIndex = 4;
-            this.chbPrintatOnce.Text = "Печатать сопроводительный бланк и наклейки сразу после подготовки заказа к отправ" +
-    "ке";
-            this.chbPrintatOnce.UseVisualStyleBackColor = true;
-            this.chbPrintatOnce.CheckedChanged += new System.EventHandler(this.chbPrintatOnce_CheckedChanged);
-            // 
             // receiverLabel
             // 
             this.receiverLabel.AutoSize = true;
             this.receiverLabel.Location = new System.Drawing.Point(298, 46);
             this.receiverLabel.Name = "receiverLabel";
-            this.receiverLabel.Size = new System.Drawing.Size(11, 16);
+            this.receiverLabel.Size = new System.Drawing.Size(10, 13);
             this.receiverLabel.TabIndex = 14;
             this.receiverLabel.Text = "-";
             this.receiverLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // btClearPdfPrinter
-            // 
-            this.btClearPdfPrinter.AutoSize = true;
-            this.btClearPdfPrinter.Font = new System.Drawing.Font("Simple Bold Jut Out", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(178)));
-            this.btClearPdfPrinter.ForeColor = System.Drawing.Color.Red;
-            this.btClearPdfPrinter.Location = new System.Drawing.Point(519, 13);
-            this.btClearPdfPrinter.Name = "btClearPdfPrinter";
-            this.btClearPdfPrinter.Size = new System.Drawing.Size(25, 29);
-            this.btClearPdfPrinter.TabIndex = 1;
-            this.btClearPdfPrinter.Text = "х";
-            this.btClearPdfPrinter.UseVisualStyleBackColor = true;
-            this.btClearPdfPrinter.Click += new System.EventHandler(this.btClearPdfPrinter_Click);
-            // 
-            // btClearStickerPrinter
-            // 
-            this.btClearStickerPrinter.AutoSize = true;
-            this.btClearStickerPrinter.Font = new System.Drawing.Font("Simple Bold Jut Out", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(178)));
-            this.btClearStickerPrinter.ForeColor = System.Drawing.Color.Red;
-            this.btClearStickerPrinter.Location = new System.Drawing.Point(519, 68);
-            this.btClearStickerPrinter.Name = "btClearStickerPrinter";
-            this.btClearStickerPrinter.Size = new System.Drawing.Size(25, 29);
-            this.btClearStickerPrinter.TabIndex = 3;
-            this.btClearStickerPrinter.Text = "x";
-            this.btClearStickerPrinter.UseVisualStyleBackColor = true;
-            this.btClearStickerPrinter.Click += new System.EventHandler(this.btClearStickerPrinter_Click);
             // 
             // rdbtnLabelEncoding2
             // 
             this.rdbtnLabelEncoding2.AutoSize = true;
             this.rdbtnLabelEncoding2.Location = new System.Drawing.Point(170, 9);
             this.rdbtnLabelEncoding2.Name = "rdbtnLabelEncoding2";
-            this.rdbtnLabelEncoding2.Size = new System.Drawing.Size(85, 20);
+            this.rdbtnLabelEncoding2.Size = new System.Drawing.Size(71, 17);
             this.rdbtnLabelEncoding2.TabIndex = 1;
             this.rdbtnLabelEncoding2.TabStop = true;
             this.rdbtnLabelEncoding2.Text = "Code 866";
@@ -220,7 +181,7 @@
             this.rdbtnLabelEncoding1.AutoSize = true;
             this.rdbtnLabelEncoding1.Location = new System.Drawing.Point(90, 9);
             this.rdbtnLabelEncoding1.Name = "rdbtnLabelEncoding1";
-            this.rdbtnLabelEncoding1.Size = new System.Drawing.Size(62, 20);
+            this.rdbtnLabelEncoding1.Size = new System.Drawing.Size(52, 17);
             this.rdbtnLabelEncoding1.TabIndex = 0;
             this.rdbtnLabelEncoding1.TabStop = true;
             this.rdbtnLabelEncoding1.Text = "UTF8";
@@ -231,7 +192,7 @@
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(6, 11);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(78, 16);
+            this.label2.Size = new System.Drawing.Size(62, 13);
             this.label2.TabIndex = 0;
             this.label2.Text = "Кодировка";
             // 
@@ -239,9 +200,9 @@
             // 
             this.gbTemplate.Controls.Add(this.panel4);
             this.gbTemplate.Controls.Add(this.pEncoding);
-            this.gbTemplate.Location = new System.Drawing.Point(0, 169);
+            this.gbTemplate.Location = new System.Drawing.Point(6, 148);
             this.gbTemplate.Name = "gbTemplate";
-            this.gbTemplate.Size = new System.Drawing.Size(544, 233);
+            this.gbTemplate.Size = new System.Drawing.Size(544, 254);
             this.gbTemplate.TabIndex = 15;
             this.gbTemplate.TabStop = false;
             this.gbTemplate.Text = "Шаблон этикетки";
@@ -254,15 +215,15 @@
             this.panel4.Controls.Add(this.bSetDefault_ZPL);
             this.panel4.Controls.Add(this.txtCustomLabel);
             this.panel4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel4.Location = new System.Drawing.Point(3, 53);
+            this.panel4.Location = new System.Drawing.Point(3, 51);
             this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(538, 177);
+            this.panel4.Size = new System.Drawing.Size(538, 200);
             this.panel4.TabIndex = 1;
             // 
             // bTestPrint
             // 
             this.bTestPrint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.bTestPrint.Location = new System.Drawing.Point(6, 134);
+            this.bTestPrint.Location = new System.Drawing.Point(6, 157);
             this.bTestPrint.Name = "bTestPrint";
             this.bTestPrint.Size = new System.Drawing.Size(112, 36);
             this.bTestPrint.TabIndex = 17;
@@ -309,7 +270,7 @@
             this.txtCustomLabel.Multiline = true;
             this.txtCustomLabel.Name = "txtCustomLabel";
             this.txtCustomLabel.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtCustomLabel.Size = new System.Drawing.Size(405, 164);
+            this.txtCustomLabel.Size = new System.Drawing.Size(405, 187);
             this.txtCustomLabel.TabIndex = 16;
             // 
             // pEncoding
@@ -318,7 +279,7 @@
             this.pEncoding.Controls.Add(this.label2);
             this.pEncoding.Controls.Add(this.rdbtnLabelEncoding1);
             this.pEncoding.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pEncoding.Location = new System.Drawing.Point(3, 18);
+            this.pEncoding.Location = new System.Drawing.Point(3, 16);
             this.pEncoding.Name = "pEncoding";
             this.pEncoding.Size = new System.Drawing.Size(538, 35);
             this.pEncoding.TabIndex = 0;
@@ -326,46 +287,67 @@
             // chbPrintStinkersAtOnce
             // 
             this.chbPrintStinkersAtOnce.AutoSize = true;
-            this.chbPrintStinkersAtOnce.Location = new System.Drawing.Point(12, 123);
+            this.chbPrintStinkersAtOnce.Location = new System.Drawing.Point(12, 102);
             this.chbPrintStinkersAtOnce.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
             this.chbPrintStinkersAtOnce.Name = "chbPrintStinkersAtOnce";
-            this.chbPrintStinkersAtOnce.Size = new System.Drawing.Size(445, 20);
+            this.chbPrintStinkersAtOnce.Size = new System.Drawing.Size(278, 17);
             this.chbPrintStinkersAtOnce.TabIndex = 4;
-            this.chbPrintStinkersAtOnce.Text = "Печатать наклейки сразу после подготовки заказа к отправке";
+            this.chbPrintStinkersAtOnce.Text = "Печатать наклейки сразу после отправки заказа";
             this.chbPrintStinkersAtOnce.UseVisualStyleBackColor = true;
             // 
             // chbPrintBlankAtOnce
             // 
             this.chbPrintBlankAtOnce.AutoSize = true;
-            this.chbPrintBlankAtOnce.Location = new System.Drawing.Point(12, 146);
+            this.chbPrintBlankAtOnce.Location = new System.Drawing.Point(12, 125);
             this.chbPrintBlankAtOnce.Margin = new System.Windows.Forms.Padding(7, 3, 3, 3);
             this.chbPrintBlankAtOnce.Name = "chbPrintBlankAtOnce";
-            this.chbPrintBlankAtOnce.Size = new System.Drawing.Size(551, 20);
+            this.chbPrintBlankAtOnce.Size = new System.Drawing.Size(360, 17);
             this.chbPrintBlankAtOnce.TabIndex = 4;
-            this.chbPrintBlankAtOnce.Text = "Печатать сопроводительный бланк сразу после подготовки заказа к отправке";
+            this.chbPrintBlankAtOnce.Text = "Печатать сопроводительный бланк сразу после отправки заказа";
             this.chbPrintBlankAtOnce.UseVisualStyleBackColor = true;
+            // 
+            // btClearStickerPrinter
+            // 
+            this.btClearStickerPrinter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btClearStickerPrinter.Image = ((System.Drawing.Image)(resources.GetObject("btClearStickerPrinter.Image")));
+            this.btClearStickerPrinter.Location = new System.Drawing.Point(521, 68);
+            this.btClearStickerPrinter.Name = "btClearStickerPrinter";
+            this.btClearStickerPrinter.Size = new System.Drawing.Size(29, 24);
+            this.btClearStickerPrinter.TabIndex = 18;
+            this.btClearStickerPrinter.UseVisualStyleBackColor = true;
+            this.btClearStickerPrinter.Click += new System.EventHandler(this.btClearStickerPrinter_Click);
+            // 
+            // btClearPdfPrinter
+            // 
+            this.btClearPdfPrinter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btClearPdfPrinter.Image = ((System.Drawing.Image)(resources.GetObject("btClearPdfPrinter.Image")));
+            this.btClearPdfPrinter.Location = new System.Drawing.Point(521, 13);
+            this.btClearPdfPrinter.Name = "btClearPdfPrinter";
+            this.btClearPdfPrinter.Size = new System.Drawing.Size(29, 24);
+            this.btClearPdfPrinter.TabIndex = 17;
+            this.btClearPdfPrinter.UseVisualStyleBackColor = true;
+            this.btClearPdfPrinter.Click += new System.EventHandler(this.btClearPdfPrinter_Click);
             // 
             // LocalOptionsForm
             // 
             this.AcceptButton = this.btSave;
             this.CancelButton = this.btCancel;
-            this.ClientSize = new System.Drawing.Size(639, 446);
+            this.ClientSize = new System.Drawing.Size(558, 446);
+            this.Controls.Add(this.btClearStickerPrinter);
+            this.Controls.Add(this.btClearPdfPrinter);
             this.Controls.Add(this.btCancel);
             this.Controls.Add(this.btSave);
             this.Controls.Add(this.gbTemplate);
             this.Controls.Add(this.btStickerPrinter);
             this.Controls.Add(this.chbPrintBlankAtOnce);
             this.Controls.Add(this.chbPrintStinkersAtOnce);
-            this.Controls.Add(this.chbPrintatOnce);
             this.Controls.Add(this.stickerLabel);
-            this.Controls.Add(this.btClearStickerPrinter);
             this.Controls.Add(this.printer2Label);
             this.Controls.Add(this.receptacleLabel);
             this.Controls.Add(this.btPdfPrinter);
             this.Controls.Add(this.printer1Label);
             this.Controls.Add(this.pdfPrinterLabel);
             this.Controls.Add(this.receiverLabel);
-            this.Controls.Add(this.btClearPdfPrinter);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -394,10 +376,7 @@
         private System.Windows.Forms.Label printer2Label;
         private System.Windows.Forms.Button btSave;
         private System.Windows.Forms.Button btCancel;
-        private System.Windows.Forms.CheckBox chbPrintatOnce;
         private System.Windows.Forms.Label receiverLabel;
-        private System.Windows.Forms.Button btClearPdfPrinter;
-        private System.Windows.Forms.Button btClearStickerPrinter;
         private System.Windows.Forms.RadioButton rdbtnLabelEncoding2;
         private System.Windows.Forms.RadioButton rdbtnLabelEncoding1;
         private System.Windows.Forms.Label label2;
@@ -411,5 +390,7 @@
         private System.Windows.Forms.Panel pEncoding;
         private System.Windows.Forms.CheckBox chbPrintStinkersAtOnce;
         private System.Windows.Forms.CheckBox chbPrintBlankAtOnce;
+        private System.Windows.Forms.Button btClearStickerPrinter;
+        private System.Windows.Forms.Button btClearPdfPrinter;
     }
 }

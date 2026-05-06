@@ -1670,6 +1670,9 @@ namespace Laboratory.Gemotest.GemotestRequests
         private string SendSoapRequest(string method, string xmlBody)
         {
             string soapAction = "\"urn:OdoctorControllerwsdl#" + method + "\"";
+
+            SaveTextToLog("CreateOrder_" + MakeSafeFileNamePart(method) + "_request_" + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture) + ".xml", xmlBody);
+
             var request = (HttpWebRequest)WebRequest.Create(_url);
             request.Method = "POST";
             request.ContentType = "text/xml; charset=utf-8";
@@ -1695,6 +1698,9 @@ namespace Laboratory.Gemotest.GemotestRequests
                 using (var reader = new StreamReader(respStream, Encoding.UTF8))
                 {
                     string responseText = reader.ReadToEnd();
+
+                    SaveTextToLog("CreateOrder_" + MakeSafeFileNamePart(method) + "_response_" + DateTime.Now.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture) + ".xml", responseText);
+
                     return responseText;
                 }
             }
@@ -1708,6 +1714,14 @@ namespace Laboratory.Gemotest.GemotestRequests
                     {
                         responseText = reader.ReadToEnd();
                     }
+                }
+
+                if (!string.IsNullOrWhiteSpace(responseText))
+                {
+                    SaveTextToLog(
+                        "CreateOrder_" + MakeSafeFileNamePart(method) + "_error_" +
+                        DateTime.Now.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture) + ".xml",
+                        responseText);
                 }
 
                 string shortError = ExtractShortSoapError(responseText);
