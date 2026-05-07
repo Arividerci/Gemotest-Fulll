@@ -249,7 +249,7 @@ namespace Laboratory.Gemotest
         {
             var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            if (model == null || model.ProductsInfo == null || laboratory.Dicts.ServiceAutoInsert == null)
+            if (model == null || model.ProductsInfo == null)
                 return result;
 
             foreach (var productInfo in model.ProductsInfo)
@@ -257,22 +257,18 @@ namespace Laboratory.Gemotest
                 if (productInfo == null || string.IsNullOrWhiteSpace(productInfo.Id))
                     continue;
 
-                List<DictionaryServiceAutoInsert> rows;
-
-                if (!laboratory.Dicts.ServiceAutoInsert.TryGetValue(productInfo.Id, out rows) || rows == null)
-                    continue;
-
-                foreach (var row in rows)
+                foreach (DictionaryService service in GetBiomaterialCollectAutoServicesForProduct(productInfo.Id))
                 {
-                    if (row == null || string.IsNullOrWhiteSpace(row.auto_service_id))
+                    if (service == null || string.IsNullOrWhiteSpace(service.id))
                         continue;
 
-                    result.Add(row.auto_service_id.Trim());
+                    result.Add(service.id.Trim());
                 }
             }
 
             return result;
         }
+
         private static bool IsInternalGemotestField(string fieldId)
         {
             return string.Equals(fieldId, GemotestOrderNumFieldId, StringComparison.OrdinalIgnoreCase);
@@ -577,7 +573,7 @@ namespace Laboratory.Gemotest
             {
                 _Model.Errors.Clear();
 
-               
+
 
                 if (_Model.Fields != null)
                 {
@@ -630,6 +626,7 @@ namespace Laboratory.Gemotest
             _Model.PriceLists.Clear();
             _Model.PriceListSelected = null;
             _Model.ProductsInfo.Clear();
+            _Model.ServicesInfo.Clear();
             _Model.Samples.Clear();
 
             try
@@ -658,7 +655,19 @@ namespace Laboratory.Gemotest
                         ProductGroupGuid = null
                     };
 
-                    _Model.ProductsInfo.Add(p);
+                    if (IsBiomaterialCollectAutoService(product.ProductId))
+                    {
+                        _Model.ServicesInfo.Add(p);
+                    }
+                    else
+                    {
+                        _Model.ProductsInfo.Add(p);
+                    }
+                }
+
+                if (_Order.State == OrderState.NotSended && !IsCollectBiomaterialByGemotestEnabled())
+                {
+                    RemoveProductsWithoutRequiredCollectServicesWhenDisabled(details, _Model);
                 }
 
                 if (_Order.State == OrderState.NotSended)
@@ -698,6 +707,63 @@ namespace Laboratory.Gemotest
                 LastException = ex;
                 return false;
             }
+        }
+
+        private void RemoveProductsWithoutRequiredCollectServicesWhenDisabled(
+    GemotestOrderDetail details,
+    OrderModelForGUI model)
+        {
+            if (details == null || model == null || model.ProductsInfo == null)
+                return;
+
+            if (IsCollectBiomaterialByGemotestEnabled())
+                return;
+
+            var deleteParentServiceIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (ProductInfoForGUI product in model.ProductsInfo)
+            {
+                if (product == null)
+                    continue;
+
+                string productServiceId = NormalizeServiceId(product.Id);
+
+                if (string.IsNullOrWhiteSpace(productServiceId))
+                    continue;
+
+                if (!ProductRequiresGemotestCollectService(productServiceId))
+                    continue;
+
+                if (ProductHasAllRequiredCollectServices(model, productServiceId))
+                    continue;
+
+                deleteParentServiceIds.Add(productServiceId);
+            }
+
+            if (deleteParentServiceIds.Count == 0)
+                return;
+
+            string deletedText = BuildServiceListText(model, deleteParentServiceIds);
+
+            model.ProductsInfo.RemoveAll(x =>
+                x != null &&
+                deleteParentServiceIds.Contains(NormalizeServiceId(x.Id)));
+
+            if (details.Products != null)
+            {
+                details.Products.RemoveAll(x =>
+                    x != null &&
+                    deleteParentServiceIds.Contains(NormalizeServiceId(x.ProductId)));
+            }
+
+            MessageBox.Show(
+                "Из заказа удалены услуги, для которых обязательна услуга забора биоматериала лабораторией Гемотест:\r\n\r\n" +
+                deletedText +
+                "\r\n\r\nВ системных настройках выключена опция \"забор биоматериалов осуществляет лаборатория Гемотест\", " +
+                "поэтому такие услуги нельзя оставить в заказе без обязательной автоуслуги забора.",
+                "Гемотест: услуга не может быть оформлена",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
         }
 
         private bool BuildReadOnlyModelFromDetails(Order order, GemotestOrderDetail details, OrderModelForGUI model)
@@ -745,6 +811,13 @@ namespace Laboratory.Gemotest
                     ProductGroupGuid = null,
                     BiomaterialGroups = new List<BiomaterialGroupForGUI>()
                 };
+
+                if (IsBiomaterialCollectAutoService(product.ProductId))
+                {
+                    model.ServicesInfo.Add(productNew);
+                    continue;
+                }
+
                 var group = BuildBiomaterialGroupForProduct(details, productIndex);
 
                 if (group == null)
@@ -1060,15 +1133,33 @@ namespace Laboratory.Gemotest
                 SavePriceListToDetails(details, _Model);
 
                 details.Products.Clear();
+
                 foreach (var productInfo in _Model.ProductsInfo)
                 {
                     details.Products.Add(new GemotestProductDetail()
                     {
-                        OrderProductGuid = productInfo.OrderProductGuid,
+                        OrderProductGuid = details.Products.Count.ToString(),
                         ProductId = productInfo.Id,
                         ProductCode = productInfo.Code,
                         ProductName = productInfo.Name
                     });
+                }
+
+                if (_Model.ServicesInfo != null)
+                {
+                    foreach (var serviceInfo in _Model.ServicesInfo)
+                    {
+                        if (serviceInfo == null)
+                            continue;
+
+                        details.Products.Add(new GemotestProductDetail()
+                        {
+                            OrderProductGuid = details.Products.Count.ToString(),
+                            ProductId = serviceInfo.Id,
+                            ProductCode = serviceInfo.Code,
+                            ProductName = serviceInfo.Name
+                        });
+                    }
                 }
 
                 details.BioMaterials.Clear();
@@ -1182,12 +1273,19 @@ namespace Laboratory.Gemotest
                     if (productIndex < 0 || productIndex >= _OrderModel.ProductsInfo.Count)
                         throw new IndexOutOfRangeException("Не удалось определить удаляемый продукт в модели заказа.");
 
+                    if (!IsCollectBiomaterialByGemotestEnabled() && ProductHasSavedRequiredCollectService(_OrderModel, _OrderModel.ProductsInfo[productIndex]))
+                    {
+                        ShowCannotRemoveProductWithRequiredCollectService(_OrderModel.ProductsInfo[productIndex]);
+                        return false;
+                    }
+
                     List<int> deleteIndexes = ResolveProductDeleteIndexesByAutoInsertRules(_OrderModel, productIndex);
 
                     if (deleteIndexes == null || deleteIndexes.Count == 0)
                         return false;
 
                     DeleteProductsFromOrderModel(_OrderModel, details, deleteIndexes);
+                    ApplyAutoInsertServices(details, _OrderModel);
 
                     if (!SaveOrderModelForGUIToDetails(_Order, _OrderModel))
                         return false;
@@ -1243,10 +1341,37 @@ namespace Laboratory.Gemotest
 
                     var selectedBioIds = GetSelectedBiomaterialIds(productNew);
 
-                    if (details.Products != null &&
-                        details.Products.Any(p => string.Equals(p.ProductId, productNew.Id, StringComparison.OrdinalIgnoreCase)))
+                    if (!IsCollectBiomaterialByGemotestEnabled())
+                    {
+                        List<DictionaryService> requiredCollectServices = GetBiomaterialCollectAutoServicesForProduct(productNew.Id);
+                        if (requiredCollectServices.Count > 0)
+                        {
+                            MessageBox.Show(
+                                BuildBiomaterialCollectDisabledWarning(productNew, requiredCollectServices),
+                                "Добавление услуги",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Information);
+
+                            return false;
+                        }
+                    }
+
+                    if (details.Products != null && details.Products.Any(p => string.Equals(p.ProductId, productNew.Id, StringComparison.OrdinalIgnoreCase)))
                     {
                         MessageBox.Show("Эта услуга уже есть в заказе.", "Добавление услуги", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return false;
+                    }
+
+                    if (!IsCollectBiomaterialByGemotestEnabled() && ProductRequiresGemotestCollectService(productNew.Id))
+                    {
+                        MessageBox.Show(
+                            "Услуга не может быть добавлена в заказ.\r\n\r\n" +
+                            "Для выбранной услуги обязательна автоуслуга забора биоматериала лабораторией Гемотест, " +
+                            "но в системных настройках выключена опция \"забор биоматериалов осуществляет лаборатория Гемотест\".",
+                            "Гемотест: добавление услуги запрещено",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+
                         return false;
                     }
 
@@ -1355,6 +1480,25 @@ namespace Laboratory.Gemotest
 
                 if (_Action == eOrderAction.RemoveService)
                 {
+                    if (_OrderModel == null || _Product == null)
+                        return false;
+
+                    if (!IsCollectBiomaterialByGemotestEnabled() &&
+                        IsBiomaterialCollectAutoService(_Product.Id) &&
+                        IsCollectServiceRequiredByCurrentProducts(_OrderModel, _Product.Id))
+                    {
+                        MessageBox.Show(
+                            "Эту услугу забора биоматериала нельзя удалить.\r\n\r\n" +
+                            "Она является обязательной автоуслугой для одной из услуг заказа. " +
+                            "В системных настройках сейчас выключена опция \"забор биоматериалов осуществляет лаборатория Гемотест\", " +
+                            "поэтому сохранённую связку основной услуги и услуги забора нельзя изменять.",
+                            "Гемотест: удаление запрещено",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+
+                        return false;
+                    }
+
                     return true;
                 }
 
@@ -1366,6 +1510,137 @@ namespace Laboratory.Gemotest
                 return false;
             }
         }
+        private HashSet<string> GetRequiredCollectAutoServiceIds(string productServiceId)
+        {
+            var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            productServiceId = NormalizeServiceId(productServiceId);
+
+            if (string.IsNullOrWhiteSpace(productServiceId) ||
+                laboratory == null ||
+                laboratory.Dicts == null ||
+                laboratory.Dicts.ServiceAutoInsert == null ||
+                laboratory.Dicts.Directory == null)
+            {
+                return result;
+            }
+
+            List<DictionaryServiceAutoInsert> rows;
+
+            if (!laboratory.Dicts.ServiceAutoInsert.TryGetValue(productServiceId, out rows) || rows == null)
+                return result;
+
+            foreach (DictionaryServiceAutoInsert row in rows)
+            {
+                if (row == null || row.archive != 0)
+                    continue;
+
+                string autoServiceId = NormalizeServiceId(row.auto_service_id);
+
+                if (string.IsNullOrWhiteSpace(autoServiceId))
+                    continue;
+
+                DictionaryService service;
+
+                if (!laboratory.Dicts.Directory.TryGetValue(autoServiceId, out service) || service == null)
+                    continue;
+
+                if (service.service_type != 4)
+                    continue;
+
+                result.Add(autoServiceId);
+            }
+
+            return result;
+        }
+
+        private bool IsBiomaterialCollectAutoService(string serviceId)
+        {
+            serviceId = NormalizeServiceId(serviceId);
+
+            if (string.IsNullOrWhiteSpace(serviceId) ||
+                laboratory == null ||
+                laboratory.Dicts == null ||
+                laboratory.Dicts.Directory == null)
+            {
+                return false;
+            }
+
+            DictionaryService service;
+
+            if (!laboratory.Dicts.Directory.TryGetValue(serviceId, out service) || service == null)
+                return false;
+
+            return service.service_type == 4;
+        }
+
+        private bool ProductHasSavedRequiredCollectService(OrderModelForGUI model, ProductInfoForGUI product)
+        {
+            if (model == null || product == null)
+                return false;
+
+            HashSet<string> requiredIds = GetRequiredCollectAutoServiceIds(product.Id);
+
+            if (requiredIds.Count == 0)
+                return false;
+
+            foreach (string requiredId in requiredIds)
+            {
+                if (model.ServicesInfo != null &&
+                    model.ServicesInfo.Any(x =>
+                        x != null &&
+                        string.Equals(NormalizeServiceId(x.Id), requiredId, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool IsCollectServiceRequiredByCurrentProducts(OrderModelForGUI model, string collectServiceId)
+        {
+            collectServiceId = NormalizeServiceId(collectServiceId);
+
+            if (string.IsNullOrWhiteSpace(collectServiceId) ||
+                model == null ||
+                model.ProductsInfo == null)
+            {
+                return false;
+            }
+
+            foreach (ProductInfoForGUI product in model.ProductsInfo)
+            {
+                if (product == null)
+                    continue;
+
+                HashSet<string> requiredIds = GetRequiredCollectAutoServiceIds(product.Id);
+
+                if (requiredIds.Contains(collectServiceId))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private void ShowCannotRemoveProductWithRequiredCollectService(ProductInfoForGUI product)
+        {
+            string productName = product != null
+                ? (!string.IsNullOrWhiteSpace(product.Code)
+                    ? product.Code + " | " + product.Name
+                    : product.Name)
+                : "выбранная услуга";
+
+            MessageBox.Show(
+                "Услугу нельзя удалить.\r\n\r\n" +
+                "Для услуги \"" + productName + "\" в заказе уже сохранена обязательная услуга забора биоматериала лабораторией Гемотест.\r\n\r\n" +
+                "В системных настройках сейчас выключена опция \"забор биоматериалов осуществляет лаборатория Гемотест\", " +
+                "поэтому сохранённую связку основной услуги и услуги забора нельзя изменять.",
+                "Гемотест: удаление запрещено",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+        }
+
         private int FindProductIndexForRemove(OrderModelForGUI model, ProductInfoForGUI product)
         {
             if (model == null || model.ProductsInfo == null || product == null)
@@ -1375,7 +1650,7 @@ namespace Laboratory.Gemotest
 
             if (!string.IsNullOrWhiteSpace(product.OrderProductGuid))
             {
-                productIndex = model.ProductsInfo.FindIndex(x => x != null &&  string.Equals(x.OrderProductGuid, product.OrderProductGuid, StringComparison.OrdinalIgnoreCase));
+                productIndex = model.ProductsInfo.FindIndex(x => x != null && string.Equals(x.OrderProductGuid, product.OrderProductGuid, StringComparison.OrdinalIgnoreCase));
             }
 
             if (productIndex < 0)
@@ -1884,7 +2159,7 @@ namespace Laboratory.Gemotest
             return serviceId;
         }
 
-   
+
 
         private bool IsAutoInsertedServiceRequiredByOtherProducts(
             string autoServiceId,
@@ -2433,14 +2708,14 @@ namespace Laboratory.Gemotest
                 {
                     if (_Order.State == OrderState.NotSended)
                     {
-                        MessageBox.Show( "Сначала необходимо подготовить или отправить заказ, чтобы получить штрихкоды.", "Гемотест", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("Сначала необходимо подготовить или отправить заказ, чтобы получить штрихкоды.", "Гемотест", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return false;
                     }
 
                     var samplesForGui = BuildStickerSamplesForGui(_Order);
                     if (samplesForGui == null || samplesForGui.Count == 0)
                     {
-                        MessageBox.Show( "Для заказа нет образцов для печати наклеек.", "Гемотест", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("Для заказа нет образцов для печати наклеек.", "Гемотест", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         return false;
                     }
 
@@ -2643,7 +2918,7 @@ namespace Laboratory.Gemotest
                     details.PriceList = pl.Name ?? string.Empty;
                     details.PriceListName = pl.Name ?? string.Empty;
                     details.PriceListCode = pl.ContractorCode ?? string.Empty;
-                    details.PriceListNum = pl.Num ?? string.Empty; 
+                    details.PriceListNum = pl.Num ?? string.Empty;
                     return;
                 }
             }
@@ -2773,7 +3048,7 @@ namespace Laboratory.Gemotest
                 var product = model.ProductsInfo[productIndex];
                 var group = product?.BiomaterialGroups?.FirstOrDefault();
 
-                var selectedIds = new HashSet<string>( (group?.BiomaterialsSelected ?? new List<BiomaterialInfoForGUI>())
+                var selectedIds = new HashSet<string>((group?.BiomaterialsSelected ?? new List<BiomaterialInfoForGUI>())
                         .Where(x => x != null && !string.IsNullOrWhiteSpace(x.BiomaterialId)).Select(x => x.BiomaterialId), StringComparer.OrdinalIgnoreCase);
 
                 foreach (var biom in details.BioMaterials.Where(b =>
@@ -2967,7 +3242,7 @@ namespace Laboratory.Gemotest
                 }
             }
 
-            if (!string.IsNullOrEmpty(service.biomaterial_id) && dicts.Biomaterials != null && dicts.Biomaterials.TryGetValue(service.biomaterial_id, out var baseBiom) 
+            if (!string.IsNullOrEmpty(service.biomaterial_id) && dicts.Biomaterials != null && dicts.Biomaterials.TryGetValue(service.biomaterial_id, out var baseBiom)
                 && baseBiom != null && !result.Any(r => string.Equals(r.id, baseBiom.id, StringComparison.OrdinalIgnoreCase)))
             {
                 result.Add(baseBiom);
@@ -2983,6 +3258,164 @@ namespace Laboratory.Gemotest
                     archive = 0
                 });
             }
+        }
+
+        private HashSet<string> GetAllAutoInsertServiceIds()
+        {
+            var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (laboratory == null ||
+                laboratory.Dicts == null ||
+                laboratory.Dicts.ServiceAutoInsert == null)
+            {
+                return result;
+            }
+
+            foreach (var pair in laboratory.Dicts.ServiceAutoInsert)
+            {
+                if (pair.Value == null)
+                    continue;
+
+                foreach (var row in pair.Value)
+                {
+                    if (row == null || string.IsNullOrWhiteSpace(row.auto_service_id))
+                        continue;
+
+                    if (row.archive != 0)
+                        continue;
+
+                    string autoServiceId = NormalizeServiceId(row.auto_service_id);
+
+                    if (IsBiomaterialCollectService(autoServiceId))
+                        result.Add(autoServiceId);
+                }
+            }
+
+            return result;
+        }
+
+        private bool IsBiomaterialCollectService(string serviceId)
+        {
+            serviceId = NormalizeServiceId(serviceId);
+
+            if (string.IsNullOrWhiteSpace(serviceId))
+                return false;
+
+            if (laboratory == null || laboratory.Dicts == null || laboratory.Dicts.Directory == null)
+                return false;
+
+            DictionaryService service;
+            if (!laboratory.Dicts.Directory.TryGetValue(serviceId, out service) || service == null)
+                return false;
+
+            return !service.is_blocked && service.service_type == 4;
+        }
+
+        private List<DictionaryService> GetBiomaterialCollectAutoServicesForProduct(string parentServiceId)
+        {
+            List<DictionaryService> result = new List<DictionaryService>();
+
+            parentServiceId = NormalizeServiceId(parentServiceId);
+
+            if (string.IsNullOrWhiteSpace(parentServiceId))
+                return result;
+
+            if (laboratory == null || laboratory.Dicts == null || laboratory.Dicts.ServiceAutoInsert == null || laboratory.Dicts.Directory == null)
+                return result;
+
+            List<DictionaryServiceAutoInsert> rows;
+            if (!laboratory.Dicts.ServiceAutoInsert.TryGetValue(parentServiceId, out rows) || rows == null)
+                return result;
+
+            HashSet<string> addedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (DictionaryServiceAutoInsert row in rows)
+            {
+                if (row == null || string.IsNullOrWhiteSpace(row.auto_service_id))
+                    continue;
+
+                if (row.archive != 0)
+                    continue;
+
+                string autoServiceId = NormalizeServiceId(row.auto_service_id);
+
+                if (string.IsNullOrWhiteSpace(autoServiceId) || addedIds.Contains(autoServiceId))
+                    continue;
+
+                DictionaryService service;
+                if (!laboratory.Dicts.Directory.TryGetValue(autoServiceId, out service) || service == null)
+                    continue;
+
+                if (service.is_blocked || service.service_type != 4)
+                    continue;
+
+                result.Add(service);
+                addedIds.Add(autoServiceId);
+            }
+
+            return result;
+        }
+
+        private string BuildBiomaterialCollectDisabledWarning(ProductInfoForGUI product, List<DictionaryService> requiredCollectServices)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine("Услуга не добавлена в заказ.");
+            sb.AppendLine();
+            sb.AppendLine("Для выбранного исследования Гемотест требует автодобавляемую услугу забора биоматериала лабораторией, но в системных настройках выключена галочка \"Забор биоматериалов осуществляет лаборатория Гемотест\".");
+            sb.AppendLine();
+            sb.AppendLine("Исследование:");
+            sb.AppendLine("• " + FormatProductCaption(product));
+
+            if (requiredCollectServices != null && requiredCollectServices.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine("Требуемые услуги забора:");
+
+                foreach (DictionaryService service in requiredCollectServices)
+                {
+                    if (service == null)
+                        continue;
+
+                    string code = service.code ?? string.Empty;
+                    string name = service.name ?? string.Empty;
+                    string caption = !string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(name)
+                        ? code + " | " + name
+                        : (!string.IsNullOrWhiteSpace(name) ? name : service.id);
+
+                    sb.AppendLine("• " + caption);
+                }
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("Включите эту настройку или выберите исследование, которое не требует забора биоматериала лабораторией.");
+
+            return sb.ToString();
+        }
+
+        private string FormatProductCaption(ProductInfoForGUI product)
+        {
+            if (product == null)
+                return string.Empty;
+
+            string code = product.Code ?? string.Empty;
+            string name = product.Name ?? string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(name))
+                return code + " | " + name;
+
+            if (!string.IsNullOrWhiteSpace(name))
+                return name;
+
+            if (!string.IsNullOrWhiteSpace(code))
+                return code;
+
+            return product.Id ?? string.Empty;
+        }
+
+        private bool IsCollectBiomaterialByGemotestEnabled()
+        {
+            return globalOptions != null && globalOptions.CollectBiomaterialByGemotest;
         }
 
         private List<DictionaryBiomaterials> ResolveBiomaterialsForService(DictionaryService service)
@@ -3329,67 +3762,126 @@ namespace Laboratory.Gemotest
 
         private void ApplyAutoInsertServices(GemotestOrderDetail details, OrderModelForGUI model)
         {
-            if (details?.Products == null || laboratory?.Dicts?.ServiceAutoInsert == null)
+            if (details == null || model == null || model.ProductsInfo == null)
                 return;
 
-            bool added;
-            do
+            // ВАЖНО:
+            // если галочка выключена, уже сохраненные услуги типа 4 не трогаем.
+            if (!IsCollectBiomaterialByGemotestEnabled())
+                return;
+
+            // Пересобираем автоуслуги только когда забор выполняет Гемотест.
+            RemoveAutoInsertServices(details, model);
+
+            HashSet<string> autoServiceIds = BuildAutoServiceIdsForSelectedProducts(model);
+
+            foreach (string autoServiceId in autoServiceIds)
             {
-                added = false;
-                var existingIds = new HashSet<string>(details.Products.Where(p => p != null && !string.IsNullOrWhiteSpace(p.ProductId)).Select(p => p.ProductId),
-                 StringComparer.OrdinalIgnoreCase);
-                var toInsert = new List<string>();
+                if (string.IsNullOrWhiteSpace(autoServiceId))
+                    continue;
 
-                foreach (var p in details.Products)
+                DictionaryService service;
+                if (laboratory == null ||
+                    laboratory.Dicts == null ||
+                    laboratory.Dicts.Directory == null ||
+                    !laboratory.Dicts.Directory.TryGetValue(autoServiceId, out service) ||
+                    service == null)
                 {
-                    if (p == null || string.IsNullOrWhiteSpace(p.ProductId))
-                        continue;
-
-                    if (laboratory.Dicts.ServiceAutoInsert.TryGetValue(p.ProductId, out var rows) && rows != null)
-                    {
-                        foreach (var row in rows)
-                        {
-                            if (row == null || string.IsNullOrWhiteSpace(row.auto_service_id))
-                                continue;
-
-                            if (!existingIds.Contains(row.auto_service_id) &&
-                                !toInsert.Contains(row.auto_service_id, StringComparer.OrdinalIgnoreCase))
-                            {
-                                toInsert.Add(row.auto_service_id);
-                            }
-                        }
-                    }
+                    continue;
                 }
 
-                foreach (var addId in toInsert)
+                var detail = new GemotestProductDetail
                 {
-                    if (laboratory?.Dicts?.Directory == null || !laboratory.Dicts.Directory.TryGetValue(addId, out var svc) || svc == null)
-                        continue;
+                    OrderProductGuid = details.Products.Count.ToString(),
+                    ProductId = service.id ?? string.Empty,
+                    ProductCode = service.code ?? string.Empty,
+                    ProductName = service.name ?? string.Empty
+                };
 
-                    int newIndex = model.ProductsInfo.Count;
-                    var p = new ProductInfoForGUI
-                    {
-                        OrderProductGuid = newIndex.ToString(),
-                        Id = svc.id,
-                        Code = svc.code,
-                        Name = svc.name,
-                        ProductGroupGuid = null
-                    };
+                details.Products.Add(detail);
 
-                    model.ProductsInfo.Add(p);
-                    details.Products.Add(new GemotestProductDetail
-                    {
-                        OrderProductGuid = p.OrderProductGuid,
-                        ProductId = p.Id,
-                        ProductCode = p.Code,
-                        ProductName = p.Name
-                    });
+                var serviceForGui = new ProductInfoForGUI
+                {
+                    OrderProductGuid = detail.OrderProductGuid,
+                    Id = detail.ProductId,
+                    Code = detail.ProductCode,
+                    Name = detail.ProductName,
+                    ProductGroupGuid = null
+                };
 
-                    existingIds.Add(addId);
-                    added = true;
-                }
+                model.ServicesInfo.Add(serviceForGui);
             }
-            while (added);
+        }
+
+        private bool ProductRequiresGemotestCollectService(string productServiceId)
+        {
+            return GetRequiredCollectAutoServiceIds(productServiceId).Count > 0;
+        }
+
+        private bool ProductHasAllRequiredCollectServices(OrderModelForGUI model, string productServiceId)
+        {
+            HashSet<string> requiredServiceIds = GetRequiredCollectAutoServiceIds(productServiceId);
+
+            if (requiredServiceIds.Count == 0)
+                return true;
+
+            foreach (string requiredServiceId in requiredServiceIds)
+            {
+                if (!HasProductOrServiceInModel(model, requiredServiceId))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private bool HasProductOrServiceInModel(OrderModelForGUI model, string serviceId)
+        {
+            serviceId = NormalizeServiceId(serviceId);
+
+            if (string.IsNullOrWhiteSpace(serviceId))
+                return false;
+
+            if (model == null)
+                return false;
+
+            if (model.ProductsInfo != null &&
+                model.ProductsInfo.Any(x =>
+                    x != null &&
+                    string.Equals(NormalizeServiceId(x.Id), serviceId, StringComparison.OrdinalIgnoreCase)))
+            {
+                return true;
+            }
+
+            if (model.ServicesInfo != null &&
+                model.ServicesInfo.Any(x =>
+                    x != null &&
+                    string.Equals(NormalizeServiceId(x.Id), serviceId, StringComparison.OrdinalIgnoreCase)))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private void RemoveAutoInsertServices(GemotestOrderDetail details, OrderModelForGUI model)
+        {
+            HashSet<string> autoServiceIds = GetAllAutoInsertServiceIds();
+
+            if (details != null && details.Products != null)
+            {
+                details.Products.RemoveAll(x =>
+                    x != null &&
+                    !string.IsNullOrWhiteSpace(x.ProductId) &&
+                    autoServiceIds.Contains(x.ProductId));
+            }
+
+            if (model != null && model.ServicesInfo != null)
+            {
+                model.ServicesInfo.RemoveAll(x =>
+                    x != null &&
+                    !string.IsNullOrWhiteSpace(x.Id) &&
+                    autoServiceIds.Contains(x.Id));
+            }
         }
 
         private GemotestBlankReportDataSetV2 FillDataSetForBlankReport(Order _Order)
@@ -3869,7 +4361,7 @@ namespace Laboratory.Gemotest
             if (order == null || order.Patient == null)
                 return string.Empty;
 
-            string fio = string.Format( "{0} {1} {2}", order.Patient.Surname ?? string.Empty, order.Patient.Name ?? string.Empty, order.Patient.Patronimic ?? string.Empty).Trim();
+            string fio = string.Format("{0} {1} {2}", order.Patient.Surname ?? string.Empty, order.Patient.Name ?? string.Empty, order.Patient.Patronimic ?? string.Empty).Trim();
 
             string sex = string.Empty;
             if (order.Patient.Sex == Sex.Male)

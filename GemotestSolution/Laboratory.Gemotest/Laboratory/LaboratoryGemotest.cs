@@ -158,6 +158,143 @@ namespace Laboratory.Gemotest
             details.AddBiomaterialsFromProducts();
         }
 
+        private bool HasProductsRequiringGemotestBiomaterialCollection(
+            List<GemotestProductDetail> products,
+            out string warningText)
+        {
+            warningText = string.Empty;
+
+            if (products == null || products.Count == 0)
+                return false;
+
+            List<string> blockedLines = new List<string>();
+
+            foreach (GemotestProductDetail productDetail in products)
+            {
+                if (productDetail == null || string.IsNullOrWhiteSpace(productDetail.ProductId))
+                    continue;
+
+                List<DictionaryService> requiredCollectServices = GetBiomaterialCollectAutoServicesForProduct(productDetail.ProductId);
+
+                if (requiredCollectServices == null || requiredCollectServices.Count == 0)
+                    continue;
+
+                blockedLines.Add("• " + FormatProductDetailCaption(productDetail));
+
+                foreach (DictionaryService service in requiredCollectServices)
+                {
+                    if (service == null)
+                        continue;
+
+                    blockedLines.Add("  требуется: " + FormatDictionaryServiceCaption(service));
+                }
+            }
+
+            if (blockedLines.Count == 0)
+                return false;
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("Заказ не может быть оформлен с текущими системными настройками.");
+            sb.AppendLine();
+            sb.AppendLine("Для выбранных исследований Гемотест требует автодобавляемые услуги забора биоматериала лабораторией, но галочка \"Забор биоматериалов осуществляет лаборатория Гемотест\" выключена.");
+            sb.AppendLine();
+            sb.AppendLine("Исследования не добавлены:");
+
+            foreach (string line in blockedLines)
+                sb.AppendLine(line);
+
+            sb.AppendLine();
+            sb.AppendLine("Включите эту настройку или уберите из заказа исследования, которые требуют забора биоматериала лабораторией.");
+
+            warningText = sb.ToString();
+            return true;
+        }
+
+        private List<DictionaryService> GetBiomaterialCollectAutoServicesForProduct(string parentServiceId)
+        {
+            List<DictionaryService> result = new List<DictionaryService>();
+
+            parentServiceId = (parentServiceId ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(parentServiceId))
+                return result;
+
+            if (Dicts == null || Dicts.ServiceAutoInsert == null || Dicts.Directory == null)
+                return result;
+
+            List<DictionaryServiceAutoInsert> rows;
+            if (!Dicts.ServiceAutoInsert.TryGetValue(parentServiceId, out rows) || rows == null)
+                return result;
+
+            HashSet<string> addedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (DictionaryServiceAutoInsert row in rows)
+            {
+                if (row == null || string.IsNullOrWhiteSpace(row.auto_service_id))
+                    continue;
+
+                if (row.archive != 0)
+                    continue;
+
+                string autoServiceId = (row.auto_service_id ?? string.Empty).Trim();
+
+                if (string.IsNullOrWhiteSpace(autoServiceId) || addedIds.Contains(autoServiceId))
+                    continue;
+
+                DictionaryService service;
+                if (!Dicts.Directory.TryGetValue(autoServiceId, out service) || service == null)
+                    continue;
+
+                if (service.is_blocked || service.service_type != 4)
+                    continue;
+
+                result.Add(service);
+                addedIds.Add(autoServiceId);
+            }
+
+            return result;
+        }
+
+        private static string FormatProductDetailCaption(GemotestProductDetail productDetail)
+        {
+            if (productDetail == null)
+                return string.Empty;
+
+            string code = productDetail.ProductCode ?? string.Empty;
+            string name = productDetail.ProductName ?? string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(name))
+                return code + " | " + name;
+
+            if (!string.IsNullOrWhiteSpace(name))
+                return name;
+
+            if (!string.IsNullOrWhiteSpace(code))
+                return code;
+
+            return productDetail.ProductId ?? string.Empty;
+        }
+
+        private static string FormatDictionaryServiceCaption(DictionaryService service)
+        {
+            if (service == null)
+                return string.Empty;
+
+            string code = service.code ?? string.Empty;
+            string name = service.name ?? string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(name))
+                return code + " | " + name;
+
+            if (!string.IsNullOrWhiteSpace(name))
+                return name;
+
+            if (!string.IsNullOrWhiteSpace(code))
+                return code;
+
+            return service.id ?? string.Empty;
+        }
+
         private void ApplyPriceListToDetails(GemotestOrderDetail details)
         {
             if (details == null)
@@ -244,6 +381,22 @@ namespace Laboratory.Gemotest
             if (details.Products.Count == 0)
             {
                 FillDefaultOrderDetail(details, _Order.Items);
+
+                if ((Options == null || !Options.CollectBiomaterialByGemotest) &&
+                    HasProductsRequiringGemotestBiomaterialCollection(details.Products, out string warningText))
+                {
+                    details.Products.Clear();
+                    if (details.BioMaterials != null)
+                        details.BioMaterials.Clear();
+
+                    MessageBox.Show(
+                        warningText,
+                        "Гемотест: оформление заказа",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+
+                    return false;
+                }
             }
             else
             {
@@ -429,11 +582,20 @@ namespace Laboratory.Gemotest
         public bool ShowSystemOptions(ref string _SystemOptions)
         {
             GemotestSystemOptionsForm optionsSystem = new GemotestSystemOptionsForm(_SystemOptions);
+
             if (optionsSystem.ShowDialog() == DialogResult.OK)
             {
-                _SystemOptions = optionsSystem.Options.Pack();
+                Options = optionsSystem.Options;
+                _SystemOptions = Options.Pack();
+
+                if (laboratoryGUI != null)
+                {
+                    laboratoryGUI.SetOptions(this, GetProducts(), LocalOptions, Options, numerator);
+                }
+
                 return true;
             }
+
             return false;
         }
 

@@ -141,7 +141,9 @@ namespace Laboratory.Gemotest.Options
             Options.Login = (login_textBox.Text ?? "").Trim();
             Options.Password = (password_textBox.Text ?? "");
             Options.Salt = (key_textBox.Text ?? "").Trim();
+
             Options.CollectBiomaterialByGemotest = collectBiomaterialByGemotest_checkBox.Checked;
+
             Options.PriceLists = list;
             Options.Contractor = selName;
             Options.Contractor_Code = selCode;
