@@ -992,16 +992,12 @@ namespace Laboratory.Gemotest
 
                 int completedResultsCount = CountCompletedGemotestResults(response);
                 bool hasCompletedResults = completedResultsCount > 0;
-                bool hasResultAttachments = HasGemotestResultAttachments(response);
-                bool hasAnyRealResultData = hasCompletedResults || hasResultAttachments;
+                bool saveAttachments = hasCompletedResults && HasGemotestResultAttachments(response);
 
-                // Сохраняем в детали только реальные результаты и реальные PDF-вложения.
-                // Пустые показатели со статусом "В работе" не должны попадать в details.Results.
-                SaveResultsToOrderDetail(details, response);
+                SaveResultsToOrderDetail(details, response, saveAttachments);
 
-                if (!hasAnyRealResultData)
+                if (!hasCompletedResults)
                 {
-                    // Результатов еще нет. Нормальный статус Симеда для этого случая — Commited / "Принят".
                     if (_Order.State == OrderState.Sended ||
                         _Order.State == OrderState.PartialResultReceived ||
                         _Order.State == OrderState.FullResultReceived)
@@ -1134,6 +1130,8 @@ namespace Laboratory.Gemotest
                 return false;
 
             return value.Contains("в работе") ||
+                   value.Contains("выполняется") ||
+                   value.Contains("выполня") ||
                    value.Contains("не готов") ||
                    value.Contains("ожид") ||
                    value.Contains("processing") ||
@@ -1147,7 +1145,11 @@ namespace Laboratory.Gemotest
             if (string.IsNullOrWhiteSpace(value))
                 return false;
 
-            return value.Contains("выполн") ||
+            if (IsGemotestInWorkText(value))
+                return false;
+
+            return value.Contains("выполнен") ||
+                   value.Contains("выполнено") ||
                    value.Contains("готов") ||
                    value.Contains("complete") ||
                    value.Contains("done");
@@ -1439,8 +1441,8 @@ namespace Laboratory.Gemotest
             return GetNodeText(returnNode, "ext_num");
         }
 
-        private void SaveResultsToOrderDetail(GemotestOrderDetail details, GemotestAnalysisResultResponse response)
-        {
+        private void SaveResultsToOrderDetail( GemotestOrderDetail details, GemotestAnalysisResultResponse response, bool saveAttachments)
+        { 
             if (details == null || response == null)
                 return;
 
@@ -1476,7 +1478,7 @@ namespace Laboratory.Gemotest
                 }
             }
 
-            if (response.Attachments != null)
+            if (saveAttachments && response.Attachments != null)
             {
                 int idx = 1;
 
@@ -1600,18 +1602,33 @@ namespace Laboratory.Gemotest
                 if (_Results == null)
                     _Results = new ResultsCollection();
 
+                if (_Order == null)
+                    return false;
+
                 GemotestOrderDetail details = _Order.OrderDetail as GemotestOrderDetail;
                 if (details == null)
                     return false;
 
-                bool hasSavedResults = details.Results != null && details.Results.Count > 0;
-                bool hasSavedAttachments = details.Attachments != null && details.Attachments.Count > 0;
+                bool hasSavedCompletedResults =
+                    details.Results != null &&
+                    details.Results.Any(x => IsCompletedGemotestResult(x));
 
-                if (hasSavedResults || hasSavedAttachments)
+                bool hasSavedAttachments =
+                    details.Attachments != null &&
+                    details.Attachments.Count > 0;
+
+                if (!hasSavedCompletedResults && hasSavedAttachments)
+                {
+                    details.Attachments.Clear();
+                }
+
+                if (hasSavedCompletedResults)
                 {
                     string extNum = !string.IsNullOrWhiteSpace(details.ExtNum)
                         ? details.ExtNum
-                        : (!string.IsNullOrWhiteSpace(details.ResultsExtNum) ? details.ResultsExtNum : (_Order.Number ?? string.Empty));
+                        : (!string.IsNullOrWhiteSpace(details.ResultsExtNum)
+                            ? details.ResultsExtNum
+                            : (_Order.Number ?? string.Empty));
 
                     int added = AddGemotestResultItemsFromDetails(_Order, details, _Results, extNum);
                     return added > 0;
