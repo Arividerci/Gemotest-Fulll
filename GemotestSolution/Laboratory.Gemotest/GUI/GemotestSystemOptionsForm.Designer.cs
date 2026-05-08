@@ -38,25 +38,25 @@
             this.key_label = new System.Windows.Forms.Label();
             this.key_textBox = new System.Windows.Forms.TextBox();
             this.connectionGroupBox = new System.Windows.Forms.GroupBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.CheckConnection_button = new System.Windows.Forms.Button();
             this.Exit_button = new System.Windows.Forms.Button();
-            this.collectBiomaterialByGemotest_checkBox = new System.Windows.Forms.CheckBox();
             this.PriceList_dataGridView = new System.Windows.Forms.DataGridView();
             this.ColumnCaption = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnApiKey = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnIcmid = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColumnTest = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.CheckConnection_button = new System.Windows.Forms.Button();
+            this.collectBiomaterialByGemotest_checkBox = new System.Windows.Forms.CheckBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.connectionGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PriceList_dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
             // address_textbox
             // 
-            this.address_textbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
-            this.address_textbox.Location = new System.Drawing.Point(203, 17);
+            this.address_textbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.address_textbox.Location = new System.Drawing.Point(139, 17);
             this.address_textbox.Name = "address_textbox";
-            this.address_textbox.Size = new System.Drawing.Size(491, 22);
+            this.address_textbox.Size = new System.Drawing.Size(389, 24);
             this.address_textbox.TabIndex = 1;
             // 
             // address_label
@@ -65,9 +65,9 @@
             this.address_label.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
             this.address_label.Location = new System.Drawing.Point(22, 20);
             this.address_label.Name = "address_label";
-            this.address_label.Size = new System.Drawing.Size(131, 16);
+            this.address_label.Size = new System.Drawing.Size(98, 16);
             this.address_label.TabIndex = 0;
-            this.address_label.Text = "Гемотест Url-адрес";
+            this.address_label.Text = "Гемотест URL";
             // 
             // login_label
             // 
@@ -81,10 +81,10 @@
             // 
             // login_textBox
             // 
-            this.login_textBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
-            this.login_textBox.Location = new System.Drawing.Point(203, 45);
+            this.login_textBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.login_textBox.Location = new System.Drawing.Point(139, 45);
             this.login_textBox.Name = "login_textBox";
-            this.login_textBox.Size = new System.Drawing.Size(491, 22);
+            this.login_textBox.Size = new System.Drawing.Size(389, 24);
             this.login_textBox.TabIndex = 3;
             // 
             // password_label
@@ -99,19 +99,19 @@
             // 
             // password_textBox
             // 
-            this.password_textBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
-            this.password_textBox.Location = new System.Drawing.Point(203, 73);
+            this.password_textBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.password_textBox.Location = new System.Drawing.Point(139, 73);
             this.password_textBox.Name = "password_textBox";
-            this.password_textBox.Size = new System.Drawing.Size(491, 22);
+            this.password_textBox.Size = new System.Drawing.Size(389, 24);
             this.password_textBox.TabIndex = 5;
             // 
             // go_button
             // 
             this.go_button.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.go_button.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
-            this.go_button.Location = new System.Drawing.Point(470, 348);
+            this.go_button.Location = new System.Drawing.Point(347, 296);
             this.go_button.Name = "go_button";
-            this.go_button.Size = new System.Drawing.Size(110, 36);
+            this.go_button.Size = new System.Drawing.Size(77, 30);
             this.go_button.TabIndex = 2;
             this.go_button.Text = "ОК";
             this.go_button.UseVisualStyleBackColor = true;
@@ -129,10 +129,10 @@
             // 
             // key_textBox
             // 
-            this.key_textBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
-            this.key_textBox.Location = new System.Drawing.Point(203, 101);
+            this.key_textBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.key_textBox.Location = new System.Drawing.Point(139, 101);
             this.key_textBox.Name = "key_textBox";
-            this.key_textBox.Size = new System.Drawing.Size(491, 22);
+            this.key_textBox.Size = new System.Drawing.Size(389, 24);
             this.key_textBox.TabIndex = 11;
             // 
             // connectionGroupBox
@@ -153,74 +153,40 @@
             this.connectionGroupBox.Controls.Add(this.password_textBox);
             this.connectionGroupBox.Controls.Add(this.key_label);
             this.connectionGroupBox.Controls.Add(this.key_textBox);
-            this.connectionGroupBox.Location = new System.Drawing.Point(12, 8);
+            this.connectionGroupBox.Location = new System.Drawing.Point(3, -7);
             this.connectionGroupBox.Name = "connectionGroupBox";
-            this.connectionGroupBox.Size = new System.Drawing.Size(710, 400);
+            this.connectionGroupBox.Size = new System.Drawing.Size(537, 360);
             this.connectionGroupBox.TabIndex = 1;
             this.connectionGroupBox.TabStop = false;
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
-            this.label6.Location = new System.Drawing.Point(22, 137);
-            this.label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(209, 16);
-            this.label6.TabIndex = 45;
-            this.label6.Text = "Прайс листы (учетные данные)";
-            // 
-            // CheckConnection_button
-            // 
-            this.CheckConnection_button.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.CheckConnection_button.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
-            this.CheckConnection_button.Location = new System.Drawing.Point(249, 348);
-            this.CheckConnection_button.Name = "CheckConnection_button";
-            this.CheckConnection_button.Size = new System.Drawing.Size(143, 36);
-            this.CheckConnection_button.TabIndex = 4;
-            this.CheckConnection_button.Text = " Проверка связи";
-            this.CheckConnection_button.UseVisualStyleBackColor = true;
-            this.CheckConnection_button.Click += new System.EventHandler(this.CheckConnection_button_Click);
             // 
             // Exit_button
             // 
             this.Exit_button.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
             this.Exit_button.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
-            this.Exit_button.Location = new System.Drawing.Point(604, 348);
+            this.Exit_button.Location = new System.Drawing.Point(449, 296);
             this.Exit_button.Name = "Exit_button";
-            this.Exit_button.Size = new System.Drawing.Size(110, 36);
+            this.Exit_button.Size = new System.Drawing.Size(77, 30);
             this.Exit_button.TabIndex = 5;
             this.Exit_button.Text = "Отмена";
             this.Exit_button.UseVisualStyleBackColor = true;
             this.Exit_button.Click += new System.EventHandler(this.Exit_button_Click);
             // 
-            // collectBiomaterialByGemotest_checkBox
-            // 
-            this.collectBiomaterialByGemotest_checkBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.collectBiomaterialByGemotest_checkBox.AutoSize = true;
-            this.collectBiomaterialByGemotest_checkBox.Location = new System.Drawing.Point(26, 304);
-            this.collectBiomaterialByGemotest_checkBox.Margin = new System.Windows.Forms.Padding(4);
-            this.collectBiomaterialByGemotest_checkBox.Name = "collectBiomaterialByGemotest_checkBox";
-            this.collectBiomaterialByGemotest_checkBox.Size = new System.Drawing.Size(449, 24);
-            this.collectBiomaterialByGemotest_checkBox.TabIndex = 22;
-            this.collectBiomaterialByGemotest_checkBox.Text = "Забор биоматериалов осуществляет лаборатория Гемотест";
-            this.collectBiomaterialByGemotest_checkBox.UseVisualStyleBackColor = true;
-            // 
             // PriceList_dataGridView
             // 
             this.PriceList_dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.PriceList_dataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.PriceList_dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.PriceList_dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.ColumnCaption,
             this.ColumnApiKey,
             this.ColumnIcmid,
             this.ColumnTest});
-            this.PriceList_dataGridView.Location = new System.Drawing.Point(26, 157);
+            this.PriceList_dataGridView.Location = new System.Drawing.Point(24, 157);
             this.PriceList_dataGridView.Margin = new System.Windows.Forms.Padding(4);
             this.PriceList_dataGridView.Name = "PriceList_dataGridView";
             this.PriceList_dataGridView.RowHeadersWidth = 51;
-            this.PriceList_dataGridView.Size = new System.Drawing.Size(668, 139);
+            this.PriceList_dataGridView.Size = new System.Drawing.Size(503, 100);
             this.PriceList_dataGridView.TabIndex = 6;
             // 
             // ColumnCaption
@@ -254,11 +220,46 @@
             this.ColumnTest.MinimumWidth = 6;
             this.ColumnTest.Name = "ColumnTest";
             // 
+            // CheckConnection_button
+            // 
+            this.CheckConnection_button.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.CheckConnection_button.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
+            this.CheckConnection_button.Location = new System.Drawing.Point(158, 296);
+            this.CheckConnection_button.Name = "CheckConnection_button";
+            this.CheckConnection_button.Size = new System.Drawing.Size(124, 30);
+            this.CheckConnection_button.TabIndex = 4;
+            this.CheckConnection_button.Text = " Проверка связи";
+            this.CheckConnection_button.UseVisualStyleBackColor = true;
+            this.CheckConnection_button.Click += new System.EventHandler(this.CheckConnection_button_Click);
+            // 
+            // collectBiomaterialByGemotest_checkBox
+            // 
+            this.collectBiomaterialByGemotest_checkBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.collectBiomaterialByGemotest_checkBox.AutoSize = true;
+            this.collectBiomaterialByGemotest_checkBox.Location = new System.Drawing.Point(24, 265);
+            this.collectBiomaterialByGemotest_checkBox.Margin = new System.Windows.Forms.Padding(4);
+            this.collectBiomaterialByGemotest_checkBox.Name = "collectBiomaterialByGemotest_checkBox";
+            this.collectBiomaterialByGemotest_checkBox.Size = new System.Drawing.Size(449, 24);
+            this.collectBiomaterialByGemotest_checkBox.TabIndex = 22;
+            this.collectBiomaterialByGemotest_checkBox.Text = "Забор биоматериалов осуществляет лаборатория Гемотест";
+            this.collectBiomaterialByGemotest_checkBox.UseVisualStyleBackColor = true;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
+            this.label6.Location = new System.Drawing.Point(22, 137);
+            this.label6.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(209, 16);
+            this.label6.TabIndex = 45;
+            this.label6.Text = "Прайс листы (учетные данные)";
+            // 
             // GemotestSystemOptionsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(734, 419);
+            this.ClientSize = new System.Drawing.Size(544, 331);
             this.Controls.Add(this.connectionGroupBox);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
