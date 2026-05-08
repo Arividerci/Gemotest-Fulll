@@ -507,16 +507,6 @@ namespace Laboratory.Gemotest
                     if (string.IsNullOrWhiteSpace(sourceServiceId))
                         return result;
 
-                    /*
-                     * Ищем основные услуги, у которых sourceServiceId указан
-                     * как auto_service_id.
-                     *
-                     * Пример:
-                     * Фосфатаза -> auto_service_id = Tarif1
-                     * СОЭ       -> auto_service_id = Tarif1
-                     *
-                     * Тогда для Tarif1 владельцами будут Фосфатаза и СОЭ.
-                     */
                     if (laboratory?.Dicts?.ServiceAutoInsert != null)
                     {
                         foreach (var possibleOwner in products)
@@ -561,10 +551,6 @@ namespace Laboratory.Gemotest
                         }
                     }
 
-                    /*
-                     * Если владельцы не найдены, это не автодобавляемая услуга,
-                     * а обычная услуга со своими дополнительными полями.
-                     */
                     if (result.Count == 0)
                         result.Add(sourceProduct);
 
@@ -1701,10 +1687,7 @@ namespace Laboratory.Gemotest
             return resultIndexes;
         }
 
-        private List<string> GetAutoInsertParentServiceIds(
-            OrderModelForGUI model,
-            string autoServiceId,
-            HashSet<string> alreadyDeletedIds)
+        private List<string> GetAutoInsertParentServiceIds( OrderModelForGUI model, string autoServiceId, HashSet<string> alreadyDeletedIds)
         {
             List<string> result = new List<string>();
 
@@ -1742,9 +1725,7 @@ namespace Laboratory.Gemotest
             return result;
         }
 
-        private List<string> CollectOrphanAutoServiceIdsAfterDelete(
-            OrderModelForGUI model,
-            HashSet<string> initialDeleteIds)
+        private List<string> CollectOrphanAutoServiceIdsAfterDelete( OrderModelForGUI model, HashSet<string> initialDeleteIds)
         {
             List<string> result = new List<string>();
             if (model == null || model.ProductsInfo == null || laboratory == null || laboratory.Dicts == null || laboratory.Dicts.ServiceAutoInsert == null)
@@ -1810,10 +1791,7 @@ namespace Laboratory.Gemotest
             return result;
         }
 
-        private bool IsAutoServiceRequiredByRemainingServices(
-            OrderModelForGUI model,
-            string autoServiceId,
-            HashSet<string> deleteIds)
+        private bool IsAutoServiceRequiredByRemainingServices( OrderModelForGUI model, string autoServiceId, HashSet<string> deleteIds)
         {
             if (model == null || model.ProductsInfo == null)
                 return false;
@@ -1906,16 +1884,10 @@ namespace Laboratory.Gemotest
                     indexes.Add(i);
             }
 
-            return indexes
-                .Distinct()
-                .OrderBy(x => x)
-                .ToList();
+            return indexes.Distinct().OrderBy(x => x).ToList();
         }
 
-        private void DeleteProductsFromOrderModel(
-            OrderModelForGUI model,
-            GemotestOrderDetail details,
-            List<int> deleteIndexes)
+        private void DeleteProductsFromOrderModel( OrderModelForGUI model, GemotestOrderDetail details, List<int> deleteIndexes)
         {
             if (model == null || model.ProductsInfo == null || deleteIndexes == null || deleteIndexes.Count == 0)
                 return;
@@ -1953,9 +1925,7 @@ namespace Laboratory.Gemotest
             ReindexProductGuidsAndLinkedObjects(model, removedGuids);
         }
 
-        private void ReindexProductGuidsAndLinkedObjects(
-            OrderModelForGUI model,
-            HashSet<string> removedGuids)
+        private void ReindexProductGuidsAndLinkedObjects( OrderModelForGUI model, HashSet<string> removedGuids)
         {
             if (model == null || model.ProductsInfo == null)
                 return;
@@ -2017,10 +1987,7 @@ namespace Laboratory.Gemotest
             }
         }
 
-        private List<string> RebuildGuidList(
-            List<string> oldGuids,
-            Dictionary<string, string> guidMap,
-            HashSet<string> removedGuids)
+        private List<string> RebuildGuidList( List<string> oldGuids, Dictionary<string, string> guidMap, HashSet<string> removedGuids)
         {
             List<string> result = new List<string>();
 
@@ -2129,414 +2096,6 @@ namespace Laboratory.Gemotest
             return serviceId;
         }
 
-
-
-        private bool IsAutoInsertedServiceRequiredByOtherProducts(
-            string autoServiceId,
-            Dictionary<int, string> productsByIndex,
-            HashSet<int> deletingIndexes)
-        {
-            if (string.IsNullOrWhiteSpace(autoServiceId))
-                return false;
-
-            if (productsByIndex == null || deletingIndexes == null)
-                return false;
-
-            if (laboratory == null || laboratory.Dicts == null || laboratory.Dicts.ServiceAutoInsert == null)
-                return false;
-
-            foreach (var pair in productsByIndex)
-            {
-                int productIndex = pair.Key;
-                string sourceServiceId = pair.Value;
-
-                if (deletingIndexes.Contains(productIndex))
-                    continue;
-
-                if (string.IsNullOrWhiteSpace(sourceServiceId))
-                    continue;
-
-                List<DictionaryServiceAutoInsert> rows;
-
-                if (!laboratory.Dicts.ServiceAutoInsert.TryGetValue(sourceServiceId, out rows) || rows == null)
-                    continue;
-
-                bool required = rows.Any(r =>
-                    r != null &&
-                    string.Equals(r.auto_service_id ?? "", autoServiceId, StringComparison.OrdinalIgnoreCase));
-
-                if (required)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private string GetProductIdByIndex(GemotestOrderDetail details, OrderModelForGUI model, int productIndex)
-        {
-            if (model != null &&
-                model.ProductsInfo != null &&
-                productIndex >= 0 &&
-                productIndex < model.ProductsInfo.Count &&
-                model.ProductsInfo[productIndex] != null &&
-                !string.IsNullOrWhiteSpace(model.ProductsInfo[productIndex].Id))
-            {
-                return model.ProductsInfo[productIndex].Id.Trim();
-            }
-
-            if (details != null &&
-                details.Products != null &&
-                productIndex >= 0 &&
-                productIndex < details.Products.Count &&
-                details.Products[productIndex] != null &&
-                !string.IsNullOrWhiteSpace(details.Products[productIndex].ProductId))
-            {
-                return details.Products[productIndex].ProductId.Trim();
-            }
-
-            return string.Empty;
-        }
-
-        private string BuildAutoInsertedRemoveQuestion(
-            GemotestOrderDetail details,
-            OrderModelForGUI model,
-            List<int> autoRemoveIndexes)
-        {
-            var lines = new List<string>();
-
-            foreach (int index in autoRemoveIndexes)
-            {
-                lines.Add("- " + GetProductDisplayNameByIndex(details, model, index));
-            }
-
-            return
-                "У удаляемой услуги есть автодобавляемые услуги, которые больше не требуются другим услугам:" +
-                Environment.NewLine +
-                Environment.NewLine +
-                string.Join(Environment.NewLine, lines) +
-                Environment.NewLine +
-                Environment.NewLine +
-                "Удалить их вместе с выбранной услугой?";
-        }
-
-        private string GetProductDisplayNameByIndex(GemotestOrderDetail details, OrderModelForGUI model, int productIndex)
-        {
-            string code = string.Empty;
-            string name = string.Empty;
-            string id = string.Empty;
-
-            if (model != null &&
-                model.ProductsInfo != null &&
-                productIndex >= 0 &&
-                productIndex < model.ProductsInfo.Count &&
-                model.ProductsInfo[productIndex] != null)
-            {
-                var product = model.ProductsInfo[productIndex];
-
-                code = product.Code ?? string.Empty;
-                name = product.Name ?? string.Empty;
-                id = product.Id ?? string.Empty;
-            }
-            else if (details != null &&
-                     details.Products != null &&
-                     productIndex >= 0 &&
-                     productIndex < details.Products.Count &&
-                     details.Products[productIndex] != null)
-            {
-                var product = details.Products[productIndex];
-
-                code = product.ProductCode ?? string.Empty;
-                name = product.ProductName ?? string.Empty;
-                id = product.ProductId ?? string.Empty;
-            }
-
-            code = code.Trim();
-            name = name.Trim();
-            id = id.Trim();
-
-            if (!string.IsNullOrWhiteSpace(code) && !string.IsNullOrWhiteSpace(name))
-                return code + " | " + name;
-
-            if (!string.IsNullOrWhiteSpace(name))
-                return name;
-
-            if (!string.IsNullOrWhiteSpace(code))
-                return code;
-
-            return id;
-        }
-
-        private void RemoveProductsFromModelAndDetails(
-            GemotestOrderDetail details,
-            OrderModelForGUI model,
-            List<int> productIndexes)
-        {
-            if (model == null || model.ProductsInfo == null || productIndexes == null)
-                return;
-
-            var indexes = productIndexes
-                .Distinct()
-                .Where(i => i >= 0 && i < model.ProductsInfo.Count)
-                .OrderByDescending(i => i)
-                .ToList();
-
-            if (indexes.Count == 0)
-                return;
-
-            var removedGuids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (int index in indexes)
-            {
-                var product = model.ProductsInfo[index];
-
-                if (product != null && !string.IsNullOrWhiteSpace(product.OrderProductGuid))
-                    removedGuids.Add(product.OrderProductGuid);
-            }
-
-            foreach (int index in indexes)
-            {
-                model.ProductsInfo.RemoveAt(index);
-            }
-
-            var guidRemap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-            for (int i = 0; i < model.ProductsInfo.Count; i++)
-            {
-                var product = model.ProductsInfo[i];
-
-                if (product == null)
-                    continue;
-
-                string oldGuid = product.OrderProductGuid ?? string.Empty;
-                string newGuid = i.ToString();
-
-                if (!string.IsNullOrWhiteSpace(oldGuid) &&
-                    !string.Equals(oldGuid, newGuid, StringComparison.OrdinalIgnoreCase))
-                {
-                    guidRemap[oldGuid] = newGuid;
-                }
-
-                product.OrderProductGuid = newGuid;
-            }
-
-            if (model.Fields != null)
-            {
-                for (int i = model.Fields.Count - 1; i >= 0; i--)
-                {
-                    var field = model.Fields[i];
-
-                    if (field == null)
-                        continue;
-
-                    if (field.OrderProductGuidList == null || field.OrderProductGuidList.Count == 0)
-                        continue;
-
-                    var newGuids = new List<string>();
-
-                    foreach (string oldGuid in field.OrderProductGuidList)
-                    {
-                        if (string.IsNullOrWhiteSpace(oldGuid))
-                            continue;
-
-                        if (removedGuids.Contains(oldGuid))
-                            continue;
-
-                        string mappedGuid;
-
-                        if (guidRemap.TryGetValue(oldGuid, out mappedGuid))
-                            newGuids.Add(mappedGuid);
-                        else
-                            newGuids.Add(oldGuid);
-                    }
-
-                    newGuids = newGuids
-                        .Distinct(StringComparer.OrdinalIgnoreCase)
-                        .ToList();
-
-                    field.OrderProductGuidList.Clear();
-                    field.OrderProductGuidList.AddRange(newGuids);
-
-                    if (field.OrderProductGuidList.Count == 0)
-                        model.Fields.RemoveAt(i);
-                }
-            }
-
-            if (details != null && details.Products != null)
-            {
-                foreach (int index in indexes)
-                {
-                    if (index >= 0 && index < details.Products.Count)
-                        details.DeleteProduct(index);
-                }
-            }
-        }
-
-        /* private GemotestBlankReportDataSetV2 FillDataSetForBlankReport(Order _Order)
-         {
-             var details = (GemotestOrderDetail)_Order.OrderDetail;
-             var dataset = new GemotestBlankReportDataSetV2();
-
-             DataRow row = dataset.BlankTable.NewRow();
-             row["DateofFormation"] = _Order.Date.ToString("dd.MM.yyyy");
-             row["LaboratoryName"] = "Гемотест";
-             row["ClinicName"] = !string.IsNullOrWhiteSpace(details.PriceListName)
-                 ? details.PriceListName
-                 : (details.PriceList ?? "");
-             row["OrderCode"] = _Order.Number ?? "";
-
-             string sexText = "";
-             if (_Order.Patient != null)
-             {
-                 if (_Order.Patient.Sex == Sex.Male) sexText = "Муж";
-                 else if (_Order.Patient.Sex == Sex.Female) sexText = "Жен";
-             }
-
-             string fio =
-                 (((_Order.Patient?.Surname) ?? "") + " " +
-                  ((_Order.Patient?.Name) ?? "") + " " +
-                  ((_Order.Patient?.Patronimic) ?? "")).Trim();
-
-             row["Pacient_FIO"] = string.IsNullOrWhiteSpace(sexText)
-                 ? fio
-                 : fio + " (" + sexText + ")";
-
-             row["PriceListName"] = details.PriceListName ?? details.PriceList ?? "";
-             dataset.BlankTable.Rows.Add(row);
-
-             AddPatientParameter(dataset, "Дата рождения:", _Order.Patient != null ? _Order.Patient.Birthday.ToString("dd.MM.yyyy") : "");
-             AddPatientParameter(dataset, "Email:", GetDetailValue(details, "email", "Email", "Patient_Email"));
-             AddPatientParameter(dataset, "Телефон:", GetDetailValue(details, "mobile_phone", "Patient_Phone", "phone", "Phone"));
-             AddPatientParameter(dataset, "СНИЛС:", GetDetailValue(details, "snils", "SNILS", "Patient_SNILS"));
-             AddPatientParameter(dataset, "ОМС:", GetDetailValue(details, "oms", "OMS"));
-             AddPatientParameter(dataset, "Адрес:", GetDetailValue(details, "address", "Address"));
-
-             foreach (var detail in details.Details ?? new System.Collections.Generic.List<GemotestDetail>())
-             {
-                 if (detail == null)
-                     continue;
-
-                 string code = (detail.Code ?? "").Trim();
-                 if (string.IsNullOrWhiteSpace(code))
-                     continue;
-
-                 if (IsBlankSystemField(code))
-                     continue;
-
-                 string value = !string.IsNullOrWhiteSpace(detail.DisplayValue)
-                     ? detail.DisplayValue
-                     : (detail.Value ?? "");
-
-                 if (string.IsNullOrWhiteSpace(value))
-                     continue;
-
-                 AddPatientParameter(dataset, detail.Name ?? code, value);
-             }
-
-             foreach (var product in details.Products ?? new System.Collections.Generic.List<GemotestOrderDetail.GemotestProductDetail>())
-             {
-                 if (product == null)
-                     continue;
-
-                 var linkedSamples = (details.Samples ?? new System.Collections.Generic.List<GemotestSampleDetail>())
-                     .Where(s => s != null &&
-                                 s.OrderProductGuidList != null &&
-                                 s.OrderProductGuidList.Contains(product.OrderProductGuid))
-                     .ToList();
-
-                 if (linkedSamples.Count == 0)
-                 {
-                     DataRow prodRow = dataset.Products.NewRow();
-                     prodRow["PROD_CODE"] = product.ProductCode ?? "";
-                     prodRow["PROD_NAME"] = product.ProductName ?? "";
-                     dataset.Products.Rows.Add(prodRow);
-                     continue;
-                 }
-
-                 foreach (var sample in linkedSamples)
-                 {
-                     DataRow prodRow = dataset.Products.NewRow();
-                     prodRow["PROD_CODE"] = product.ProductCode ?? "";
-                     prodRow["PROD_NAME"] = product.ProductName ?? "";
-
-                     prodRow["SAMPLE_BARCODE"] = sample.Barcode ?? "";
-                     prodRow["SAMPLE_ID"] = sample.SampleId ?? "";
-                     prodRow["SAMPLE_IDENTIFIER"] = sample.SampleIdentifier ?? "";
-
-                     prodRow["BIOMATERIAL_NAME"] = sample.BiomName ?? "";
-                     prodRow["CONTAINER_NAME"] = sample.ContName ?? "";
-                     prodRow["LOCALIZATION_NAME"] = sample.LocalizationName ?? "";
-                     prodRow["TRANSPORT_NAME"] = sample.TransportName ?? "";
-                     prodRow["LAB_CENTER_ID"] = sample.LabCenterId ?? "";
-                     prodRow["SAMPLE_DESCRIPTION"] = sample.SampleDescription ?? "";
-
-                     dataset.Products.Rows.Add(prodRow);
-                 }
-             }
-
-             return dataset;
-         }
-
-         private void AddPatientParameter(GemotestBlankReportDataSetV2 dataset, string name, string value)
-         {
-             if (dataset == null || string.IsNullOrWhiteSpace(value))
-                 return;
-
-             DataRow row = dataset.PatientParameters.NewRow();
-             row["PatientParamName"] = name ?? "";
-             row["PatientParamValue"] = value ?? "";
-             dataset.PatientParameters.Rows.Add(row);
-         }
- */
-        private string GetDetailValue(GemotestOrderDetail details, params string[] codes)
-        {
-            if (details == null || details.Details == null || codes == null)
-                return "";
-
-            foreach (string code in codes)
-            {
-                var d = details.Details.FirstOrDefault(x =>
-                    x != null &&
-                    !string.IsNullOrWhiteSpace(x.Code) &&
-                    string.Equals(x.Code.Trim(), code.Trim(), StringComparison.OrdinalIgnoreCase));
-
-                if (d == null)
-                    continue;
-
-                if (!string.IsNullOrWhiteSpace(d.DisplayValue))
-                    return d.DisplayValue;
-
-                if (!string.IsNullOrWhiteSpace(d.Value))
-                    return d.Value;
-            }
-
-            return "";
-        }
-
-        private bool IsBlankSystemField(string code)
-        {
-            if (string.IsNullOrWhiteSpace(code))
-                return false;
-
-            code = code.Trim().ToLowerInvariant();
-
-            switch (code)
-            {
-                case "email":
-                case "patient_email":
-                case "mobile_phone":
-                case "patient_phone":
-                case "phone":
-                case "home_phone":
-                case "snils":
-                case "patient_snils":
-                case "oms":
-                case "address":
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
         public bool PrintStikers(Order _Order, List<SampleInfoForGUI> _SelectedSamples)
         {
             LastException = null;
@@ -2581,7 +2140,6 @@ namespace Laboratory.Gemotest
                     if (fullSample == null)
                         continue;
 
-                    //string.Format(LabelTemplate, "1234567890", "Тестов", "Тест Тестович", "01.01.2000", "Биоматериал", "Контейнер", "Контрагент");
                     string contName = fullSample.ContName;
                     if (!string.IsNullOrEmpty(contName) && contName.Length > 10)
                         contName = contName.Substring(0, 10);
@@ -3271,34 +2829,6 @@ namespace Laboratory.Gemotest
                 string.Equals(NormalizeServiceId(x.Id), serviceId, StringComparison.OrdinalIgnoreCase));
         }
 
-        private HashSet<string> GetAllAutoInsertServiceIds()
-        {
-            var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            if (laboratory == null ||
-                laboratory.Dicts == null ||
-                laboratory.Dicts.ServiceAutoInsert == null)
-            {
-                return result;
-            }
-
-            foreach (var pair in laboratory.Dicts.ServiceAutoInsert)
-            {
-                if (pair.Value == null)
-                    continue;
-
-                foreach (var row in pair.Value)
-                {
-                    if (row == null || string.IsNullOrWhiteSpace(row.auto_service_id))
-                        continue;
-
-                    result.Add(row.auto_service_id.Trim());
-                }
-            }
-
-            return result;
-        }
-
         private bool IsCollectBiomaterialByGemotestEnabled()
         {
             return globalOptions != null && globalOptions.CollectBiomaterialByGemotest;
@@ -3690,38 +3220,6 @@ namespace Laboratory.Gemotest
                     model.ServicesInfo.Add(productForGui);
                 else
                     model.ProductsInfo.Add(productForGui);
-            }
-        }
-
-        private void RemoveAutoInsertServices(GemotestOrderDetail details, OrderModelForGUI model)
-        {
-            HashSet<string> autoServiceIds = GetAllAutoInsertServiceIds();
-
-            if (autoServiceIds.Count == 0)
-                return;
-
-            if (details != null && details.Products != null)
-            {
-                details.Products.RemoveAll(x =>
-                    x != null &&
-                    !string.IsNullOrWhiteSpace(x.ProductId) &&
-                    autoServiceIds.Contains(NormalizeServiceId(x.ProductId)));
-            }
-
-            if (model != null && model.ProductsInfo != null)
-            {
-                model.ProductsInfo.RemoveAll(x =>
-                    x != null &&
-                    !string.IsNullOrWhiteSpace(x.Id) &&
-                    autoServiceIds.Contains(NormalizeServiceId(x.Id)));
-            }
-
-            if (model != null && model.ServicesInfo != null)
-            {
-                model.ServicesInfo.RemoveAll(x =>
-                    x != null &&
-                    !string.IsNullOrWhiteSpace(x.Id) &&
-                    autoServiceIds.Contains(NormalizeServiceId(x.Id)));
             }
         }
 

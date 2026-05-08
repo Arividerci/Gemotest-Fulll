@@ -56,7 +56,7 @@
             this.address_textbox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.address_textbox.Location = new System.Drawing.Point(139, 17);
             this.address_textbox.Name = "address_textbox";
-            this.address_textbox.Size = new System.Drawing.Size(389, 24);
+            this.address_textbox.Size = new System.Drawing.Size(495, 24);
             this.address_textbox.TabIndex = 1;
             // 
             // address_label
@@ -84,7 +84,7 @@
             this.login_textBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.login_textBox.Location = new System.Drawing.Point(139, 45);
             this.login_textBox.Name = "login_textBox";
-            this.login_textBox.Size = new System.Drawing.Size(389, 24);
+            this.login_textBox.Size = new System.Drawing.Size(495, 24);
             this.login_textBox.TabIndex = 3;
             // 
             // password_label
@@ -102,16 +102,16 @@
             this.password_textBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.password_textBox.Location = new System.Drawing.Point(139, 73);
             this.password_textBox.Name = "password_textBox";
-            this.password_textBox.Size = new System.Drawing.Size(389, 24);
+            this.password_textBox.Size = new System.Drawing.Size(495, 24);
             this.password_textBox.TabIndex = 5;
             // 
             // go_button
             // 
             this.go_button.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.go_button.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
-            this.go_button.Location = new System.Drawing.Point(347, 296);
+            this.go_button.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.go_button.Location = new System.Drawing.Point(455, 300);
             this.go_button.Name = "go_button";
-            this.go_button.Size = new System.Drawing.Size(77, 30);
+            this.go_button.Size = new System.Drawing.Size(77, 26);
             this.go_button.TabIndex = 2;
             this.go_button.Text = "ОК";
             this.go_button.UseVisualStyleBackColor = true;
@@ -132,7 +132,7 @@
             this.key_textBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.key_textBox.Location = new System.Drawing.Point(139, 101);
             this.key_textBox.Name = "key_textBox";
-            this.key_textBox.Size = new System.Drawing.Size(389, 24);
+            this.key_textBox.Size = new System.Drawing.Size(495, 24);
             this.key_textBox.TabIndex = 11;
             // 
             // connectionGroupBox
@@ -155,17 +155,17 @@
             this.connectionGroupBox.Controls.Add(this.key_textBox);
             this.connectionGroupBox.Location = new System.Drawing.Point(3, -7);
             this.connectionGroupBox.Name = "connectionGroupBox";
-            this.connectionGroupBox.Size = new System.Drawing.Size(537, 360);
+            this.connectionGroupBox.Size = new System.Drawing.Size(644, 360);
             this.connectionGroupBox.TabIndex = 1;
             this.connectionGroupBox.TabStop = false;
             // 
             // Exit_button
             // 
             this.Exit_button.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.Exit_button.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
-            this.Exit_button.Location = new System.Drawing.Point(449, 296);
+            this.Exit_button.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.Exit_button.Location = new System.Drawing.Point(557, 300);
             this.Exit_button.Name = "Exit_button";
-            this.Exit_button.Size = new System.Drawing.Size(77, 30);
+            this.Exit_button.Size = new System.Drawing.Size(77, 26);
             this.Exit_button.TabIndex = 5;
             this.Exit_button.Text = "Отмена";
             this.Exit_button.UseVisualStyleBackColor = true;
@@ -186,7 +186,7 @@
             this.PriceList_dataGridView.Margin = new System.Windows.Forms.Padding(4);
             this.PriceList_dataGridView.Name = "PriceList_dataGridView";
             this.PriceList_dataGridView.RowHeadersWidth = 51;
-            this.PriceList_dataGridView.Size = new System.Drawing.Size(503, 100);
+            this.PriceList_dataGridView.Size = new System.Drawing.Size(610, 100);
             this.PriceList_dataGridView.TabIndex = 6;
             // 
             // ColumnCaption
@@ -223,10 +223,10 @@
             // CheckConnection_button
             // 
             this.CheckConnection_button.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.CheckConnection_button.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F);
-            this.CheckConnection_button.Location = new System.Drawing.Point(158, 296);
+            this.CheckConnection_button.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.CheckConnection_button.Location = new System.Drawing.Point(266, 300);
             this.CheckConnection_button.Name = "CheckConnection_button";
-            this.CheckConnection_button.Size = new System.Drawing.Size(124, 30);
+            this.CheckConnection_button.Size = new System.Drawing.Size(132, 26);
             this.CheckConnection_button.TabIndex = 4;
             this.CheckConnection_button.Text = " Проверка связи";
             this.CheckConnection_button.UseVisualStyleBackColor = true;
@@ -259,7 +259,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(544, 331);
+            this.ClientSize = new System.Drawing.Size(651, 331);
             this.Controls.Add(this.connectionGroupBox);
             this.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
