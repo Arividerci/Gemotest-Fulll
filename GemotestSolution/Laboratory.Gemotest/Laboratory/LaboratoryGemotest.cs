@@ -583,20 +583,48 @@ namespace Laboratory.Gemotest
         {
             GemotestSystemOptionsForm optionsSystem = new GemotestSystemOptionsForm(_SystemOptions);
 
-            if (optionsSystem.ShowDialog() == DialogResult.OK)
+            if (optionsSystem.ShowDialog() != DialogResult.OK)
+                return false;
+
+            Options = optionsSystem.Options ?? new SystemOptions();
+            _SystemOptions = Options.Pack();
+
+            try
             {
-                Options = optionsSystem.Options;
-                _SystemOptions = Options.Pack();
+                string localOptionsPacked = LocalOptions != null ? LocalOptions.Pack() : string.Empty;
+                SetOptions(_SystemOptions, localOptionsPacked);
 
                 if (laboratoryGUI != null)
                 {
-                    laboratoryGUI.SetOptions(this, GetProducts(), LocalOptions, Options, numerator);
-                }
+                    ProductsCollection productsForGui = AllProducts ?? new ProductsCollection();
 
-                return true;
+                    try
+                    {
+                        ProductsGemotest = null;
+                        product = null;
+                        productsForGui = GetProducts();
+                        AllProducts = productsForGui;
+                    }
+                    catch (Exception ex)
+                    {
+                        last_exception = ex;
+                        SiMed.Clinic.Logger.LogEvent.SaveErrorToLog(
+                            "Настройки Gemotest сохранены, но не удалось обновить справочник услуг: " + ex.Message,
+                            "Gemotest");
+                    }
+
+                    laboratoryGUI.SetOptions(this, productsForGui, LocalOptions, Options, numerator);
+                }
+            }
+            catch (Exception ex)
+            {
+                last_exception = ex;
+                SiMed.Clinic.Logger.LogEvent.SaveErrorToLog(
+                    "Настройки Gemotest сохранены, но не удалось переинициализировать модуль: " + ex.Message,
+                    "Gemotest");
             }
 
-            return false;
+            return true;
         }
 
         public bool ShowLocalOptions(ref string _LocalOptions)
@@ -753,9 +781,8 @@ namespace Laboratory.Gemotest
                 product = null;
                 laboratoryGUI = new LaboratoryGemotestGUI();
 
-                EnsureProductsLoaded();
-
-                laboratoryGUI.SetOptions(this, GetProducts(), LocalOptions, Options, numerator);
+                AllProducts = GetProducts();
+                laboratoryGUI.SetOptions(this, AllProducts, LocalOptions, Options, numerator);
 
                 SiMed.Clinic.Logger.LogEvent.RemoveOldFilesFromLog("Gemotest", 30);
                 return true;
@@ -1441,8 +1468,8 @@ namespace Laboratory.Gemotest
             return GetNodeText(returnNode, "ext_num");
         }
 
-        private void SaveResultsToOrderDetail( GemotestOrderDetail details, GemotestAnalysisResultResponse response, bool saveAttachments)
-        { 
+        private void SaveResultsToOrderDetail(GemotestOrderDetail details, GemotestAnalysisResultResponse response, bool saveAttachments)
+        {
             if (details == null || response == null)
                 return;
 

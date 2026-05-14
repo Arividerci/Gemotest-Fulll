@@ -173,7 +173,7 @@ namespace Laboratory.Gemotest.SourseClass
         public bool Required { get; set; }
     }
 
-    [Serializable]  
+    [Serializable]
     public class GemotestOrderDetail : BaseOrderDetail
     {
 
@@ -186,8 +186,8 @@ namespace Laboratory.Gemotest.SourseClass
         public List<GemotestBioMaterial> BioMaterials { get; set; }
         public List<Product> DefectProductList { get; set; }
         public string PriceList { get; set; }
-        public string PriceListCode { get; set; }  
-        public string PriceListName { get; set; } 
+        public string PriceListCode { get; set; }
+        public string PriceListName { get; set; }
         public string PriceListNum { get; set; }
         public List<GemotestSampleDetail> Samples { get; set; }
 
@@ -236,7 +236,7 @@ namespace Laboratory.Gemotest.SourseClass
             }
         }
 
-                private List<DictionaryBiomaterials> ResolveBiomaterialsForService(DictionaryService service)
+        private List<DictionaryBiomaterials> ResolveBiomaterialsForService(DictionaryService service)
         {
             var result = new List<DictionaryBiomaterials>();
             if (service == null)
@@ -343,24 +343,30 @@ namespace Laboratory.Gemotest.SourseClass
             else
                 BioMaterials.Clear();
 
-
             for (int productIndex = 0; productIndex < Products.Count; productIndex++)
             {
-                var product = Products[productIndex];
+                GemotestProductDetail product = Products[productIndex];
 
-                if (!Dicts.Directory.TryGetValue(product.ProductId, out var service) || service == null)
+                if (product == null || string.IsNullOrWhiteSpace(product.ProductId))
                     continue;
 
-                var biomaterialsForService = ResolveBiomaterialsForService(service);
-                if (!biomaterialsForService.Any())
+                DictionaryService service;
+                if (!Dicts.Directory.TryGetValue(product.ProductId, out service) || service == null)
                     continue;
 
-                foreach (var biom in biomaterialsForService)
+                List<DictionaryBiomaterials> biomaterialsForService = ResolveBiomaterialsForService(service);
+
+                if (biomaterialsForService == null || biomaterialsForService.Count == 0)
+                    continue;
+
+                foreach (DictionaryBiomaterials biom in biomaterialsForService)
                 {
-                    if (biom == null || string.IsNullOrEmpty(biom.id))
+                    if (biom == null || string.IsNullOrWhiteSpace(biom.id))
                         continue;
 
-                    var existing = BioMaterials.FirstOrDefault(b => b.Id == biom.id);
+                    GemotestBioMaterial existing = BioMaterials.FirstOrDefault(b =>
+                        string.Equals(b.Id, biom.id, StringComparison.OrdinalIgnoreCase));
+
                     if (existing == null)
                     {
                         existing = new GemotestBioMaterial
@@ -369,39 +375,210 @@ namespace Laboratory.Gemotest.SourseClass
                             Code = biom.id,
                             Name = biom.name
                         };
+
                         BioMaterials.Add(existing);
                     }
 
-                    if (!existing.Another.Contains(productIndex) &&  !existing.Chosen.Contains(productIndex) && !existing.Mandatory.Contains(productIndex))
+                    existing.Another.Remove(productIndex);
+                    existing.Chosen.Remove(productIndex);
+                    existing.Mandatory.Remove(productIndex);
+
+                    existing.Another.Add(productIndex);
+                }
+
+                if (IsComplexWithIncludedServices(service))
+                {
+                    foreach (DictionaryBiomaterials biom in biomaterialsForService)
                     {
-                        existing.Another.Add(productIndex);
+                        if (biom == null || string.IsNullOrWhiteSpace(biom.id))
+                            continue;
+
+                        MoveBiomaterialProductIndex(biom.id, productIndex, true);
                     }
                 }
-            }
-
-            for (int i = 0; i < Products.Count; i++)
-            {
-
-                bool alreadyChosen = BioMaterials.Any(b =>
-                    b.Chosen.Contains(i) || b.Mandatory.Contains(i));
-
-                if (alreadyChosen)
-                    continue;
-
-
-                var candidate = BioMaterials.FirstOrDefault(b => b.Another.Contains(i));
-                if (candidate != null)
+                else
                 {
-                    candidate.Another.Remove(i);
-                    candidate.Chosen.Add(i);
+                    List<string> defaultBioIds = GetDefaultSelectedBiomaterialIdsForService(service, biomaterialsForService);
+
+                    foreach (string bioId in defaultBioIds)
+                        MoveBiomaterialProductIndex(bioId, productIndex, false);
+
+                    bool alreadySelected = BioMaterials.Any(b =>
+                        b.Chosen.Contains(productIndex) ||
+                        b.Mandatory.Contains(productIndex));
+
+                    if (!alreadySelected)
+                    {
+                        GemotestBioMaterial candidate = BioMaterials.FirstOrDefault(b =>
+                            b.Another.Contains(productIndex));
+
+                        if (candidate != null)
+                            MoveBiomaterialProductIndex(candidate.Id, productIndex, false);
+                    }
                 }
             }
 
             BioMaterials = BioMaterials
-                .Where(b => b.Chosen.Count > 0 || b.Another.Count > 0 || b.Mandatory.Count > 0)
+                .Where(b =>
+                    b.Chosen.Count > 0 ||
+                    b.Another.Count > 0 ||
+                    b.Mandatory.Count > 0)
                 .ToList();
+        }
 
-             Console.WriteLine($"[AddBiomaterialsFromProducts] BioMaterials.Count = {BioMaterials.Count}");
+        private void MoveBiomaterialProductIndex(string biomaterialId, int productIndex, bool mandatory)
+        {
+            if (string.IsNullOrWhiteSpace(biomaterialId) || productIndex < 0)
+                return;
+
+            GemotestBioMaterial bio = BioMaterials.FirstOrDefault(b =>
+                string.Equals(b.Id, biomaterialId, StringComparison.OrdinalIgnoreCase));
+
+            if (bio == null)
+                return;
+
+            bio.Another.Remove(productIndex);
+            bio.Chosen.Remove(productIndex);
+            bio.Mandatory.Remove(productIndex);
+
+            if (mandatory)
+                bio.Mandatory.Add(productIndex);
+            else
+                bio.Chosen.Add(productIndex);
+        }
+
+        private bool IsComplexWithIncludedServices(DictionaryService service)
+        {
+            if (service == null || string.IsNullOrWhiteSpace(service.id))
+                return false;
+
+            if (Dicts == null)
+                return false;
+
+            List<DictionaryMarketingComplex> complexItems = null;
+
+            if (service.service_type == 2)
+            {
+                if (Dicts.MarketingComplexByComplexId != null)
+                    Dicts.MarketingComplexByComplexId.TryGetValue(service.id, out complexItems);
+            }
+            else if (service.service_type == 1)
+            {
+                if (Dicts.MarketingComplexByServiceId != null)
+                    Dicts.MarketingComplexByServiceId.TryGetValue(service.id, out complexItems);
+            }
+
+            return complexItems != null &&
+                   complexItems.Any(x => x != null && !string.IsNullOrWhiteSpace(x.service_id));
+        }
+
+        private List<string> GetDefaultSelectedBiomaterialIdsForService(
+            DictionaryService service,
+            List<DictionaryBiomaterials> biomaterialsForService)
+        {
+            List<string> result = new List<string>();
+
+            if (service == null || string.IsNullOrWhiteSpace(service.id))
+                return result;
+
+            if (biomaterialsForService == null || biomaterialsForService.Count == 0)
+                return result;
+
+            if (Dicts != null && Dicts.SamplesServices != null)
+            {
+                List<DictionarySamplesServices> sampleRows;
+
+                if (Dicts.SamplesServices.TryGetValue(service.id, out sampleRows) &&
+                    sampleRows != null &&
+                    sampleRows.Count > 0)
+                {
+                    foreach (DictionarySamplesServices row in sampleRows)
+                    {
+                        string bioId = GetBiomaterialIdFromSampleServiceRow(row);
+
+                        if (string.IsNullOrWhiteSpace(bioId))
+                            continue;
+
+                        if (!BiomaterialExistsInResolvedList(bioId, biomaterialsForService))
+                            continue;
+
+                        result.Add(bioId);
+                        return result;
+                    }
+                }
+            }
+
+            AddFirstBiomaterialId(result, biomaterialsForService);
+            return result;
+        }
+
+        private static void AddFirstBiomaterialId(List<string> result, List<DictionaryBiomaterials> biomaterialsForService)
+        {
+            if (result == null || biomaterialsForService == null)
+                return;
+
+            DictionaryBiomaterials first = biomaterialsForService.FirstOrDefault(x =>
+                x != null && !string.IsNullOrWhiteSpace(x.id));
+
+            if (first != null)
+                result.Add(first.id);
+        }
+
+        private static string GetBiomaterialIdFromSampleServiceRow(DictionarySamplesServices row)
+        {
+            if (row == null)
+                return string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(row.biomaterial_id))
+                return row.biomaterial_id.Trim();
+
+            if (!string.IsNullOrWhiteSpace(row.microbiology_biomaterial_id))
+                return row.microbiology_biomaterial_id.Trim();
+
+            return string.Empty;
+        }
+
+        private static bool BiomaterialExistsInResolvedList(
+            string biomaterialId,
+            List<DictionaryBiomaterials> biomaterialsForService)
+        {
+            if (string.IsNullOrWhiteSpace(biomaterialId) || biomaterialsForService == null)
+                return false;
+
+            return biomaterialsForService.Any(x =>
+                x != null &&
+                string.Equals(x.id, biomaterialId, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private bool IsAllBiomaterialsRequiredForService( DictionaryService service, List<DictionaryBiomaterials> biomaterialsForService)
+        {
+            if (service == null || biomaterialsForService == null || biomaterialsForService.Count == 0)
+                return false;
+
+            if (biomaterialsForService.Count == 1)
+                return true;
+
+            if (service.service_type == 1 || service.service_type == 2)
+                return true;
+
+            if (service.service_type == 0 && Dicts != null && Dicts.ServiceParameters != null)
+            {
+                List<DictionaryService_parameters> parameters;
+                if (Dicts.ServiceParameters.TryGetValue(service.id, out parameters) &&
+                    parameters != null &&
+                    parameters.Count > 0)
+                {
+                    int biomaterialCount = parameters
+                        .Where(p => p != null && !string.IsNullOrWhiteSpace(p.biomaterial_id))
+                        .Select(p => p.biomaterial_id.Trim())
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .Count();
+
+                    return biomaterialCount > 1;
+                }
+            }
+
+            return false;
         }
 
         public void DeleteObsoleteDetails()
