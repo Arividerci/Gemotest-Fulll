@@ -255,6 +255,58 @@ namespace Laboratory.Gemotest
             return result;
         }
 
+        private bool IsBiomaterialCollectService(string serviceId)
+        {
+            serviceId = (serviceId ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(serviceId) || Dicts == null || Dicts.Directory == null)
+                return false;
+
+            DictionaryService service;
+            return Dicts.Directory.TryGetValue(serviceId, out service) && service != null && service.service_type == 4;
+        }
+
+        private void RemoveDisabledBiomaterialCollectServices(GemotestOrderDetail details, string stage)
+        {
+            if (details == null || details.Products == null)
+                return;
+
+            if (Options != null && Options.CollectBiomaterialByGemotest)
+                return;
+
+            int removed = 0;
+
+            for (int i = details.Products.Count - 1; i >= 0; i--)
+            {
+                GemotestProductDetail product = details.Products[i];
+                if (product == null)
+                    continue;
+
+                if (!IsBiomaterialCollectService(product.ProductId))
+                    continue;
+
+                string message = "Гемотест: удалена услуга забора биоматериала при выключенной настройке CollectBiomaterialByGemotest. Stage=" + (stage ?? string.Empty) +
+                    "; id=" + (product.ProductId ?? string.Empty) +
+                    "; code=" + (product.ProductCode ?? string.Empty) +
+                    "; name=" + (product.ProductName ?? string.Empty);
+
+                try { SiMed.Clinic.Logger.LogEvent.SaveErrorToLog(message, "Gemotest"); } catch { }
+                try { Console.WriteLine(message); } catch { }
+
+                details.Products.RemoveAt(i);
+                removed++;
+            }
+
+            if (removed > 0)
+            {
+                for (int i = 0; i < details.Products.Count; i++)
+                {
+                    if (details.Products[i] != null)
+                        details.Products[i].OrderProductGuid = i.ToString(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
         private static string FormatProductDetailCaption(GemotestProductDetail productDetail)
         {
             if (productDetail == null)
@@ -382,26 +434,13 @@ namespace Laboratory.Gemotest
             {
                 FillDefaultOrderDetail(details, _Order.Items);
 
-                if ((Options == null || !Options.CollectBiomaterialByGemotest) &&
-                    HasProductsRequiringGemotestBiomaterialCollection(details.Products, out string warningText))
-                {
-                    details.Products.Clear();
-                    if (details.BioMaterials != null)
-                        details.BioMaterials.Clear();
-
-                    MessageBox.Show(
-                        warningText,
-                        "Гемотест: оформление заказа",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information);
-
-                    return false;
-                }
+                RemoveDisabledBiomaterialCollectServices(details, "CreateOrder: after FillDefaultOrderDetail");
             }
             else
             {
                 details.Dicts = Dicts;
                 ApplyPriceListToDetails(details);
+                RemoveDisabledBiomaterialCollectServices(details, "CreateOrder: before RebuildBiomaterialsKeepSelection");
                 RebuildBiomaterialsKeepSelection(details);
             }
 
@@ -527,6 +566,9 @@ namespace Laboratory.Gemotest
                 if (details == null)
                     throw new InvalidOperationException("OrderDetail не является GemotestOrderDetail.");
 
+                details.Dicts = Dicts;
+                RemoveDisabledBiomaterialCollectServices(details, "SendOrder: before send");
+
                 if (details.Products == null || details.Products.Count == 0)
                     throw new InvalidOperationException("В заказе нет ни одной услуги (details.Products пуст).");
 
@@ -583,48 +625,20 @@ namespace Laboratory.Gemotest
         {
             GemotestSystemOptionsForm optionsSystem = new GemotestSystemOptionsForm(_SystemOptions);
 
-            if (optionsSystem.ShowDialog() != DialogResult.OK)
-                return false;
-
-            Options = optionsSystem.Options ?? new SystemOptions();
-            _SystemOptions = Options.Pack();
-
-            try
+            if (optionsSystem.ShowDialog() == DialogResult.OK)
             {
-                string localOptionsPacked = LocalOptions != null ? LocalOptions.Pack() : string.Empty;
-                SetOptions(_SystemOptions, localOptionsPacked);
+                Options = optionsSystem.Options;
+                _SystemOptions = Options.Pack();
 
                 if (laboratoryGUI != null)
                 {
-                    ProductsCollection productsForGui = AllProducts ?? new ProductsCollection();
-
-                    try
-                    {
-                        ProductsGemotest = null;
-                        product = null;
-                        productsForGui = GetProducts();
-                        AllProducts = productsForGui;
-                    }
-                    catch (Exception ex)
-                    {
-                        last_exception = ex;
-                        SiMed.Clinic.Logger.LogEvent.SaveErrorToLog(
-                            "Настройки Gemotest сохранены, но не удалось обновить справочник услуг: " + ex.Message,
-                            "Gemotest");
-                    }
-
-                    laboratoryGUI.SetOptions(this, productsForGui, LocalOptions, Options, numerator);
+                    laboratoryGUI.SetOptions(this, GetProducts(), LocalOptions, Options, numerator);
                 }
-            }
-            catch (Exception ex)
-            {
-                last_exception = ex;
-                SiMed.Clinic.Logger.LogEvent.SaveErrorToLog(
-                    "Настройки Gemotest сохранены, но не удалось переинициализировать модуль: " + ex.Message,
-                    "Gemotest");
+
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         public bool ShowLocalOptions(ref string _LocalOptions)
@@ -781,8 +795,9 @@ namespace Laboratory.Gemotest
                 product = null;
                 laboratoryGUI = new LaboratoryGemotestGUI();
 
-                AllProducts = GetProducts();
-                laboratoryGUI.SetOptions(this, AllProducts, LocalOptions, Options, numerator);
+                EnsureProductsLoaded();
+
+                laboratoryGUI.SetOptions(this, GetProducts(), LocalOptions, Options, numerator);
 
                 SiMed.Clinic.Logger.LogEvent.RemoveOldFilesFromLog("Gemotest", 30);
                 return true;
@@ -1468,8 +1483,8 @@ namespace Laboratory.Gemotest
             return GetNodeText(returnNode, "ext_num");
         }
 
-        private void SaveResultsToOrderDetail(GemotestOrderDetail details, GemotestAnalysisResultResponse response, bool saveAttachments)
-        {
+        private void SaveResultsToOrderDetail( GemotestOrderDetail details, GemotestAnalysisResultResponse response, bool saveAttachments)
+        { 
             if (details == null || response == null)
                 return;
 
