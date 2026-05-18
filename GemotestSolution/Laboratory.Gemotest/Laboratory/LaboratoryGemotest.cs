@@ -255,58 +255,6 @@ namespace Laboratory.Gemotest
             return result;
         }
 
-        private bool IsBiomaterialCollectService(string serviceId)
-        {
-            serviceId = (serviceId ?? string.Empty).Trim();
-
-            if (string.IsNullOrWhiteSpace(serviceId) || Dicts == null || Dicts.Directory == null)
-                return false;
-
-            DictionaryService service;
-            return Dicts.Directory.TryGetValue(serviceId, out service) && service != null && service.service_type == 4;
-        }
-
-        private void RemoveDisabledBiomaterialCollectServices(GemotestOrderDetail details, string stage)
-        {
-            if (details == null || details.Products == null)
-                return;
-
-            if (Options != null && Options.CollectBiomaterialByGemotest)
-                return;
-
-            int removed = 0;
-
-            for (int i = details.Products.Count - 1; i >= 0; i--)
-            {
-                GemotestProductDetail product = details.Products[i];
-                if (product == null)
-                    continue;
-
-                if (!IsBiomaterialCollectService(product.ProductId))
-                    continue;
-
-                string message = "Гемотест: удалена услуга забора биоматериала при выключенной настройке CollectBiomaterialByGemotest. Stage=" + (stage ?? string.Empty) +
-                    "; id=" + (product.ProductId ?? string.Empty) +
-                    "; code=" + (product.ProductCode ?? string.Empty) +
-                    "; name=" + (product.ProductName ?? string.Empty);
-
-                try { SiMed.Clinic.Logger.LogEvent.SaveErrorToLog(message, "Gemotest"); } catch { }
-                try { Console.WriteLine(message); } catch { }
-
-                details.Products.RemoveAt(i);
-                removed++;
-            }
-
-            if (removed > 0)
-            {
-                for (int i = 0; i < details.Products.Count; i++)
-                {
-                    if (details.Products[i] != null)
-                        details.Products[i].OrderProductGuid = i.ToString(CultureInfo.InvariantCulture);
-                }
-            }
-        }
-
         private static string FormatProductDetailCaption(GemotestProductDetail productDetail)
         {
             if (productDetail == null)
@@ -434,13 +382,26 @@ namespace Laboratory.Gemotest
             {
                 FillDefaultOrderDetail(details, _Order.Items);
 
-                RemoveDisabledBiomaterialCollectServices(details, "CreateOrder: after FillDefaultOrderDetail");
+                if ((Options == null || !Options.CollectBiomaterialByGemotest) &&
+                    HasProductsRequiringGemotestBiomaterialCollection(details.Products, out string warningText))
+                {
+                    details.Products.Clear();
+                    if (details.BioMaterials != null)
+                        details.BioMaterials.Clear();
+
+                    MessageBox.Show(
+                        warningText,
+                        "Гемотест: оформление заказа",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+
+                    return false;
+                }
             }
             else
             {
                 details.Dicts = Dicts;
                 ApplyPriceListToDetails(details);
-                RemoveDisabledBiomaterialCollectServices(details, "CreateOrder: before RebuildBiomaterialsKeepSelection");
                 RebuildBiomaterialsKeepSelection(details);
             }
 
@@ -566,15 +527,36 @@ namespace Laboratory.Gemotest
                 if (details == null)
                     throw new InvalidOperationException("OrderDetail не является GemotestOrderDetail.");
 
-                details.Dicts = Dicts;
-                RemoveDisabledBiomaterialCollectServices(details, "SendOrder: before send");
-
-                if (details.Products == null || details.Products.Count == 0)
-                    throw new InvalidOperationException("В заказе нет ни одной услуги (details.Products пуст).");
-
                 var contractorCode = !string.IsNullOrEmpty(details.PriceListCode) ? details.PriceListCode : Options.Contractor_Code;
 
                 var sender = new GemotestOrderSender(Options.UrlAdress, contractorCode, Options.Salt, Options.Login, Options.Password);
+
+                DialogResult sendMode = MessageBox.Show(
+                    "Выберите режим отправки заказа в Гемотест.\r\n\r\n" +
+                    "Да — обычная отправка текущего заказа.\r\n" +
+                    "Нет — тестовая отправка набора контрольных услуг.\r\n" +
+                    "Отмена — не отправлять.",
+                    "Гемотест: режим отправки",
+                    MessageBoxButtons.YesNoCancel,
+                    MessageBoxIcon.Question);
+
+                if (sendMode == DialogResult.Cancel)
+                    return false;
+
+                if (sendMode == DialogResult.No)
+                {
+                    string testError;
+                    bool testResult = SendGemotestTestOrders(_Order, details, sender, out testError);
+                    if (!testResult)
+                    {
+                        last_exception = new Exception(testError);
+                        SiMed.Clinic.Logger.LogEvent.SaveErrorToLog(testError, "Gemotest");
+                    }
+                    return testResult;
+                }
+
+                if (details.Products == null || details.Products.Count == 0)
+                    throw new InvalidOperationException("В заказе нет ни одной услуги (details.Products пуст).");
 
                 string errorMessage;
                 if (!sender.CreateOrder(_Order, out errorMessage))
@@ -613,6 +595,324 @@ namespace Laboratory.Gemotest
             }
         }
 
+        private static readonly string[] GemotestTestServiceIds = new string[]
+        {
+            "17-KC",
+            "com27.99.1_MK",
+            "NM_MFANAER_KROV_MK",
+            "NM_MF_1&MF",
+            "NM_MF_2&MF",
+            "PTV MNO_cito"
+        };
+
+        private bool SendGemotestTestOrders(Order order, GemotestOrderDetail details, GemotestOrderSender sender, out string errorMessage)
+        {
+            errorMessage = null;
+
+            if (order == null)
+            {
+                errorMessage = "Тестовая отправка невозможна: заказ не задан.";
+                return false;
+            }
+
+            if (details == null)
+            {
+                errorMessage = "Тестовая отправка невозможна: OrderDetail не является GemotestOrderDetail.";
+                return false;
+            }
+
+            if (sender == null)
+            {
+                errorMessage = "Тестовая отправка невозможна: объект отправки не создан.";
+                return false;
+            }
+
+            EnsureProductsLoaded();
+
+            var oldProducts = details.Products;
+            var oldBioMaterials = details.BioMaterials;
+            var oldSamples = details.Samples;
+            var oldDetails = details.Details;
+            var oldSupplementalInstances = details.SupplementalInstances;
+            string oldExtNum = details.ExtNum;
+            string oldOrderNum = details.OrderNum;
+
+            var report = new StringBuilder();
+            bool allOk = true;
+
+            try
+            {
+                for (int i = 0; i < GemotestTestServiceIds.Length; i++)
+                {
+                    string serviceId = GemotestTestServiceIds[i];
+                    DictionaryService service = FindDictionaryServiceById(serviceId);
+                    if (service == null)
+                    {
+                        allOk = false;
+                        report.AppendLine(serviceId + ": услуга не найдена в справочнике Directory.xml.");
+                        continue;
+                    }
+
+                    PrepareDetailsForTestService(details, service, i);
+
+                    string testExtNum = BuildTestExternalNumber(order, serviceId, i + 1);
+                    string sendError;
+                    bool ok = sender.CreateOrder(order, out sendError, testExtNum);
+
+                    if (ok)
+                    {
+                        report.AppendLine(serviceId + ": отправлено; ext_num=" + testExtNum + "; order_num=" + (details.OrderNum ?? ""));
+                    }
+                    else
+                    {
+                        allOk = false;
+                        report.AppendLine(serviceId + ": ошибка; ext_num=" + testExtNum + "; " + (sendError ?? "без текста ошибки"));
+                    }
+                }
+            }
+            finally
+            {
+                details.Products = oldProducts;
+                details.BioMaterials = oldBioMaterials;
+                details.Samples = oldSamples;
+                details.Details = oldDetails;
+                details.SupplementalInstances = oldSupplementalInstances;
+                details.ExtNum = oldExtNum;
+                details.OrderNum = oldOrderNum;
+                details.Dicts = Dicts;
+            }
+
+            string summary = report.ToString().Trim();
+            if (string.IsNullOrEmpty(summary))
+                summary = "Тестовая отправка не выполнила ни одного заказа.";
+
+            MessageBox.Show(summary,
+                allOk ? "Гемотест: тестовая отправка завершена" : "Гемотест: тестовая отправка завершена с ошибками",
+                MessageBoxButtons.OK,
+                allOk ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+
+            if (!allOk)
+                errorMessage = summary;
+
+            return allOk;
+        }
+
+        private DictionaryService FindDictionaryServiceById(string serviceId)
+        {
+            if (string.IsNullOrWhiteSpace(serviceId))
+                return null;
+
+            if (ProductsGemotest != null)
+            {
+                var fromProducts = ProductsGemotest.FirstOrDefault(x => x != null && SameGemotestId(x.id, serviceId));
+                if (fromProducts != null)
+                    return fromProducts;
+            }
+
+            if (Dicts != null && Dicts.Directory != null)
+            {
+                DictionaryService fromDict;
+                if (Dicts.Directory.TryGetValue(serviceId, out fromDict))
+                    return fromDict;
+
+                return Dicts.Directory.Values.FirstOrDefault(x => x != null && SameGemotestId(x.id, serviceId));
+            }
+
+            return null;
+        }
+
+        private void PrepareDetailsForTestService(GemotestOrderDetail details, DictionaryService service, int productIndex)
+        {
+            details.Dicts = Dicts;
+            details.ExtNum = string.Empty;
+            details.OrderNum = string.Empty;
+            details.Products = new List<GemotestProductDetail>();
+            details.BioMaterials = new List<GemotestBioMaterial>();
+            details.Samples = new List<GemotestSampleDetail>();
+            details.Details = new List<GemotestDetail>();
+            details.SupplementalInstances = new List<GemotestSupplementalInstance>();
+
+            int detailsProductIndex = 0;
+            string productGuid = detailsProductIndex.ToString(CultureInfo.InvariantCulture);
+            details.Products.Add(new GemotestProductDetail
+            {
+                OrderProductGuid = productGuid,
+                ProductId = service.id,
+                ProductCode = service.code,
+                ProductName = service.name
+            });
+
+            ApplyPriceListToDetails(details);
+            details.AddBiomaterialsFromProducts();
+
+            // Для маркетингового комплекса тест должен повторять выбор всех входящих биоматериалов.
+            // Для обычной услуги оставляем старую логику выбора одного биоматериала, а обязательные связанные
+            // пробы добираются на этапе формирования create_order по samples_services.
+            if (service.service_type == 2)
+                SelectAllBiomaterialsForProduct(details, detailsProductIndex);
+
+            AddDefaultSupplementalsForTest(details, service, detailsProductIndex);
+        }
+
+        private void SelectAllBiomaterialsForProduct(GemotestOrderDetail details, int productIndex)
+        {
+            if (details == null || details.BioMaterials == null)
+                return;
+
+            foreach (GemotestBioMaterial biomaterial in details.BioMaterials)
+            {
+                if (biomaterial == null)
+                    continue;
+
+                bool belongsToProduct =
+                    (biomaterial.Chosen != null && biomaterial.Chosen.Contains(productIndex)) ||
+                    (biomaterial.Another != null && biomaterial.Another.Contains(productIndex)) ||
+                    (biomaterial.Mandatory != null && biomaterial.Mandatory.Contains(productIndex));
+
+                if (!belongsToProduct)
+                    continue;
+
+                if (biomaterial.Chosen == null)
+                    biomaterial.Chosen = new List<int>();
+                if (biomaterial.Another == null)
+                    biomaterial.Another = new List<int>();
+
+                if (!biomaterial.Chosen.Contains(productIndex))
+                    biomaterial.Chosen.Add(productIndex);
+
+                while (biomaterial.Another.Contains(productIndex))
+                    biomaterial.Another.Remove(productIndex);
+            }
+        }
+
+        private void AddDefaultSupplementalsForTest(GemotestOrderDetail details, DictionaryService service, int productIndex)
+        {
+            if (details == null || service == null || Dicts == null || Dicts.ServicesSupplementals == null)
+                return;
+
+            foreach (DictionaryServicesSupplementals supplemental in Dicts.ServicesSupplementalsAll)
+            {
+                if (supplemental == null)
+                    continue;
+
+                if (!SameGemotestId(supplemental.parent_id, service.id))
+                    continue;
+
+                string value = BuildDefaultSupplementalValueForTest(supplemental);
+                if (string.IsNullOrWhiteSpace(value))
+                    continue;
+
+                var detail = new GemotestDetail
+                {
+                    Code = supplemental.test_id ?? string.Empty,
+                    SoapCode = supplemental.test_id ?? string.Empty,
+                    Name = supplemental.name ?? string.Empty,
+                    Value = value,
+                    DisplayValue = value
+                };
+
+                if (supplemental.required)
+                    detail.MandatoryProducts.Add(productIndex);
+                else
+                    detail.OptionalProducts.Add(productIndex);
+
+                details.Details.Add(detail);
+            }
+        }
+
+        private static string BuildDefaultSupplementalValueForTest(DictionaryServicesSupplementals supplemental)
+        {
+            if (supplemental == null)
+                return string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(supplemental.value))
+            {
+                string[] parts = supplemental.value.Split(new char[] { ';', ',', '|' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length > 0)
+                    return parts[0].Trim();
+            }
+
+            string name = (supplemental.name ?? string.Empty).ToLowerInvariant();
+            string testId = (supplemental.test_id ?? string.Empty).ToLowerInvariant();
+
+            if (name.Contains("моч") || name.Contains("объем") || name.Contains("объём") || testId.Contains("volume"))
+                return "1000";
+
+            return "1";
+        }
+
+        private static string BuildTestExternalNumber(Order order, string serviceId, int number)
+        {
+            string baseNumber = null;
+            if (order != null && !string.IsNullOrWhiteSpace(order.Number))
+                baseNumber = order.Number.Trim();
+
+            if (string.IsNullOrWhiteSpace(baseNumber))
+                baseNumber = "SiMedTest" + DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
+
+            return baseNumber + "_TEST_" + number.ToString(CultureInfo.InvariantCulture) + "_" + SanitizeExtNumPart(serviceId);
+        }
+
+        private static string SanitizeExtNumPart(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return "service";
+
+            var sb = new StringBuilder();
+            foreach (char ch in value)
+            {
+                if (char.IsLetterOrDigit(ch) || ch == '-' || ch == '_')
+                    sb.Append(ch);
+                else
+                    sb.Append('_');
+            }
+
+            string result = sb.ToString().Trim('_');
+            return string.IsNullOrEmpty(result) ? "service" : result;
+        }
+
+        private static bool SameGemotestId(string left, string right)
+        {
+            return string.Equals((left ?? string.Empty).Trim(), (right ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool CsvContains(string csv, string value)
+        {
+            if (string.IsNullOrEmpty(csv) || string.IsNullOrEmpty(value))
+                return false;
+
+            return csv.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Any(x => string.Equals(x.Trim(), value, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static string AddToCsv(string csv, string value)
+        {
+            if (string.IsNullOrEmpty(value))
+                return csv ?? string.Empty;
+
+            var list = new List<string>();
+            if (!string.IsNullOrEmpty(csv))
+                list.AddRange(csv.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Where(x => x.Length > 0));
+
+            if (!list.Any(x => string.Equals(x, value, StringComparison.OrdinalIgnoreCase)))
+                list.Add(value);
+
+            return string.Join(",", list.ToArray());
+        }
+
+        private static string RemoveFromCsv(string csv, string value)
+        {
+            if (string.IsNullOrEmpty(csv) || string.IsNullOrEmpty(value))
+                return csv ?? string.Empty;
+
+            var list = csv.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Trim())
+                .Where(x => x.Length > 0 && !string.Equals(x, value, StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            return string.Join(",", list);
+        }
+
         public void PrintOrderForms(Order _Order)
         {
             ResultsCollection resultsCollection = new ResultsCollection();
@@ -632,7 +932,18 @@ namespace Laboratory.Gemotest
 
                 if (laboratoryGUI != null)
                 {
-                    laboratoryGUI.SetOptions(this, GetProducts(), LocalOptions, Options, numerator);
+                    ProductsCollection productsForGui = new ProductsCollection();
+                    try
+                    {
+                        productsForGui = GetProducts();
+                        laboratoryGUI.SetOptions(this, productsForGui, LocalOptions, Options, numerator);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Настройки подключения уже сохранены в _SystemOptions.
+                        // Ошибка связи с сервером не должна откатывать сохранение формы настроек.
+                        SiMed.Clinic.Logger.LogEvent.SaveErrorToLog("Гемотест: настройки сохранены, но обновить справочники после сохранения не удалось: " + ex.Message, "Gemotest");
+                    }
                 }
 
                 return true;

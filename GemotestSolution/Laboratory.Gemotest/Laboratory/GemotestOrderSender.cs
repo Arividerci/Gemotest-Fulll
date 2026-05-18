@@ -263,6 +263,11 @@ namespace Laboratory.Gemotest.GemotestRequests
 
         public bool CreateOrder(Order order, out string errorMessage)
         {
+            return CreateOrder(order, out errorMessage, null);
+        }
+
+        public bool CreateOrder(Order order, out string errorMessage, string extNumOverride)
+        {
             errorMessage = null;
 
             try
@@ -283,8 +288,11 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                 var patient = order.Patient ?? new Patient();
 
-                string extNum = string.IsNullOrWhiteSpace(order.Number)
-                    ? "SiMed_" + DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture) : order.Number;
+                string extNum = !string.IsNullOrWhiteSpace(extNumOverride)
+                    ? extNumOverride.Trim()
+                    : (string.IsNullOrWhiteSpace(order.Number)
+                        ? "SiMed_" + DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture)
+                        : order.Number);
 
                 string orderNum = "";
 
@@ -758,7 +766,6 @@ namespace Laboratory.Gemotest.GemotestRequests
                 string microbiologyBiomaterialId = "";
 
 
-                if (svc.type == 2)
                 {
                     TubePlan microTube = null;
 
@@ -1366,16 +1373,16 @@ namespace Laboratory.Gemotest.GemotestRequests
                 return;
             }
 
-            var list = SelectSampleServiceRowsForSending(baseList, biomaterialId, forcedLocalizationId);
+            bool standaloneService = string.IsNullOrWhiteSpace(complexId);
+            var list = SelectSampleServiceRowsForSending(baseList, biomaterialId, forcedLocalizationId, standaloneService);
 
-            // В большинстве услуг пара "дочерняя проба + primary_sample_id" означает аликвоту,
-            // которую МИС физически не формирует. Тогда отправляем только родительскую пробу активной услугой.
-            // Но есть услуги с комбинированным набором проб: например 17-КС требует одновременно кровь
-            // и обе мочевые строки из samples_services (sample_id=121 и sample_id=38). Для таких услуг
-            // нельзя схлопывать дочернюю строку и нельзя отправлять родителя с refuse=1.
-            bool sendEverySampleRequirementAsOrdinary = ShouldSendEverySampleRequirementAsOrdinary(list);
+            // Для строк внутри маркетингового комплекса оставляем прежний безопасный режим:
+            // если есть родительская проба и дочерняя аликвота, отправляем только родителя.
+            // Для самостоятельной услуги нельзя так делать: 17-КС и ПТВ/МНО требуют полный набор
+            // строк samples_services, включая связанные строки primary_sample_id.
+            bool collapseAliquotChildren = !string.IsNullOrWhiteSpace(complexId);
 
-            if (!sendEverySampleRequirementAsOrdinary)
+            if (collapseAliquotChildren)
             {
                 int beforeNoAliquotFilterCount = list != null ? list.Count : 0;
                 list = RemoveChildAliquotRowsWhenParentPresent(list);
@@ -1383,7 +1390,7 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                 if (beforeNoAliquotFilterCount != afterNoAliquotFilterCount)
                 {
-                    DebugGemotestSender("AddRowsForSimpleService: no-aliquot mode collapsed sample rows: service=" + (serviceId ?? "") +
+                    DebugGemotestSender("AddRowsForSimpleService: complex no-aliquot mode collapsed sample rows: service=" + (serviceId ?? "") +
                         "; complex=" + (complexId ?? "") +
                         "; before=" + beforeNoAliquotFilterCount.ToString(CultureInfo.InvariantCulture) +
                         "; after=" + afterNoAliquotFilterCount.ToString(CultureInfo.InvariantCulture));
@@ -1391,8 +1398,7 @@ namespace Laboratory.Gemotest.GemotestRequests
             }
             else
             {
-                DebugGemotestSender("AddRowsForSimpleService: multi-sample requirement mode, keep every dictionary sample row as ordinary: service=" + (serviceId ?? "") +
-                    "; complex=" + (complexId ?? "") +
+                DebugGemotestSender("AddRowsForSimpleService: standalone required-samples mode, keep dictionary sample rows with primary links: service=" + (serviceId ?? "") +
                     "; rows=" + (list != null ? list.Count.ToString(CultureInfo.InvariantCulture) : "0"));
             }
 
@@ -1410,18 +1416,12 @@ namespace Laboratory.Gemotest.GemotestRequests
                 DictionarySamples primarySample = null;
 
                 int primaryId = ToInt(p.primary_sample_id, 0);
-                if (primaryId > 0 && !sendEverySampleRequirementAsOrdinary)
+                if (primaryId > 0)
                 {
                     primarySampleId = primaryId;
 
                     if (_dictionaries.Samples != null)
                         _dictionaries.Samples.TryGetValue(primaryId.ToString(CultureInfo.InvariantCulture), out primarySample);
-                }
-                else if (primaryId > 0 && sendEverySampleRequirementAsOrdinary)
-                {
-                    DebugGemotestSender("AddRowsForSimpleService: treat linked sample as ordinary required sample: service=" + (serviceId ?? "") +
-                        "; sample_id=" + execSampleId.ToString(CultureInfo.InvariantCulture) +
-                        "; primary_sample_id=" + primaryId.ToString(CultureInfo.InvariantCulture));
                 }
 
                 rows.Add(new SampleServiceRow
@@ -1558,9 +1558,27 @@ namespace Laboratory.Gemotest.GemotestRequests
             return result;
         }
 
-        private List<DictionarySamplesServices> SelectSampleServiceRowsForSending( List<DictionarySamplesServices> source, string selectedBiomaterialId, string forcedLocalizationId)
+
+        private static string Safe(object value)
         {
-            var all = source.Where(p => p != null).ToList();
+            return value == null ? string.Empty : value.ToString();
+        }
+
+        private string GetTransportIdForDictionarySampleRow(DictionarySamplesServices row)
+        {
+            if (row == null || _dictionaries == null || _dictionaries.Samples == null)
+                return string.Empty;
+
+            DictionarySamples sample;
+            if (_dictionaries.Samples.TryGetValue(row.sample_id.ToString(CultureInfo.InvariantCulture), out sample) && sample != null)
+                return sample.transport_id ?? string.Empty;
+
+            return string.Empty;
+        }
+
+        private List<DictionarySamplesServices> SelectSampleServiceRowsForSending(List<DictionarySamplesServices> source, string selectedBiomaterialId, string forcedLocalizationId, bool allowStandaloneRequiredExpansion)
+        {
+            var all = source != null ? source.Where(p => p != null).ToList() : new List<DictionarySamplesServices>();
 
             if (all.Count == 0)
                 return all;
@@ -1571,8 +1589,10 @@ namespace Laboratory.Gemotest.GemotestRequests
             if (!hasBiomaterialFilter && !hasLocalizationFilter)
                 return all;
 
-            var selected = all.Where(p => (!hasBiomaterialFilter || SameId(p.biomaterial_id, selectedBiomaterialId)) &&
+            var selected = all.Where(p =>
+                    (!hasBiomaterialFilter || RowMatchesBiomaterialFilter(p, selectedBiomaterialId)) &&
                     (!hasLocalizationFilter || SameId(p.localization_id, forcedLocalizationId))).ToList();
+
             if (selected.Count == 0)
             {
                 if (hasLocalizationFilter)
@@ -1582,44 +1602,226 @@ namespace Laboratory.Gemotest.GemotestRequests
             }
 
             var result = new List<DictionarySamplesServices>();
-
             AddUniqueSampleServiceRows(result, selected);
 
-            // Часть услуг в samples_services задаёт не альтернативы, а обязательный состав пробы.
-            // Типичный случай: выбранный биоматериал крови + обязательная мочевая пара 121/38.
-            // Поэтому после выбора основного биоматериала добавляем связанные строки parent/child
-            // по той же услуге, иначе Гемотест возвращает 307 "необходимо добавить пробы".
-            foreach (var row in all)
+            DebugGemotestSender("SelectSampleServiceRowsForSending: selected rows before linked expansion: service="
+                + (all.Count > 0 ? (all[0].service_id ?? "") : "")
+                + "; selected_bio=" + (selectedBiomaterialId ?? "")
+                + "; selected_loc=" + (forcedLocalizationId ?? "")
+                + "; rows=" + BuildSampleRowIdList(result));
+
+            bool hasLinkedParentChildPair = HasLinkedParentChildPair(all);
+            bool hasIndependentOrdinaryRequirement = all.Any(delegate(DictionarySamplesServices row)
             {
-                if (hasLocalizationFilter && !SameId(row.localization_id, forcedLocalizationId))
-                    continue;
+                return IsIndependentOrdinarySampleRequirementRow(row, all);
+            });
 
-                if (IsLinkedSampleRequirementRow(row, all))
-                    AddUniqueSampleServiceRow(result, row);
-            }
-
-            bool resultHasLinkedRows = result.Any(row => IsLinkedSampleRequirementRow(row, all));
-            bool resultHasIndependentRows = result.Any(row => IsIndependentOrdinarySampleRequirementRow(row, all));
-
-            if (resultHasLinkedRows && !resultHasIndependentRows)
+            if (allowStandaloneRequiredExpansion && hasLinkedParentChildPair && hasIndependentOrdinaryRequirement)
             {
-                var firstIndependentRow = all.FirstOrDefault(row => IsIndependentOrdinarySampleRequirementRow(row, all));
-                if (firstIndependentRow != null)
+                // Случай ПТВ/МНО: в справочнике есть parent/aliquot-пара и отдельная обязательная обычная проба.
+                // По ответу Гемотеста child-аликвоту sample_id=13 отправлять нельзя, зато надо добавить независимую пробу sample_id=1.
+                int beforeChildCollapseCount = result.Count;
+                result = RemoveChildAliquotRowsWhenParentPresent(result);
+                int afterChildCollapseCount = result.Count;
+
+                if (beforeChildCollapseCount != afterChildCollapseCount)
                 {
-                    AddUniqueSampleServiceRow(result, firstIndependentRow);
-                    DebugGemotestSender("SelectSampleServiceRowsForSending: add default independent sample row for linked sample set: service=" + (firstIndependentRow.service_id ?? "") +
-                        "; sample_id=" + ToInt(firstIndependentRow.sample_id, 0).ToString(CultureInfo.InvariantCulture) +
-                        "; bio=" + (firstIndependentRow.biomaterial_id ?? ""));
+                    DebugGemotestSender("SelectSampleServiceRowsForSending: standalone linked+ordinary mode removed child aliquot rows: service="
+                        + (all.Count > 0 ? (all[0].service_id ?? "") : "")
+                        + "; before=" + beforeChildCollapseCount.ToString(CultureInfo.InvariantCulture)
+                        + "; after=" + afterChildCollapseCount.ToString(CultureInfo.InvariantCulture));
+                }
+
+                foreach (var row in all)
+                {
+                    if (hasLocalizationFilter && !SameId(row.localization_id, forcedLocalizationId))
+                        continue;
+
+                    if (!IsIndependentOrdinarySampleRequirementRow(row, all))
+                        continue;
+
+                    if (AddUniqueSampleServiceRow(result, row))
+                    {
+                        DebugGemotestSender("SelectSampleServiceRowsForSending: add independent required row for standalone linked service: service=" + (row.service_id ?? "")
+                            + "; sample_id=" + Safe(row.sample_id)
+                            + "; primary_sample_id=" + Safe(row.primary_sample_id)
+                            + "; bio=" + Safe(row.biomaterial_id)
+                            + "; micro_bio=" + Safe(row.microbiology_biomaterial_id)
+                            + "; loc=" + Safe(row.localization_id));
+                    }
+                }
+            }
+            else
+            {
+                // Если у услуги в samples_services есть связанные parent/child-строки, это не альтернативы,
+                // а обязательный состав пробы. Добавляем всю связанную группу по услуге.
+                foreach (var row in all)
+                {
+                    if (hasLocalizationFilter && !SameId(row.localization_id, forcedLocalizationId))
+                        continue;
+
+                    if (!IsLinkedSampleRequirementRow(row, all))
+                        continue;
+
+                    if (AddUniqueSampleServiceRow(result, row))
+                    {
+                        DebugGemotestSender("SelectSampleServiceRowsForSending: add linked required row: service=" + (row.service_id ?? "")
+                            + "; sample_id=" + Safe(row.sample_id)
+                            + "; primary_sample_id=" + Safe(row.primary_sample_id)
+                            + "; bio=" + Safe(row.biomaterial_id)
+                            + "; micro_bio=" + Safe(row.microbiology_biomaterial_id)
+                            + "; loc=" + Safe(row.localization_id));
+                    }
                 }
             }
 
-            foreach (var row in all)
+            if (allowStandaloneRequiredExpansion && ShouldExpandStandaloneCompanionBiomaterialGroup(all, result, selectedBiomaterialId, forcedLocalizationId))
             {
-                if (IsUtilizeSampleServiceRow(row))
-                    AddUniqueSampleServiceRow(result, row);
+                // Случай 17-КС: пользователь выбирает основной биоматериал, но Гемотест ждёт ещё комплект мочи.
+                // Отличительный признак в справочнике: у невыбранного биоматериала есть группа из нескольких sample_id.
+                foreach (var row in all)
+                {
+                    if (row == null)
+                        continue;
+
+                    if (hasLocalizationFilter && !SameId(row.localization_id, forcedLocalizationId))
+                        continue;
+
+                    if (RowMatchesBiomaterialFilter(row, selectedBiomaterialId))
+                        continue;
+
+                    string groupKey = BuildBiomaterialGroupKey(row);
+                    int groupDistinctSamples = all
+                        .Where(x => x != null && SameId(BuildBiomaterialGroupKey(x), groupKey) && ToInt(x.sample_id, 0) > 0)
+                        .Select(x => ToInt(x.sample_id, 0))
+                        .Distinct()
+                        .Count();
+
+                    if (groupDistinctSamples < 2)
+                        continue;
+
+                    if (AddUniqueSampleServiceRow(result, row))
+                    {
+                        DebugGemotestSender("SelectSampleServiceRowsForSending: add companion biomaterial group row: service=" + (row.service_id ?? "")
+                            + "; selected_bio=" + (selectedBiomaterialId ?? "")
+                            + "; sample_id=" + Safe(row.sample_id)
+                            + "; primary_sample_id=" + Safe(row.primary_sample_id)
+                            + "; bio=" + Safe(row.biomaterial_id)
+                            + "; micro_bio=" + Safe(row.microbiology_biomaterial_id)
+                            + "; loc=" + Safe(row.localization_id));
+                    }
+                }
             }
 
+            DebugGemotestSender("SelectSampleServiceRowsForSending: final rows after linked expansion: service="
+                + (all.Count > 0 ? (all[0].service_id ?? "") : "")
+                + "; rows=" + BuildSampleRowIdList(result));
+
             return result;
+        }
+
+        private static bool HasLinkedParentChildPair(List<DictionarySamplesServices> rows)
+        {
+            if (rows == null || rows.Count == 0)
+                return false;
+
+            return rows.Any(delegate(DictionarySamplesServices child)
+            {
+                if (child == null)
+                    return false;
+
+                int primarySampleId = ToInt(child.primary_sample_id, 0);
+                if (primarySampleId <= 0)
+                    return false;
+
+                return rows.Any(parent => parent != null && ToInt(parent.sample_id, 0) == primarySampleId);
+            });
+        }
+
+        private static bool ShouldExpandStandaloneCompanionBiomaterialGroup(List<DictionarySamplesServices> allRows, List<DictionarySamplesServices> currentRows, string selectedBiomaterialId, string forcedLocalizationId)
+        {
+            if (allRows == null || currentRows == null || allRows.Count == 0)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(selectedBiomaterialId))
+                return false;
+
+            bool hasSelectedRow = currentRows.Any(row => row != null && RowMatchesBiomaterialFilter(row, selectedBiomaterialId));
+            if (!hasSelectedRow)
+                return false;
+
+            var candidateGroups = allRows
+                .Where(row => row != null && !RowMatchesBiomaterialFilter(row, selectedBiomaterialId))
+                .Where(row => string.IsNullOrWhiteSpace(forcedLocalizationId) || SameId(row.localization_id, forcedLocalizationId))
+                .GroupBy(row => BuildBiomaterialGroupKey(row))
+                .ToList();
+
+            foreach (var group in candidateGroups)
+            {
+                int distinctSamples = group
+                    .Select(row => ToInt(row.sample_id, 0))
+                    .Where(sampleId => sampleId > 0)
+                    .Distinct()
+                    .Count();
+
+                if (distinctSamples >= 2)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static string BuildBiomaterialGroupKey(DictionarySamplesServices row)
+        {
+            if (row == null)
+                return string.Empty;
+
+            return (row.biomaterial_id ?? string.Empty) + "|" +
+                   (row.microbiology_biomaterial_id ?? string.Empty) + "|" +
+                   (row.localization_id ?? string.Empty);
+        }
+
+        private static bool RowMatchesBiomaterialFilter(DictionarySamplesServices row, string selectedBiomaterialId)
+        {
+            if (row == null)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(selectedBiomaterialId))
+                return true;
+
+            return SameId(row.biomaterial_id, selectedBiomaterialId) ||
+                   SameId(row.microbiology_biomaterial_id, selectedBiomaterialId);
+        }
+
+        private static string BuildSampleRowIdList(List<DictionarySamplesServices> rows)
+        {
+            if (rows == null || rows.Count == 0)
+                return "";
+
+            return string.Join(",", rows.Select(delegate(DictionarySamplesServices row)
+            {
+                string primaryId = row == null ? string.Empty : Safe(row.primary_sample_id);
+                if (!string.IsNullOrWhiteSpace(primaryId) && primaryId != "0")
+                    return Safe(row.sample_id) + "<-" + primaryId;
+                return row == null ? string.Empty : Safe(row.sample_id);
+            }).ToArray());
+        }
+
+        private static string BuildDictionarySampleRequirementKey(DictionarySamplesServices row)
+        {
+            if (row == null)
+                return string.Empty;
+
+            return string.Join("|", new string[]
+            {
+                Safe(row.service_id),
+                Safe(row.sample_id),
+                Safe(row.primary_sample_id),
+                Safe(row.biomaterial_id),
+                Safe(row.microbiology_biomaterial_id),
+                Safe(row.localization_id),
+                Safe(row.service_count)
+            });
         }
 
         private static void AddUniqueSampleServiceRows(List<DictionarySamplesServices> target, IEnumerable<DictionarySamplesServices> rows)
@@ -1631,13 +1833,17 @@ namespace Laboratory.Gemotest.GemotestRequests
                 AddUniqueSampleServiceRow(target, row);
         }
 
-        private static void AddUniqueSampleServiceRow(List<DictionarySamplesServices> target, DictionarySamplesServices row)
+        private static bool AddUniqueSampleServiceRow(List<DictionarySamplesServices> target, DictionarySamplesServices row)
         {
             if (target == null || row == null)
-                return;
+                return false;
 
-            if (!target.Any(x => Object.ReferenceEquals(x, row)))
-                target.Add(row);
+            string key = BuildDictionarySampleRequirementKey(row);
+            if (target.Any(x => x != null && SameId(BuildDictionarySampleRequirementKey(x), key)))
+                return false;
+
+            target.Add(row);
+            return true;
         }
 
         private bool IsUtilizeSampleServiceRow(DictionarySamplesServices row)
