@@ -7,14 +7,14 @@ namespace Laboratory.Gemotest
     public sealed class SampleServiceRow
     {
         public string ServiceId { get; set; }
-        public string ComplexId { get; set; } // если услуга входит в маркетинговый комплекс
+        public string ComplexId { get; set; } 
 
         public int ExecutionSampleId { get; set; }
         public string ExecutionSampleName { get; set; }
         public string ExecutionTransportId { get; set; }
         public bool ExecutionUtilize { get; set; }
 
-        public int? PrimarySampleId { get; set; } // если есть - значит алиquot
+        public int? PrimarySampleId { get; set; } 
         public string PrimarySampleName { get; set; }
         public string PrimaryTransportId { get; set; }
         public bool PrimaryUtilize { get; set; }
@@ -23,7 +23,7 @@ namespace Laboratory.Gemotest
         public string MicroBioBiomaterialId { get; set; }
         public string LocalizationId { get; set; }
 
-        public int ServiceCount { get; set; } // доля: 100 / service_count
+        public int ServiceCount { get; set; } 
 
         public SampleServiceRow()
         {
@@ -279,105 +279,105 @@ namespace Laboratory.Gemotest
             }
         }
 
-        /*public static List<TubePlan> Pack(List<SampleServiceRow> rows)
-        {
-            if (rows == null) throw new ArgumentNullException(nameof(rows));
+        
 
-            // 0) подготовка work items
-            var items = new List<WorkItem>(rows.Count);
-            for (int i = 0; i < rows.Count; i++)
-            {
-                var r = rows[i];
-                int sc = r.ServiceCount <= 0 ? 1 : r.ServiceCount;
-                double share = Capacity / sc;
 
-                int drawId = r.PrimarySampleId.HasValue ? r.PrimarySampleId.Value : r.ExecutionSampleId;
-                string drawName = r.PrimarySampleId.HasValue ? (r.PrimarySampleName ?? "") : (r.ExecutionSampleName ?? "");
-                string drawTransport = r.PrimarySampleId.HasValue ? (r.PrimaryTransportId ?? "") : (r.ExecutionTransportId ?? "");
-                bool drawUtilize = r.PrimarySampleId.HasValue ? r.PrimaryUtilize : r.ExecutionUtilize;
 
-                items.Add(new WorkItem
-                {
-                    Src = r,
-                    DrawSampleId = drawId,
-                    DrawSampleName = drawName,
-                    DrawTransportId = drawTransport,
-                    DrawUtilize = drawUtilize,
-                    UtilizationFlag = r.ExecutionUtilize ? 1 : 0,
-                    Share = share
-                });
-            }
 
-            // 1) merge utilize -> non-utilize (если совпали bio+loc+transport)
-            var groupsForMerge = items.GroupBy(x => new MergeKey(GetBioKey(x.Src), x.Src.LocalizationId ?? "", x.DrawTransportId ?? "")).ToList();
-            foreach (var g in groupsForMerge)
-            {
-                var nonUtil = g.FirstOrDefault(x => x.DrawUtilize == false);
-                if (nonUtil == null) continue;
 
-                foreach (var it in g)
-                {
-                    if (it.DrawUtilize == true)
-                    {
-                        it.DrawSampleId = nonUtil.DrawSampleId;
-                        it.DrawSampleName = nonUtil.DrawSampleName;
-                        it.DrawTransportId = nonUtil.DrawTransportId;
-                        it.DrawUtilize = nonUtil.DrawUtilize;
-                        it.UtilizationFlag = 1;
-                    }
-                }
-            }
 
-            // 2) бин-пэкинг первичных пробирок
-            var primaryPlans = new List<TubePlan>();
-            var itemsByPrimaryKey = items.GroupBy(x => new PrimaryPackKey(x.DrawSampleId, GetBioKey(x.Src), x.Src.LocalizationId ?? "", x.DrawTransportId ?? "")).ToList();
 
-            foreach (var g in itemsByPrimaryKey)
-            {
-                var binList = BestFitDecreasing(g.ToList());
 
-                foreach (var b in binList)
-                {
-                    // первичная пробирка
-                    var p = new TubePlan
-                    {
-                        Parent = null,
-                        SampleId = g.Key.SampleId,
-                        SampleName = b.Items.Count > 0 ? (b.Items[0].DrawSampleName ?? "") : "",
-                        TransportId = g.Key.Transport ?? "",
-                        Utilize = b.Items.Count > 0 && b.Items[0].DrawUtilize,
-                        BiomaterialId = ResolveBiomaterialId(g.Key.Bio),
-                        MicroBioBiomaterialId = ResolveMicroBioId(g.Key.Bio),
-                        LocalizationId = g.Key.Loc ?? "",
-                        UsedPercent = b.Used
-                    };
 
-                    // услуги в первичной (aliquot-услуги тут refuse=1)
-                    foreach (var it in b.Items)
-                    {
-                        var r = it.Src;
-                        int sc = r.ServiceCount <= 0 ? 1 : r.ServiceCount;
-                        double share = Capacity / sc;
 
-                        p.Services.Add(new TubeServicePlan
-                        {
-                            ServiceId = r.ServiceId ?? "",
-                            ComplexId = r.ComplexId ?? "",
-                            UtilizationFlag = ResolvePrimaryUtilizationFlag(it),
-                            RefuseFlag = 0,
-                            ServiceCount = sc,
-                            SharePercent = share
-                        });
-                    }
 
-                    primaryPlans.Add(p);
 
-                   
-                }
-            }
-            return primaryPlans;
-        }
-*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         public static List<TubePlan> Pack(List<SampleServiceRow> rows)
         {
             if (rows == null) throw new ArgumentNullException(nameof(rows));
@@ -402,8 +402,8 @@ namespace Laboratory.Gemotest
 
             var result = new List<TubePlan>();
 
-            // 1) Обычные строки без primary_sample_id.
-            // Но если это parent-строка для aliquot-услуги, отдельно как обычную пробу ее не отправляем.
+            
+            
             var ordinaryRows = new List<SampleServiceRow>();
 
             for (int i = 0; i < cleanRows.Count; i++)
@@ -421,7 +421,7 @@ namespace Laboratory.Gemotest
 
             result.AddRange(PackOrdinaryRows(ordinaryRows));
 
-            // 2) Aliquot-строки: создаем parent-пробу и дочернюю execution-пробу.
+            
             var aliquotRows = new List<SampleServiceRow>();
 
             for (int i = 0; i < cleanRows.Count; i++)
@@ -544,7 +544,7 @@ namespace Laboratory.Gemotest
                 if (string.IsNullOrWhiteSpace(parentTransport))
                     parentTransport = r.PrimaryTransportId ?? "";
 
-                // Последний fallback, чтобы transport_id не стал пустым.
+                
                 if (string.IsNullOrWhiteSpace(parentTransport))
                     parentTransport = r.ExecutionTransportId ?? "";
 
@@ -587,8 +587,8 @@ namespace Laboratory.Gemotest
                         UsedPercent = parentBin.Used
                     };
 
-                    // На parent-пробе услуга должна быть отмечена как отказанная/refuse,
-                    // потому что реально выполняется на дочерней aliquot-пробе.
+                    
+                    
                     foreach (var it in parentBin.Items)
                     {
                         AddTubeServiceIfMissing(
@@ -601,7 +601,7 @@ namespace Laboratory.Gemotest
 
                     result.Add(parentTube);
 
-                    // Теперь создаем дочерние aliquot-пробы.
+                    
                     var childGroups = parentBin.Items
                         .GroupBy(x => new AliquotPackKey(
                             x.Src.ExecutionSampleId,
@@ -790,8 +790,8 @@ namespace Laboratory.Gemotest
             if (!SameText(candidateParent.LocalizationId, aliquotRow.LocalizationId))
                 return false;
 
-            // Если primary transport известен, проверяем строго.
-            // Если он пустой, не отсекаем parent-строку.
+            
+            
             if (!string.IsNullOrWhiteSpace(aliquotRow.PrimaryTransportId))
             {
                 if (!SameText(candidateParent.ExecutionTransportId, aliquotRow.PrimaryTransportId))
@@ -861,13 +861,13 @@ namespace Laboratory.Gemotest
         {
             if (it == null) return 0;
 
-            // 1) Если утильная проба была объединена с рабочей,
-            // этот флаг уже выставлен на этапе merge.
+            
+            
             if (it.UtilizationFlag == 1)
                 return 1;
 
-            // 2) Если проба сама по себе утильная и не была объединена,
-            // всё равно нужно отправлять utilization_flag = 1.
+            
+            
             if (it.DrawUtilize)
                 return 1;
 
@@ -878,8 +878,8 @@ namespace Laboratory.Gemotest
         {
             if (it == null || it.Src == null) return 0;
 
-            // Для дочерней aliquot-пробы флаг должен отражать именно execution-пробу,
-            // а не parent/draw-пробу.
+            
+            
             return it.Src.ExecutionUtilize ? 1 : 0;
         }
 
@@ -894,7 +894,7 @@ namespace Laboratory.Gemotest
         private static string ResolveBiomaterialId(BioKey key)
         {
             if (key.Kind == "BM") return key.Value;
-            return ""; // для микробиологии biomaterial_id может быть пустым
+            return ""; 
         }
 
         private static string ResolveMicroBioId(BioKey key)

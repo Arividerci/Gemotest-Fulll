@@ -531,30 +531,6 @@ namespace Laboratory.Gemotest
 
                 var sender = new GemotestOrderSender(Options.UrlAdress, contractorCode, Options.Salt, Options.Login, Options.Password);
 
-                DialogResult sendMode = MessageBox.Show(
-                    "Выберите режим отправки заказа в Гемотест.\r\n\r\n" +
-                    "Да — обычная отправка текущего заказа.\r\n" +
-                    "Нет — тестовая отправка набора контрольных услуг.\r\n" +
-                    "Отмена — не отправлять.",
-                    "Гемотест: режим отправки",
-                    MessageBoxButtons.YesNoCancel,
-                    MessageBoxIcon.Question);
-
-                if (sendMode == DialogResult.Cancel)
-                    return false;
-
-                if (sendMode == DialogResult.No)
-                {
-                    string testError;
-                    bool testResult = SendGemotestTestOrders(_Order, details, sender, out testError);
-                    if (!testResult)
-                    {
-                        last_exception = new Exception(testError);
-                        SiMed.Clinic.Logger.LogEvent.SaveErrorToLog(testError, "Gemotest");
-                    }
-                    return testResult;
-                }
-
                 if (details.Products == null || details.Products.Count == 0)
                     throw new InvalidOperationException("В заказе нет ни одной услуги (details.Products пуст).");
 
@@ -593,165 +569,6 @@ namespace Laboratory.Gemotest
                 SiMed.Clinic.Logger.LogEvent.SaveErrorToLog(ex.Message, "Gemotest");
                 return false;
             }
-        }
-
-        private static readonly string[] GemotestTestServiceIds = new string[]
-        {
-            "17-KC",
-            "com27.99.1_MK",
-            "NM_MFANAER_KROV_MK",
-            "NM_MF_1&MF",
-            "NM_MF_2&MF",
-            "PTV MNO_cito"
-        };
-
-        private bool SendGemotestTestOrders(Order order, GemotestOrderDetail details, GemotestOrderSender sender, out string errorMessage)
-        {
-            errorMessage = null;
-
-            if (order == null)
-            {
-                errorMessage = "Тестовая отправка невозможна: заказ не задан.";
-                return false;
-            }
-
-            if (details == null)
-            {
-                errorMessage = "Тестовая отправка невозможна: OrderDetail не является GemotestOrderDetail.";
-                return false;
-            }
-
-            if (sender == null)
-            {
-                errorMessage = "Тестовая отправка невозможна: объект отправки не создан.";
-                return false;
-            }
-
-            EnsureProductsLoaded();
-
-            var oldProducts = details.Products;
-            var oldBioMaterials = details.BioMaterials;
-            var oldSamples = details.Samples;
-            var oldDetails = details.Details;
-            var oldSupplementalInstances = details.SupplementalInstances;
-            string oldExtNum = details.ExtNum;
-            string oldOrderNum = details.OrderNum;
-
-            var report = new StringBuilder();
-            bool allOk = true;
-
-            try
-            {
-                for (int i = 0; i < GemotestTestServiceIds.Length; i++)
-                {
-                    string serviceId = GemotestTestServiceIds[i];
-                    DictionaryService service = FindDictionaryServiceById(serviceId);
-                    if (service == null)
-                    {
-                        allOk = false;
-                        report.AppendLine(serviceId + ": услуга не найдена в справочнике Directory.xml.");
-                        continue;
-                    }
-
-                    PrepareDetailsForTestService(details, service, i);
-
-                    string testExtNum = BuildTestExternalNumber(order, serviceId, i + 1);
-                    string sendError;
-                    bool ok = sender.CreateOrder(order, out sendError, testExtNum);
-
-                    if (ok)
-                    {
-                        report.AppendLine(serviceId + ": отправлено; ext_num=" + testExtNum + "; order_num=" + (details.OrderNum ?? ""));
-                    }
-                    else
-                    {
-                        allOk = false;
-                        report.AppendLine(serviceId + ": ошибка; ext_num=" + testExtNum + "; " + (sendError ?? "без текста ошибки"));
-                    }
-                }
-            }
-            finally
-            {
-                details.Products = oldProducts;
-                details.BioMaterials = oldBioMaterials;
-                details.Samples = oldSamples;
-                details.Details = oldDetails;
-                details.SupplementalInstances = oldSupplementalInstances;
-                details.ExtNum = oldExtNum;
-                details.OrderNum = oldOrderNum;
-                details.Dicts = Dicts;
-            }
-
-            string summary = report.ToString().Trim();
-            if (string.IsNullOrEmpty(summary))
-                summary = "Тестовая отправка не выполнила ни одного заказа.";
-
-            MessageBox.Show(summary,
-                allOk ? "Гемотест: тестовая отправка завершена" : "Гемотест: тестовая отправка завершена с ошибками",
-                MessageBoxButtons.OK,
-                allOk ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
-
-            if (!allOk)
-                errorMessage = summary;
-
-            return allOk;
-        }
-
-        private DictionaryService FindDictionaryServiceById(string serviceId)
-        {
-            if (string.IsNullOrWhiteSpace(serviceId))
-                return null;
-
-            if (ProductsGemotest != null)
-            {
-                var fromProducts = ProductsGemotest.FirstOrDefault(x => x != null && SameGemotestId(x.id, serviceId));
-                if (fromProducts != null)
-                    return fromProducts;
-            }
-
-            if (Dicts != null && Dicts.Directory != null)
-            {
-                DictionaryService fromDict;
-                if (Dicts.Directory.TryGetValue(serviceId, out fromDict))
-                    return fromDict;
-
-                return Dicts.Directory.Values.FirstOrDefault(x => x != null && SameGemotestId(x.id, serviceId));
-            }
-
-            return null;
-        }
-
-        private void PrepareDetailsForTestService(GemotestOrderDetail details, DictionaryService service, int productIndex)
-        {
-            details.Dicts = Dicts;
-            details.ExtNum = string.Empty;
-            details.OrderNum = string.Empty;
-            details.Products = new List<GemotestProductDetail>();
-            details.BioMaterials = new List<GemotestBioMaterial>();
-            details.Samples = new List<GemotestSampleDetail>();
-            details.Details = new List<GemotestDetail>();
-            details.SupplementalInstances = new List<GemotestSupplementalInstance>();
-
-            int detailsProductIndex = 0;
-            string productGuid = detailsProductIndex.ToString(CultureInfo.InvariantCulture);
-            details.Products.Add(new GemotestProductDetail
-            {
-                OrderProductGuid = productGuid,
-                ProductId = service.id,
-                ProductCode = service.code,
-                ProductName = service.name
-            });
-
-            ApplyPriceListToDetails(details);
-            details.AddBiomaterialsFromProducts();
-
-            // Для маркетингового комплекса тест должен повторять выбор всех входящих биоматериалов.
-            // Для обычной услуги оставляем старую логику выбора одного биоматериала, а обязательные связанные
-            // пробы добираются на этапе формирования create_order по samples_services.
-            if (service.service_type == 2)
-                SelectAllBiomaterialsForProduct(details, detailsProductIndex);
-
-            AddDefaultSupplementalsForTest(details, service, detailsProductIndex);
         }
 
         private void SelectAllBiomaterialsForProduct(GemotestOrderDetail details, int productIndex)
@@ -940,8 +757,8 @@ namespace Laboratory.Gemotest
                     }
                     catch (Exception ex)
                     {
-                        // Настройки подключения уже сохранены в _SystemOptions.
-                        // Ошибка связи с сервером не должна откатывать сохранение формы настроек.
+                        
+                        
                         SiMed.Clinic.Logger.LogEvent.SaveErrorToLog("Гемотест: настройки сохранены, но обновить справочники после сохранения не удалось: " + ex.Message, "Gemotest");
                     }
                 }
