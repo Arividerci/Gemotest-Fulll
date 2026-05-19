@@ -173,7 +173,7 @@ namespace Laboratory.Gemotest.SourseClass
         public bool Required { get; set; }
     }
 
-    [Serializable]  
+    [Serializable]
     public class GemotestOrderDetail : BaseOrderDetail
     {
 
@@ -186,8 +186,8 @@ namespace Laboratory.Gemotest.SourseClass
         public List<GemotestBioMaterial> BioMaterials { get; set; }
         public List<Product> DefectProductList { get; set; }
         public string PriceList { get; set; }
-        public string PriceListCode { get; set; }  
-        public string PriceListName { get; set; } 
+        public string PriceListCode { get; set; }
+        public string PriceListName { get; set; }
         public string PriceListNum { get; set; }
         public List<GemotestSampleDetail> Samples { get; set; }
 
@@ -401,7 +401,6 @@ namespace Laboratory.Gemotest.SourseClass
                 .Where(b => b.Chosen.Count > 0 || b.Another.Count > 0 || b.Mandatory.Count > 0)
                 .ToList();
 
-             Console.WriteLine($"[AddBiomaterialsFromProducts] BioMaterials.Count = {BioMaterials.Count}");
         }
 
         public void DeleteObsoleteDetails()

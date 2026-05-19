@@ -32,217 +32,6 @@ namespace Laboratory.Gemotest.GemotestRequests
             _password = password ?? throw new ArgumentNullException(nameof(password));
         }
 
-        private static void DebugGemotestSender(string message)
-        {
-            try
-            {
-                string line = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture) +
-                    " [Gemotest SEND DEBUG] " + (message ?? string.Empty);
-
-                Console.WriteLine(line);
-                System.Diagnostics.Debug.WriteLine(line);
-            }
-            catch
-            {
-            }
-        }
-
-        private static string JoinDebugValues(IEnumerable<string> values)
-        {
-            if (values == null)
-                return "";
-
-            return string.Join(",", values.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray());
-        }
-
-        private void DumpDetailsBeforeSend(GemotestOrderDetail details)
-        {
-            try
-            {
-                DebugGemotestSender("========== CreateOrder: details before sample rows ==========");
-
-                if (details == null)
-                {
-                    DebugGemotestSender("details=null");
-                    return;
-                }
-
-                DebugGemotestSender("ExtNum=" + (details.ExtNum ?? "") +
-                    "; OrderNum=" + (details.OrderNum ?? "") +
-                    "; Products=" + (details.Products != null ? details.Products.Count.ToString(CultureInfo.InvariantCulture) : "null") +
-                    "; BioMaterials=" + (details.BioMaterials != null ? details.BioMaterials.Count.ToString(CultureInfo.InvariantCulture) : "null") +
-                    "; Samples=" + (details.Samples != null ? details.Samples.Count.ToString(CultureInfo.InvariantCulture) : "null"));
-
-                if (details.Products != null)
-                {
-                    for (int i = 0; i < details.Products.Count; i++)
-                    {
-                        var p = details.Products[i];
-                        if (p == null)
-                            continue;
-
-                        DictionaryService svc = null;
-                        if (_dictionaries != null && _dictionaries.Directory != null)
-                            _dictionaries.Directory.TryGetValue(p.ProductId ?? "", out svc);
-
-                        DebugGemotestSender("PRODUCT[" + i.ToString(CultureInfo.InvariantCulture) + "]: guid=" + (p.OrderProductGuid ?? "") +
-                            "; id=" + (p.ProductId ?? "") +
-                            "; code=" + (p.ProductCode ?? "") +
-                            "; name=" + (p.ProductName ?? "") +
-                            "; service_type=" + (svc != null && svc.service_type.HasValue ? svc.service_type.Value.ToString(CultureInfo.InvariantCulture) : "") +
-                            "; type=" + (svc != null ? svc.type.ToString(CultureInfo.InvariantCulture) : ""));
-                    }
-                }
-
-                if (details.BioMaterials != null)
-                {
-                    for (int i = 0; i < details.BioMaterials.Count; i++)
-                    {
-                        var b = details.BioMaterials[i];
-                        if (b == null)
-                            continue;
-
-                        DebugGemotestSender("BIOMATERIAL[" + i.ToString(CultureInfo.InvariantCulture) + "]: id=" + (b.Id ?? "") +
-                            "; code=" + (b.Code ?? "") +
-                            "; name=" + (b.Name ?? "") +
-                            "; Mandatory=" + JoinDebugValues((b.Mandatory ?? new List<int>()).Select(x => x.ToString(CultureInfo.InvariantCulture))) +
-                            "; Chosen=" + JoinDebugValues((b.Chosen ?? new List<int>()).Select(x => x.ToString(CultureInfo.InvariantCulture))) +
-                            "; Another=" + JoinDebugValues((b.Another ?? new List<int>()).Select(x => x.ToString(CultureInfo.InvariantCulture))));
-                    }
-                }
-
-                var singleMap = BuildChosenBiomaterialByProductIndex(details);
-                foreach (var pair in singleMap.OrderBy(x => x.Key))
-                {
-                    DebugGemotestSender("SINGLE_BIO_MAP productIndex=" + pair.Key.ToString(CultureInfo.InvariantCulture) +
-                        " -> " + (pair.Value ?? ""));
-                }
-
-                var multiMap = BuildChosenBiomaterialsByProductIndex(details);
-                foreach (var pair in multiMap.OrderBy(x => x.Key))
-                {
-                    DebugGemotestSender("MULTI_BIO_MAP productIndex=" + pair.Key.ToString(CultureInfo.InvariantCulture) +
-                        " -> [" + JoinDebugValues(pair.Value) + "]");
-                }
-            }
-            catch (Exception ex)
-            {
-                DebugGemotestSender("DumpDetailsBeforeSend failed: " + ex.Message);
-            }
-        }
-
-        private void DumpSampleRows(string stage, List<SampleServiceRow> rows)
-        {
-            try
-            {
-                DebugGemotestSender("========== " + stage + " ==========");
-                DebugGemotestSender("ROWS_COUNT=" + (rows != null ? rows.Count.ToString(CultureInfo.InvariantCulture) : "null"));
-
-                if (rows == null)
-                    return;
-
-                for (int i = 0; i < rows.Count; i++)
-                {
-                    var r = rows[i];
-                    if (r == null)
-                        continue;
-
-                    DebugGemotestSender("ROW[" + i.ToString(CultureInfo.InvariantCulture) + "]: service=" + (r.ServiceId ?? "") +
-                        "; complex=" + (r.ComplexId ?? "") +
-                        "; execSample=" + r.ExecutionSampleId.ToString(CultureInfo.InvariantCulture) + "/" + (r.ExecutionSampleName ?? "") +
-                        "; execTransport=" + (r.ExecutionTransportId ?? "") +
-                        "; primarySample=" + (r.PrimarySampleId.HasValue ? r.PrimarySampleId.Value.ToString(CultureInfo.InvariantCulture) : "") + "/" + (r.PrimarySampleName ?? "") +
-                        "; bio=" + (r.BiomaterialId ?? "") +
-                        "; microBio=" + (r.MicroBioBiomaterialId ?? "") +
-                        "; loc=" + (r.LocalizationId ?? "") +
-                        "; serviceCount=" + r.ServiceCount.ToString(CultureInfo.InvariantCulture));
-                }
-            }
-            catch (Exception ex)
-            {
-                DebugGemotestSender("DumpSampleRows failed: " + ex.Message);
-            }
-        }
-
-        private void DumpTubes(string stage, List<TubePlan> tubes)
-        {
-            try
-            {
-                DebugGemotestSender("========== " + stage + " ==========");
-                DebugGemotestSender("TUBES_COUNT=" + (tubes != null ? tubes.Count.ToString(CultureInfo.InvariantCulture) : "null"));
-
-                if (tubes == null)
-                    return;
-
-                for (int i = 0; i < tubes.Count; i++)
-                {
-                    var t = tubes[i];
-                    if (t == null)
-                        continue;
-
-                    DebugGemotestSender("TUBE[" + i.ToString(CultureInfo.InvariantCulture) + "]: sample=" + t.SampleId.ToString(CultureInfo.InvariantCulture) +
-                        "; sampleIdentifier=" + (t.SampleIdentifier ?? "") +
-                        "; primaryIdentifier=" + (t.PrimarySampleIdentifier ?? "") +
-                        "; bio=" + (t.BiomaterialId ?? "") +
-                        "; microBio=" + (t.MicroBioBiomaterialId ?? "") +
-                        "; loc=" + (t.LocalizationId ?? "") +
-                        "; transport=" + (t.TransportId ?? "") +
-                        "; used=" + t.UsedPercent.ToString(CultureInfo.InvariantCulture) +
-                        "; parent=" + (t.Parent != null ? "yes" : "no") +
-                        "; services=" + (t.Services != null ? t.Services.Count.ToString(CultureInfo.InvariantCulture) : "null"));
-
-                    if (t.Services == null)
-                        continue;
-
-                    for (int s = 0; s < t.Services.Count; s++)
-                    {
-                        var svc = t.Services[s];
-                        if (svc == null)
-                            continue;
-
-                        DebugGemotestSender("TUBE[" + i.ToString(CultureInfo.InvariantCulture) + "].SERVICE[" + s.ToString(CultureInfo.InvariantCulture) + "]: service=" + (svc.ServiceId ?? "") +
-                            "; complex=" + (svc.ComplexId ?? "") +
-                            "; share=" + svc.SharePercent.ToString(CultureInfo.InvariantCulture) +
-                            "; utilization=" + svc.UtilizationFlag.ToString(CultureInfo.InvariantCulture) +
-                            "; refuse=" + svc.RefuseFlag.ToString(CultureInfo.InvariantCulture));
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                DebugGemotestSender("DumpTubes failed: " + ex.Message);
-            }
-        }
-
-        private void DumpTopServices(string stage, List<SoapTopServiceItem> services)
-        {
-            try
-            {
-                DebugGemotestSender("========== " + stage + " ==========");
-                DebugGemotestSender("TOP_SERVICES_COUNT=" + (services != null ? services.Count.ToString(CultureInfo.InvariantCulture) : "null"));
-
-                if (services == null)
-                    return;
-
-                for (int i = 0; i < services.Count; i++)
-                {
-                    var s = services[i];
-                    if (s == null)
-                        continue;
-
-                    DebugGemotestSender("TOP_SERVICE[" + i.ToString(CultureInfo.InvariantCulture) + "]: id=" + (s.Id ?? "") +
-                        "; bio=" + (s.BiomaterialId ?? "") +
-                        "; microBio=" + (s.MicrobiologyBiomaterialId ?? "") +
-                        "; sample=" + (s.SampleId ?? "") +
-                        "; loc=" + (s.LocalizationId ?? "") +
-                        "; transport=" + (s.TransportId ?? ""));
-                }
-            }
-            catch (Exception ex)
-            {
-                DebugGemotestSender("DumpTopServices failed: " + ex.Message);
-            }
-        }
 
         private sealed class SoapTopServiceItem
         {
@@ -300,17 +89,14 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                 string createHash = BuildCreateOrderHash( extNum, orderNum, _contractor, patient.Surname ?? "", birthDate, _salt);
 
-                DumpDetailsBeforeSend(details);
 
                 var rows = BuildSampleServiceRows(details);
-                DumpSampleRows("CreateOrder: BuildSampleServiceRows result", rows);
 
                 if (rows == null || rows.Count == 0)
                     throw new InvalidOperationException("Не удалось определить пробы для выбранных услуг (rows=0).");
 
                 var tubes = GemotestSamplePacker.Pack(rows);
                 NormalizeTubeServices(tubes);
-                DumpTubes("CreateOrder: tubes after pack/normalize", tubes);
                 if (tubes == null || tubes.Count == 0)
                     throw new InvalidOperationException("Упаковка не дала ни одной пробирки (tubes=0).");
 
@@ -326,7 +112,6 @@ namespace Laboratory.Gemotest.GemotestRequests
                 FillDetailsSamplesFromTubes(details, tubes);
 
                 var topServices = BuildTopLevelServices(details, tubes);
-                DumpTopServices("CreateOrder: top level services", topServices);
                 var supplementals = BuildServiceSupplementals(details);
 
                 string doctor = "";
@@ -788,7 +573,7 @@ namespace Laboratory.Gemotest.GemotestRequests
                                     )) &&
                                 string.Equals(t.MicroBioBiomaterialId ?? "", chosenBioId, StringComparison.OrdinalIgnoreCase));
                         }
-                                                    
+
                         if (microTube == null)
                         {
                             microTube = tubes.FirstOrDefault(t =>
@@ -1028,8 +813,7 @@ namespace Laboratory.Gemotest.GemotestRequests
                     if (!chosenBioMulti.TryGetValue(i, out selectedBiomaterialIds) || selectedBiomaterialIds == null)
                         selectedBiomaterialIds = new List<string>();
 
-                    
-                    
+
                     AddRowsForMarketingComplex(prod.ProductId, selectedBiomaterialIds, rows);
 
                     continue;
@@ -1038,7 +822,13 @@ namespace Laboratory.Gemotest.GemotestRequests
                 List<string> simpleSelectedBiomaterialIds;
                 if (chosenBioMulti.TryGetValue(i, out simpleSelectedBiomaterialIds) && simpleSelectedBiomaterialIds != null && simpleSelectedBiomaterialIds.Count > 0)
                 {
-                    AddRowsForSimpleService(prod.ProductId, simpleSelectedBiomaterialIds, rows, "", "");
+                    foreach (string simpleBiomaterialId in simpleSelectedBiomaterialIds)
+                    {
+                        if (string.IsNullOrEmpty(simpleBiomaterialId))
+                            continue;
+
+                        AddRowsForSimpleService(prod.ProductId, simpleBiomaterialId, rows, "", "");
+                    }
                 }
                 else
                 {
@@ -1327,7 +1117,6 @@ namespace Laboratory.Gemotest.GemotestRequests
                 comp == null ||
                 comp.Count == 0)
             {
-                DebugGemotestSender("AddRowsForMarketingComplex: composition not found for complexId=" + complexId);
                 return;
             }
 
@@ -1337,9 +1126,6 @@ namespace Laboratory.Gemotest.GemotestRequests
                     .Select(x => x.Trim()),
                 StringComparer.OrdinalIgnoreCase);
 
-            DebugGemotestSender("AddRowsForMarketingComplex: complexId=" + complexId +
-                "; compositionRows=" + comp.Count.ToString(CultureInfo.InvariantCulture) +
-                "; selectedBio=[" + JoinDebugValues(selectedSet) + "]");
 
             for (int i = 0; i < comp.Count; i++)
             {
@@ -1355,31 +1141,14 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                 if (selectedSet.Count > 0 && !selectedSet.Contains(bio))
                 {
-                    DebugGemotestSender("AddRowsForMarketingComplex: skip composition row by biomaterial filter: complex=" + complexId +
-                        "; service=" + (c.service_id ?? "") +
-                        "; bio=" + bio +
-                        "; loc=" + loc);
                     continue;
                 }
 
-                DebugGemotestSender("AddRowsForMarketingComplex: add composition row: complex=" + complexId +
-                    "; service=" + (c.service_id ?? "") +
-                    "; bio=" + bio +
-                    "; loc=" + loc);
 
                 AddRowsForSimpleService(c.service_id, bio, rows, complexId, loc);
             }
         }
-        private void AddRowsForSimpleService(string serviceId, string biomaterialId, List<SampleServiceRow> rows, string complexId, string forcedLocalizationId)
-        {
-            var selectedBiomaterialIds = new List<string>();
-            if (!string.IsNullOrWhiteSpace(biomaterialId))
-                selectedBiomaterialIds.Add(biomaterialId.Trim());
-
-            AddRowsForSimpleService(serviceId, selectedBiomaterialIds, rows, complexId, forcedLocalizationId);
-        }
-
-        private void AddRowsForSimpleService(string serviceId, List<string> selectedBiomaterialIds, List<SampleServiceRow> rows, string complexId, string forcedLocalizationId)
+        private void AddRowsForSimpleService(  string serviceId, string biomaterialId, List<SampleServiceRow> rows, string complexId, string forcedLocalizationId)
         {
             if (string.IsNullOrWhiteSpace(serviceId))
                 return;
@@ -1391,33 +1160,17 @@ namespace Laboratory.Gemotest.GemotestRequests
             }
 
             bool standaloneService = string.IsNullOrWhiteSpace(complexId);
-            var list = SelectSampleServiceRowsForSending(baseList, selectedBiomaterialIds, forcedLocalizationId, standaloneService);
+            var list = SelectSampleServiceRowsForSending(baseList, biomaterialId, forcedLocalizationId, standaloneService);
 
-            
-            
-            
-            
+
             bool collapseAliquotChildren = !string.IsNullOrWhiteSpace(complexId);
 
             if (collapseAliquotChildren)
             {
-                int beforeNoAliquotFilterCount = list != null ? list.Count : 0;
                 list = RemoveChildAliquotRowsWhenParentPresent(list);
-                int afterNoAliquotFilterCount = list != null ? list.Count : 0;
 
-                if (beforeNoAliquotFilterCount != afterNoAliquotFilterCount)
-                {
-                    DebugGemotestSender("AddRowsForSimpleService: complex no-aliquot mode collapsed sample rows: service=" + (serviceId ?? "") +
-                        "; complex=" + (complexId ?? "") +
-                        "; before=" + beforeNoAliquotFilterCount.ToString(CultureInfo.InvariantCulture) +
-                        "; after=" + afterNoAliquotFilterCount.ToString(CultureInfo.InvariantCulture));
-                }
             }
-            else
-            {
-                DebugGemotestSender("AddRowsForSimpleService: standalone required-samples mode, keep dictionary sample rows with primary links: service=" + (serviceId ?? "") +
-                    "; rows=" + (list != null ? list.Count.ToString(CultureInfo.InvariantCulture) : "0"));
-            }
+
 
             foreach (var p in list)
             {
@@ -1441,7 +1194,7 @@ namespace Laboratory.Gemotest.GemotestRequests
                         _dictionaries.Samples.TryGetValue(primaryId.ToString(CultureInfo.InvariantCulture), out primarySample);
                 }
 
-                var rowToAdd = new SampleServiceRow
+                rows.Add(new SampleServiceRow
                 {
                     ServiceId = serviceId ?? "",
                     ComplexId = complexId ?? "",
@@ -1461,35 +1214,8 @@ namespace Laboratory.Gemotest.GemotestRequests
                     LocalizationId = p.localization_id ?? "",
 
                     ServiceCount = ToInt(p.service_count, 1) <= 0 ? 1 : ToInt(p.service_count, 1)
-                };
-
-                AddSampleServiceRowIfMissing(rows, rowToAdd);
+                });
             }
-        }
-
-        private static void AddSampleServiceRowIfMissing(List<SampleServiceRow> target, SampleServiceRow row)
-        {
-            if (target == null || row == null)
-                return;
-
-            bool exists = target.Any(x => SameSampleServiceRow(x, row));
-            if (!exists)
-                target.Add(row);
-        }
-
-        private static bool SameSampleServiceRow(SampleServiceRow left, SampleServiceRow right)
-        {
-            if (left == null || right == null)
-                return false;
-
-            return SameId(left.ServiceId, right.ServiceId) &&
-                   SameId(left.ComplexId, right.ComplexId) &&
-                   left.ExecutionSampleId == right.ExecutionSampleId &&
-                   object.Equals(left.PrimarySampleId, right.PrimarySampleId) &&
-                   SameId(left.BiomaterialId, right.BiomaterialId) &&
-                   SameId(left.MicroBioBiomaterialId, right.MicroBioBiomaterialId) &&
-                   SameId(left.LocalizationId, right.LocalizationId) &&
-                   left.ServiceCount == right.ServiceCount;
         }
 
         private static bool IsLinkedSampleRequirementRow(DictionarySamplesServices row, List<DictionarySamplesServices> allRows)
@@ -1524,37 +1250,6 @@ namespace Laboratory.Gemotest.GemotestRequests
             return !isParentOfLinkedChild;
         }
 
-        private static bool ShouldSendEverySampleRequirementAsOrdinary(List<DictionarySamplesServices> rows)
-        {
-            if (rows == null || rows.Count == 0)
-                return false;
-
-            var cleanRows = rows.Where(r => r != null && ToInt(r.sample_id, 0) > 0).ToList();
-            if (cleanRows.Count == 0)
-                return false;
-
-            bool hasLinkedParentChildPair = cleanRows.Any(r =>
-            {
-                int primarySampleId = ToInt(r.primary_sample_id, 0);
-                return primarySampleId > 0 && cleanRows.Any(parent => parent != null && ToInt(parent.sample_id, 0) == primarySampleId);
-            });
-
-            if (!hasLinkedParentChildPair)
-                return false;
-
-            bool hasIndependentOrdinaryRequirement = cleanRows.Any(r =>
-            {
-                int sampleId = ToInt(r.sample_id, 0);
-                int primarySampleId = ToInt(r.primary_sample_id, 0);
-
-                bool isChild = primarySampleId > 0;
-                bool isParent = cleanRows.Any(child => child != null && !object.ReferenceEquals(child, r) && ToInt(child.primary_sample_id, 0) == sampleId);
-
-                return !isChild && !isParent;
-            });
-
-            return hasIndependentOrdinaryRequirement;
-        }
 
         private static List<DictionarySamplesServices> RemoveChildAliquotRowsWhenParentPresent(List<DictionarySamplesServices> rows)
         {
@@ -1588,11 +1283,6 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                 if (parentSampleExists)
                 {
-                    DebugGemotestSender("RemoveChildAliquotRowsWhenParentPresent: skip child aliquot row because parent row exists: service=" + (row.service_id ?? "") +
-                        "; child_sample_id=" + sampleId.ToString(CultureInfo.InvariantCulture) +
-                        "; primary_sample_id=" + primarySampleId.ToString(CultureInfo.InvariantCulture) +
-                        "; bio=" + (row.biomaterial_id ?? "") +
-                        "; loc=" + (row.localization_id ?? ""));
                     continue;
                 }
 
@@ -1608,48 +1298,22 @@ namespace Laboratory.Gemotest.GemotestRequests
             return value == null ? string.Empty : value.ToString();
         }
 
-        private string GetTransportIdForDictionarySampleRow(DictionarySamplesServices row)
-        {
-            if (row == null || _dictionaries == null || _dictionaries.Samples == null)
-                return string.Empty;
-
-            DictionarySamples sample;
-            if (_dictionaries.Samples.TryGetValue(row.sample_id.ToString(CultureInfo.InvariantCulture), out sample) && sample != null)
-                return sample.transport_id ?? string.Empty;
-
-            return string.Empty;
-        }
 
         private List<DictionarySamplesServices> SelectSampleServiceRowsForSending(List<DictionarySamplesServices> source, string selectedBiomaterialId, string forcedLocalizationId, bool allowStandaloneRequiredExpansion)
-        {
-            var selectedBiomaterialIds = new List<string>();
-            if (!string.IsNullOrWhiteSpace(selectedBiomaterialId))
-                selectedBiomaterialIds.Add(selectedBiomaterialId.Trim());
-
-            return SelectSampleServiceRowsForSending(source, selectedBiomaterialIds, forcedLocalizationId, allowStandaloneRequiredExpansion);
-        }
-
-        private List<DictionarySamplesServices> SelectSampleServiceRowsForSending(List<DictionarySamplesServices> source, List<string> selectedBiomaterialIds, string forcedLocalizationId, bool allowStandaloneRequiredExpansion)
         {
             var all = source != null ? source.Where(p => p != null).ToList() : new List<DictionarySamplesServices>();
 
             if (all.Count == 0)
                 return all;
 
-            var selectedSet = new HashSet<string>(
-                (selectedBiomaterialIds ?? new List<string>())
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .Select(x => x.Trim()),
-                StringComparer.OrdinalIgnoreCase);
-
-            bool hasBiomaterialFilter = selectedSet.Count > 0;
+            bool hasBiomaterialFilter = !string.IsNullOrWhiteSpace(selectedBiomaterialId);
             bool hasLocalizationFilter = !string.IsNullOrWhiteSpace(forcedLocalizationId);
 
             if (!hasBiomaterialFilter && !hasLocalizationFilter)
                 return all;
 
             var selected = all.Where(p =>
-                    (!hasBiomaterialFilter || RowMatchesAnyBiomaterialFilter(p, selectedSet)) &&
+                    (!hasBiomaterialFilter || RowMatchesBiomaterialFilter(p, selectedBiomaterialId)) &&
                     (!hasLocalizationFilter || SameId(p.localization_id, forcedLocalizationId))).ToList();
 
             if (selected.Count == 0)
@@ -1663,11 +1327,6 @@ namespace Laboratory.Gemotest.GemotestRequests
             var result = new List<DictionarySamplesServices>();
             AddUniqueSampleServiceRows(result, selected);
 
-            DebugGemotestSender("SelectSampleServiceRowsForSending: selected rows before linked expansion: service="
-                + (all.Count > 0 ? (all[0].service_id ?? "") : "")
-                + "; selected_bio=[" + JoinDebugValues(selectedSet) + "]"
-                + "; selected_loc=" + (forcedLocalizationId ?? "")
-                + "; rows=" + BuildSampleRowIdList(result));
 
             bool hasLinkedParentChildPair = HasLinkedParentChildPair(all);
             bool hasIndependentOrdinaryRequirement = all.Any(delegate(DictionarySamplesServices row)
@@ -1677,19 +1336,8 @@ namespace Laboratory.Gemotest.GemotestRequests
 
             if (allowStandaloneRequiredExpansion && hasLinkedParentChildPair && hasIndependentOrdinaryRequirement)
             {
-                
-                
-                int beforeChildCollapseCount = result.Count;
                 result = RemoveChildAliquotRowsWhenParentPresent(result);
-                int afterChildCollapseCount = result.Count;
 
-                if (beforeChildCollapseCount != afterChildCollapseCount)
-                {
-                    DebugGemotestSender("SelectSampleServiceRowsForSending: standalone linked+ordinary mode removed child aliquot rows: service="
-                        + (all.Count > 0 ? (all[0].service_id ?? "") : "")
-                        + "; before=" + beforeChildCollapseCount.ToString(CultureInfo.InvariantCulture)
-                        + "; after=" + afterChildCollapseCount.ToString(CultureInfo.InvariantCulture));
-                }
 
                 foreach (var row in all)
                 {
@@ -1699,21 +1347,12 @@ namespace Laboratory.Gemotest.GemotestRequests
                     if (!IsIndependentOrdinarySampleRequirementRow(row, all))
                         continue;
 
-                    if (AddUniqueSampleServiceRow(result, row))
-                    {
-                        DebugGemotestSender("SelectSampleServiceRowsForSending: add independent required row for standalone linked service: service=" + (row.service_id ?? "")
-                            + "; sample_id=" + Safe(row.sample_id)
-                            + "; primary_sample_id=" + Safe(row.primary_sample_id)
-                            + "; bio=" + Safe(row.biomaterial_id)
-                            + "; micro_bio=" + Safe(row.microbiology_biomaterial_id)
-                            + "; loc=" + Safe(row.localization_id));
-                    }
                 }
             }
             else
             {
-                
-                
+
+
                 foreach (var row in all)
                 {
                     if (hasLocalizationFilter && !SameId(row.localization_id, forcedLocalizationId))
@@ -1722,22 +1361,13 @@ namespace Laboratory.Gemotest.GemotestRequests
                     if (!IsLinkedSampleRequirementRow(row, all))
                         continue;
 
-                    if (AddUniqueSampleServiceRow(result, row))
-                    {
-                        DebugGemotestSender("SelectSampleServiceRowsForSending: add linked required row: service=" + (row.service_id ?? "")
-                            + "; sample_id=" + Safe(row.sample_id)
-                            + "; primary_sample_id=" + Safe(row.primary_sample_id)
-                            + "; bio=" + Safe(row.biomaterial_id)
-                            + "; micro_bio=" + Safe(row.microbiology_biomaterial_id)
-                            + "; loc=" + Safe(row.localization_id));
-                    }
                 }
             }
 
-            if (allowStandaloneRequiredExpansion && ShouldExpandStandaloneCompanionBiomaterialGroup(all, result, selectedSet, forcedLocalizationId))
+            if (allowStandaloneRequiredExpansion && ShouldExpandStandaloneCompanionBiomaterialGroup(all, result, selectedBiomaterialId, forcedLocalizationId))
             {
-                
-                
+
+
                 foreach (var row in all)
                 {
                     if (row == null)
@@ -1746,7 +1376,7 @@ namespace Laboratory.Gemotest.GemotestRequests
                     if (hasLocalizationFilter && !SameId(row.localization_id, forcedLocalizationId))
                         continue;
 
-                    if (RowMatchesAnyBiomaterialFilter(row, selectedSet))
+                    if (RowMatchesBiomaterialFilter(row, selectedBiomaterialId))
                         continue;
 
                     string groupKey = BuildBiomaterialGroupKey(row);
@@ -1759,22 +1389,9 @@ namespace Laboratory.Gemotest.GemotestRequests
                     if (groupDistinctSamples < 2)
                         continue;
 
-                    if (AddUniqueSampleServiceRow(result, row))
-                    {
-                        DebugGemotestSender("SelectSampleServiceRowsForSending: add companion biomaterial group row: service=" + (row.service_id ?? "")
-                            + "; selected_bio=[" + JoinDebugValues(selectedSet) + "]"
-                            + "; sample_id=" + Safe(row.sample_id)
-                            + "; primary_sample_id=" + Safe(row.primary_sample_id)
-                            + "; bio=" + Safe(row.biomaterial_id)
-                            + "; micro_bio=" + Safe(row.microbiology_biomaterial_id)
-                            + "; loc=" + Safe(row.localization_id));
-                    }
                 }
             }
 
-            DebugGemotestSender("SelectSampleServiceRowsForSending: final rows after linked expansion: service="
-                + (all.Count > 0 ? (all[0].service_id ?? "") : "")
-                + "; rows=" + BuildSampleRowIdList(result));
 
             return result;
         }
@@ -1797,26 +1414,20 @@ namespace Laboratory.Gemotest.GemotestRequests
             });
         }
 
-        private static bool ShouldExpandStandaloneCompanionBiomaterialGroup(List<DictionarySamplesServices> allRows, List<DictionarySamplesServices> currentRows, IEnumerable<string> selectedBiomaterialIds, string forcedLocalizationId)
+        private static bool ShouldExpandStandaloneCompanionBiomaterialGroup(List<DictionarySamplesServices> allRows, List<DictionarySamplesServices> currentRows, string selectedBiomaterialId, string forcedLocalizationId)
         {
             if (allRows == null || currentRows == null || allRows.Count == 0)
                 return false;
 
-            var selectedSet = new HashSet<string>(
-                (selectedBiomaterialIds ?? new List<string>())
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .Select(x => x.Trim()),
-                StringComparer.OrdinalIgnoreCase);
-
-            if (selectedSet.Count == 0)
+            if (string.IsNullOrWhiteSpace(selectedBiomaterialId))
                 return false;
 
-            bool hasSelectedRow = currentRows.Any(row => row != null && RowMatchesAnyBiomaterialFilter(row, selectedSet));
+            bool hasSelectedRow = currentRows.Any(row => row != null && RowMatchesBiomaterialFilter(row, selectedBiomaterialId));
             if (!hasSelectedRow)
                 return false;
 
             var candidateGroups = allRows
-                .Where(row => row != null && !RowMatchesAnyBiomaterialFilter(row, selectedSet))
+                .Where(row => row != null && !RowMatchesBiomaterialFilter(row, selectedBiomaterialId))
                 .Where(row => string.IsNullOrWhiteSpace(forcedLocalizationId) || SameId(row.localization_id, forcedLocalizationId))
                 .GroupBy(row => BuildBiomaterialGroupKey(row))
                 .ToList();
@@ -1858,42 +1469,6 @@ namespace Laboratory.Gemotest.GemotestRequests
                    SameId(row.microbiology_biomaterial_id, selectedBiomaterialId);
         }
 
-        private static bool RowMatchesAnyBiomaterialFilter(DictionarySamplesServices row, IEnumerable<string> selectedBiomaterialIds)
-        {
-            if (row == null)
-                return false;
-
-            var selectedSet = new HashSet<string>(
-                (selectedBiomaterialIds ?? new List<string>())
-                    .Where(x => !string.IsNullOrWhiteSpace(x))
-                    .Select(x => x.Trim()),
-                StringComparer.OrdinalIgnoreCase);
-
-            if (selectedSet.Count == 0)
-                return true;
-
-            foreach (string selectedBiomaterialId in selectedSet)
-            {
-                if (RowMatchesBiomaterialFilter(row, selectedBiomaterialId))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static string BuildSampleRowIdList(List<DictionarySamplesServices> rows)
-        {
-            if (rows == null || rows.Count == 0)
-                return "";
-
-            return string.Join(",", rows.Select(delegate(DictionarySamplesServices row)
-            {
-                string primaryId = row == null ? string.Empty : Safe(row.primary_sample_id);
-                if (!string.IsNullOrWhiteSpace(primaryId) && primaryId != "0")
-                    return Safe(row.sample_id) + "<-" + primaryId;
-                return row == null ? string.Empty : Safe(row.sample_id);
-            }).ToArray());
-        }
 
         private static string BuildDictionarySampleRequirementKey(DictionarySamplesServices row)
         {
@@ -2958,6 +2533,6 @@ namespace Laboratory.Gemotest.GemotestRequests
 
             return fallback;
         }
-            
+
     }
 }

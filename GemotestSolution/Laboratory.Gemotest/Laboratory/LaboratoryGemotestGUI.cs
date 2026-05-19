@@ -60,156 +60,6 @@ namespace Laboratory.Gemotest
 
         public Exception GetLastException() => LastException;
 
-        private static void DebugGemotestGui(string message)
-        {
-            try
-            {
-                string line = DateTime.Now.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture) +
-                    " [Gemotest GUI DEBUG] " + (message ?? string.Empty);
-
-                Console.WriteLine(line);
-                System.Diagnostics.Debug.WriteLine(line);
-            }
-            catch
-            {
-            }
-        }
-
-        private static string JoinDebugValues(IEnumerable<string> values)
-        {
-            if (values == null)
-                return "";
-
-            return string.Join(",", values.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray());
-        }
-
-        private void DumpGuiOrderState(string stage, Order order, OrderModelForGUI model, GemotestOrderDetail details)
-        {
-            try
-            {
-                if (details == null && order != null)
-                    details = order.OrderDetail as GemotestOrderDetail;
-
-                DebugGemotestGui("========== " + stage + " ==========");
-
-                if (order != null)
-                {
-                    DebugGemotestGui("ORDER: Number=" + (order.Number ?? "") + "; State=" + order.State);
-                }
-
-                if (details != null)
-                {
-                    DebugGemotestGui("DETAILS: Products=" + (details.Products != null ? details.Products.Count.ToString(CultureInfo.InvariantCulture) : "null") +
-                        "; BioMaterials=" + (details.BioMaterials != null ? details.BioMaterials.Count.ToString(CultureInfo.InvariantCulture) : "null") +
-                        "; Samples=" + (details.Samples != null ? details.Samples.Count.ToString(CultureInfo.InvariantCulture) : "null"));
-
-                    if (details.Products != null)
-                    {
-                        for (int i = 0; i < details.Products.Count; i++)
-                        {
-                            var p = details.Products[i];
-                            if (p == null)
-                                continue;
-
-                            DebugGemotestGui("DETAILS.PRODUCT[" + i.ToString(CultureInfo.InvariantCulture) + "]: guid=" + (p.OrderProductGuid ?? "") +
-                                "; id=" + (p.ProductId ?? "") +
-                                "; code=" + (p.ProductCode ?? "") +
-                                "; name=" + (p.ProductName ?? ""));
-                        }
-                    }
-
-                    if (details.BioMaterials != null)
-                    {
-                        for (int i = 0; i < details.BioMaterials.Count; i++)
-                        {
-                            var b = details.BioMaterials[i];
-                            if (b == null)
-                                continue;
-
-                            DebugGemotestGui("DETAILS.BIOMATERIAL[" + i.ToString(CultureInfo.InvariantCulture) + "]: id=" + (b.Id ?? "") +
-                                "; code=" + (b.Code ?? "") +
-                                "; name=" + (b.Name ?? "") +
-                                "; Mandatory=" + JoinDebugValues((b.Mandatory ?? new List<int>()).Select(x => x.ToString(CultureInfo.InvariantCulture))) +
-                                "; Chosen=" + JoinDebugValues((b.Chosen ?? new List<int>()).Select(x => x.ToString(CultureInfo.InvariantCulture))) +
-                                "; Another=" + JoinDebugValues((b.Another ?? new List<int>()).Select(x => x.ToString(CultureInfo.InvariantCulture))));
-                        }
-                    }
-                }
-
-                if (model != null)
-                {
-                    DebugGemotestGui("MODEL: ProductsInfo=" + (model.ProductsInfo != null ? model.ProductsInfo.Count.ToString(CultureInfo.InvariantCulture) : "null") +
-                        "; ServicesInfo=" + (model.ServicesInfo != null ? model.ServicesInfo.Count.ToString(CultureInfo.InvariantCulture) : "null") +
-                        "; Samples=" + (model.Samples != null ? model.Samples.Count.ToString(CultureInfo.InvariantCulture) : "null") +
-                        "; Fields=" + (model.Fields != null ? model.Fields.Count.ToString(CultureInfo.InvariantCulture) : "null"));
-
-                    if (model.ProductsInfo != null)
-                    {
-                        for (int i = 0; i < model.ProductsInfo.Count; i++)
-                        {
-                            var p = model.ProductsInfo[i];
-                            if (p == null)
-                                continue;
-
-                            DebugGemotestGui("MODEL.PRODUCT[" + i.ToString(CultureInfo.InvariantCulture) + "]: guid=" + (p.OrderProductGuid ?? "") +
-                                "; id=" + (p.Id ?? "") +
-                                "; code=" + (p.Code ?? "") +
-                                "; name=" + (p.Name ?? ""));
-
-                            if (p.BiomaterialGroups == null)
-                                continue;
-
-                            for (int g = 0; g < p.BiomaterialGroups.Count; g++)
-                            {
-                                var group = p.BiomaterialGroups[g];
-                                if (group == null)
-                                    continue;
-
-                                var allBio = (group.Biomaterials ?? new List<BiomaterialInfoForGUI>())
-                                    .Where(x => x != null)
-                                    .Select(x => (x.BiomaterialId ?? "") + "/" + (x.BiomaterialName ?? "") + "/" + (x.ContainerCode ?? ""));
-
-                                var selectedBio = (group.BiomaterialsSelected ?? new List<BiomaterialInfoForGUI>())
-                                    .Where(x => x != null)
-                                    .Select(x => (x.BiomaterialId ?? "") + "/" + (x.BiomaterialName ?? "") + "/" + (x.ContainerCode ?? ""));
-
-                                DebugGemotestGui("MODEL.PRODUCT[" + i.ToString(CultureInfo.InvariantCulture) + "].GROUP[" + g.ToString(CultureInfo.InvariantCulture) + "]: SelectOnlyOne=" + group.SelectOnlyOne +
-                                    "; Optional=" + group.Optional +
-                                    "; All=[" + JoinDebugValues(allBio) + "]" +
-                                    "; Selected=[" + JoinDebugValues(selectedBio) + "]");
-                            }
-                        }
-                    }
-
-                    if (model.Samples != null)
-                    {
-                        for (int i = 0; i < model.Samples.Count; i++)
-                        {
-                            var s = model.Samples[i];
-                            if (s == null)
-                                continue;
-
-                            string biomaterial = "";
-                            if (s.Biomaterial != null)
-                            {
-                                biomaterial = (s.Biomaterial.BiomaterialId ?? "") + "/" +
-                                    (s.Biomaterial.BiomaterialName ?? "") + "/" +
-                                    (s.Biomaterial.ContainerCode ?? "");
-                            }
-
-                            DebugGemotestGui("MODEL.SAMPLE[" + i.ToString(CultureInfo.InvariantCulture) + "]: guid=" + (s.OrderSampleGuid ?? "") +
-                                "; barcode=" + (s.Barcode ?? "") +
-                                "; biomaterial=" + biomaterial +
-                                "; productGuids=" + JoinDebugValues(s.OrderProductGuids ?? new List<string>()));
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                DebugGemotestGui("DumpGuiOrderState failed: " + ex.Message);
-            }
-        }
 
         public bool GetGuiOptions(out List<GuiOption> _Options)
         {
@@ -340,7 +190,6 @@ namespace Laboratory.Gemotest
                     }
                 }
                 _Model.Samples = samples;
-                DumpGuiOrderState("GenerateSamples: after building samples", _Order, _Model, details);
                 return true;
             }
             catch (Exception exc)
@@ -719,7 +568,6 @@ namespace Laboratory.Gemotest
                 _Model.Errors.Clear();
 
 
-
                 if (_Model.Fields != null)
                 {
                     foreach (var field in _Model.Fields)
@@ -839,7 +687,6 @@ namespace Laboratory.Gemotest
                 }
 
                 RebuildBiomaterialGroups(details, _Model);
-                DumpGuiOrderState("CreateOrderModelForGUI: after RebuildBiomaterialGroups", _Order, _Model, details);
 
                 if (!GenerateSamples(_Order, _Model))
                     return false;
@@ -894,7 +741,7 @@ namespace Laboratory.Gemotest
                 var productNew = new ProductInfoForGUI
                 {
                     OrderProductGuid = string.IsNullOrWhiteSpace(product.OrderProductGuid)
-                        ? productIndex.ToString()
+                        ? productIndex.ToString(CultureInfo.InvariantCulture)
                         : product.OrderProductGuid,
 
                     Id = product.ProductId ?? string.Empty,
@@ -903,68 +750,63 @@ namespace Laboratory.Gemotest
                     ProductGroupGuid = null,
                     BiomaterialGroups = new List<BiomaterialGroupForGUI>()
                 };
+
                 if (IsBiomaterialCollectService(product.ProductId))
                 {
                     model.ServicesInfo.Add(productNew);
                     continue;
                 }
+                var groups = BuildReadOnlySampleBiomaterialGroupsFromDetails(
+                    details,
+                    productNew.OrderProductGuid);
 
-                var group = BuildBiomaterialGroupForProduct(details, productIndex);
-
-                if (group == null)
+                string indexGuid = productIndex.ToString(CultureInfo.InvariantCulture);
+                if ((groups == null || groups.Count == 0) &&
+                    !string.Equals(productNew.OrderProductGuid ?? string.Empty, indexGuid, StringComparison.OrdinalIgnoreCase))
                 {
-                    group = new BiomaterialGroupForGUI
-                    {
-                        GroupNum = 0,
-                        SelectOnlyOne = true,
-                        Optional = true
-                    };
+                    groups = BuildReadOnlySampleBiomaterialGroupsFromDetails(details, indexGuid);
                 }
 
-                group.GroupNum = 0;
-                group.Optional = true;
-
-                if (group.Biomaterials == null || group.Biomaterials.Count == 0)
+                if (groups == null || groups.Count == 0)
                 {
-                    group = BuildReadOnlySampleBiomaterialGroupFromDetails(
-                        details,
-                        productNew.OrderProductGuid);
+                    groups = BuildBiomaterialGroupsForProduct(details, productIndex);
                 }
 
-                if (group.Biomaterials == null || group.Biomaterials.Count == 0)
+                if (groups == null)
+                    groups = new List<BiomaterialGroupForGUI>();
+
+                if (groups.Count == 0)
                 {
                     var fallbackBiom = ResolveFallbackBiomaterialForProduct(details, product);
 
                     if (fallbackBiom != null)
-                    {
-                        group.Biomaterials.Add(fallbackBiom);
-                        group.BiomaterialsSelected.Add(fallbackBiom);
-                    }
+                        groups.Add(CreateReadOnlySingleBiomaterialGroup(fallbackBiom));
                 }
 
-                productNew.BiomaterialGroups.Add(group);
+                NormalizeReadOnlyBiomaterialGroups(groups);
+
+                foreach (var group in groups)
+                    productNew.BiomaterialGroups.Add(group);
+
                 model.ProductsInfo.Add(productNew);
             }
         }
 
-        private BiomaterialGroupForGUI   BuildReadOnlySampleBiomaterialGroupFromDetails(GemotestOrderDetail details, string orderProductGuid)
+        private List<BiomaterialGroupForGUI> BuildReadOnlySampleBiomaterialGroupsFromDetails(GemotestOrderDetail details, string orderProductGuid)
         {
-            var group = new BiomaterialGroupForGUI
-            {
-                GroupNum = 0,
-                SelectOnlyOne = false,
-                Optional = true
-            };
+            var result = new List<BiomaterialGroupForGUI>();
 
-            if (details == null || details.Samples == null)
-                return group;
+            if (details == null || details.Samples == null || string.IsNullOrWhiteSpace(orderProductGuid))
+                return result;
+
+            var usedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var sampleInfo in details.Samples)
             {
                 if (sampleInfo == null || sampleInfo.OrderProductGuidList == null)
                     continue;
 
-                if (!sampleInfo.OrderProductGuidList.Contains(orderProductGuid))
+                if (!sampleInfo.OrderProductGuidList.Any(x => string.Equals(x ?? string.Empty, orderProductGuid, StringComparison.OrdinalIgnoreCase)))
                     continue;
 
                 var biomInfo = new BiomaterialInfoForGUI
@@ -978,19 +820,113 @@ namespace Laboratory.Gemotest
                     ContainerName = sampleInfo.ContName ?? string.Empty
                 };
 
-                bool alreadyExists = group.Biomaterials.Any(x =>
-                    string.Equals(x.BiomaterialId ?? string.Empty, biomInfo.BiomaterialId ?? string.Empty, StringComparison.OrdinalIgnoreCase) &&
-                    string.Equals(x.ContainerCode ?? string.Empty, biomInfo.ContainerCode ?? string.Empty, StringComparison.OrdinalIgnoreCase));
+                string key = BuildBiomaterialInfoDuplicateKey(biomInfo);
+                if (string.IsNullOrWhiteSpace(key))
+                    key = (biomInfo.BiomaterialId ?? string.Empty) + "|" + (biomInfo.ContainerCode ?? string.Empty);
 
-                if (!alreadyExists)
+                if (!usedKeys.Add(key))
+                    continue;
+
+                result.Add(CreateReadOnlySingleBiomaterialGroup(biomInfo));
+            }
+
+            return result;
+        }
+
+        private BiomaterialGroupForGUI BuildReadOnlySampleBiomaterialGroupFromDetails(GemotestOrderDetail details, string orderProductGuid)
+        {
+            var groups = BuildReadOnlySampleBiomaterialGroupsFromDetails(details, orderProductGuid);
+
+            if (groups.Count == 0)
+            {
+                return new BiomaterialGroupForGUI
                 {
-                    group.Biomaterials.Add(biomInfo);
-                    group.BiomaterialsSelected.Add(biomInfo);
-                }
+                    GroupNum = 0,
+                    SelectOnlyOne = false,
+                    Optional = true,
+                    Biomaterials = new List<BiomaterialInfoForGUI>(),
+                    BiomaterialsSelected = new List<BiomaterialInfoForGUI>()
+                };
+            }
+
+            if (groups.Count == 1)
+                return groups[0];
+
+            var combined = new BiomaterialGroupForGUI
+            {
+                GroupNum = 0,
+                SelectOnlyOne = false,
+                Optional = true,
+                Biomaterials = new List<BiomaterialInfoForGUI>(),
+                BiomaterialsSelected = new List<BiomaterialInfoForGUI>()
+            };
+
+            foreach (var group in groups)
+            {
+                if (group == null || group.Biomaterials == null)
+                    continue;
+
+                foreach (var biomaterial in group.Biomaterials)
+                    AddBiomaterialInfoToGroup(combined, biomaterial);
+            }
+
+            foreach (var biomaterial in combined.Biomaterials)
+                combined.BiomaterialsSelected.Add(biomaterial);
+
+            return combined;
+        }
+
+        private BiomaterialGroupForGUI CreateReadOnlySingleBiomaterialGroup(BiomaterialInfoForGUI biomaterial)
+        {
+            var group = new BiomaterialGroupForGUI
+            {
+                GroupNum = 0,
+                SelectOnlyOne = true,
+                Optional = true,
+                Biomaterials = new List<BiomaterialInfoForGUI>(),
+                BiomaterialsSelected = new List<BiomaterialInfoForGUI>()
+            };
+
+            if (biomaterial != null)
+            {
+                group.Biomaterials.Add(biomaterial);
+                group.BiomaterialsSelected.Add(biomaterial);
             }
 
             return group;
         }
+
+        private void NormalizeReadOnlyBiomaterialGroups(List<BiomaterialGroupForGUI> groups)
+        {
+            if (groups == null)
+                return;
+
+            MergeDuplicateSingleBiomaterialGroups(groups);
+
+            int groupNum = 1;
+            foreach (var group in groups.Where(g => g != null))
+            {
+                group.GroupNum = groupNum++;
+                group.Optional = true;
+                group.RefreshFieldsOnSelectionSet = false;
+                group.RefreshFieldsOnSelectionRemove = false;
+                group.Biomaterials = group.Biomaterials ?? new List<BiomaterialInfoForGUI>();
+                group.BiomaterialsSelected = group.BiomaterialsSelected ?? new List<BiomaterialInfoForGUI>();
+
+                RemoveDuplicateBiomaterialInfosFromGroup(group);
+
+                if (group.BiomaterialsSelected.Count == 0 && group.Biomaterials.Count > 0)
+                    group.BiomaterialsSelected.Add(group.Biomaterials[0]);
+
+                if (group.SelectOnlyOne && group.BiomaterialsSelected.Count > 1)
+                {
+                    var first = group.BiomaterialsSelected[0];
+                    group.BiomaterialsSelected.Clear();
+                    group.BiomaterialsSelected.Add(first);
+                }
+            }
+        }
+
         private BiomaterialInfoForGUI ResolveFallbackBiomaterialForProduct(GemotestOrderDetail details, GemotestOrderDetail.GemotestProductDetail product)
         {
             if (details == null || product == null || details.Dicts == null)
@@ -1245,8 +1181,6 @@ namespace Laboratory.Gemotest
 
                         if (IsBiomaterialCollectService(serviceInfo.Id) && !IsCollectBiomaterialByGemotestEnabled())
                         {
-                            DebugGemotestGui("SaveOrderModelForGUIToDetails: skip disabled biomaterial collect service: id=" + (serviceInfo.Id ?? "") +
-                                "; code=" + (serviceInfo.Code ?? "") + "; name=" + (serviceInfo.Name ?? ""));
                             continue;
                         }
 
@@ -1267,7 +1201,6 @@ namespace Laboratory.Gemotest
                 EnsureRequiredSampleBiomaterialsInDetails(details);
 
                 ApplyBiomaterialSelectionFromModel(details, _Model);
-                DumpGuiOrderState("SaveOrderModelForGUIToDetails: after ApplyBiomaterialSelectionFromModel", _Order, _Model, details);
 
                 RebuildBiomaterialGroups(details, _Model);
 
@@ -1326,7 +1259,6 @@ namespace Laboratory.Gemotest
                 details.PriceListCode = details.PriceListCode ?? string.Empty;
                 details.PriceListName = details.PriceListName ?? string.Empty;
                 details.PriceList = details.PriceList ?? string.Empty;
-                DumpGuiOrderState("SaveOrderModelForGUIToDetails: final details", _Order, _Model, details);
                 return true;
             }
             catch (Exception exc)
@@ -1362,7 +1294,7 @@ namespace Laboratory.Gemotest
                     return false;
                 }
 
-                
+
                 if (_Action == eOrderAction.RemoveProduct)
                 {
                     if (_OrderModel == null || _OrderModel.ProductsInfo == null)
@@ -3031,8 +2963,6 @@ namespace Laboratory.Gemotest
                 if (!IsBiomaterialCollectService(product.ProductId))
                     continue;
 
-                DebugGemotestGui((stage ?? "") + ": remove disabled biomaterial collect service from details: index=" + i.ToString(CultureInfo.InvariantCulture) +
-                    "; id=" + (product.ProductId ?? "") + "; code=" + (product.ProductCode ?? "") + "; name=" + (product.ProductName ?? ""));
 
                 details.Products.RemoveAt(i);
                 removed++;
@@ -3059,8 +2989,6 @@ namespace Laboratory.Gemotest
                 if (!IsBiomaterialCollectService(serviceInfo.Id))
                     continue;
 
-                DebugGemotestGui((stage ?? "") + ": remove disabled biomaterial collect service from model.ServicesInfo: index=" + i.ToString(CultureInfo.InvariantCulture) +
-                    "; id=" + (serviceInfo.Id ?? "") + "; code=" + (serviceInfo.Code ?? "") + "; name=" + (serviceInfo.Name ?? ""));
 
                 model.ServicesInfo.RemoveAt(i);
             }
@@ -3226,9 +3154,6 @@ namespace Laboratory.Gemotest
 
             if (result.Count != before)
             {
-                DebugGemotestGui("ExpandSelectedBiomaterialsForRequiredSampleRows: service=" + (serviceId ?? string.Empty) +
-                    "; before=" + before.ToString(CultureInfo.InvariantCulture) +
-                    "; after=" + result.Count.ToString(CultureInfo.InvariantCulture));
             }
 
             return result;
@@ -3636,8 +3561,6 @@ namespace Laboratory.Gemotest
                 if (groups.Count > 0)
                 {
                     NormalizeBiomaterialGroups(groups);
-                    DebugGemotestGui("BuildBiomaterialGroupsForService: marketing complex " + (serviceId ?? string.Empty) +
-                        "; groups=" + groups.Count.ToString(CultureInfo.InvariantCulture));
                     return groups;
                 }
             }
@@ -3646,8 +3569,6 @@ namespace Laboratory.Gemotest
             if (requiredSampleGroups.Count > 0)
             {
                 NormalizeBiomaterialGroups(requiredSampleGroups);
-                DebugGemotestGui("BuildBiomaterialGroupsForService: required sample rows " + (serviceId ?? string.Empty) +
-                    "; groups=" + requiredSampleGroups.Count.ToString(CultureInfo.InvariantCulture));
                 return requiredSampleGroups;
             }
 
@@ -3707,10 +3628,6 @@ namespace Laboratory.Gemotest
 
             NormalizeBiomaterialGroups(groups);
 
-            DebugGemotestGui("BuildBiomaterialGroupsForProduct: productIndex=" + productIndex.ToString(CultureInfo.InvariantCulture) +
-                "; productId=" + (productDetail.ProductId ?? string.Empty) +
-                "; groups=" + groups.Count.ToString(CultureInfo.InvariantCulture) +
-                "; selectedIds=" + JoinDebugValues(validSelectedIds));
 
             return groups;
         }
@@ -4209,11 +4126,6 @@ namespace Laboratory.Gemotest
             string biomaterialKey = SafeTrim(item.biomaterial_id);
             if (string.IsNullOrWhiteSpace(biomaterialKey) && sampleRow != null)
                 biomaterialKey = GetBiomaterialIdFromSampleRequirement(sampleRow);
-
-            // Для GUI у маркетингового комплекса один и тот же биоматериал не должен
-            // превращаться в несколько одинаковых групп только из-за разных строк состава
-            // или разных внутренних услуг комплекса. При отправке выбранный BiomaterialId
-            // всё равно разворачивается в нужные строки состава комплекса.
             return biomaterialKey;
         }
 
@@ -4530,21 +4442,14 @@ namespace Laboratory.Gemotest
                 bool isCollectService = service.service_type == 4;
                 bool collectEnabled = IsCollectBiomaterialByGemotestEnabled();
 
-                DebugGemotestGui("AUTO_INSERT candidate: id=" + (service.id ?? "") +
-                    "; code=" + (service.code ?? "") + "; name=" + (service.name ?? "") +
-                    "; service_type=" + service.service_type.ToString() +
-                    "; isCollectService=" + isCollectService.ToString() +
-                    "; CollectBiomaterialByGemotest=" + collectEnabled.ToString());
 
                 if (isCollectService && !collectEnabled)
                 {
-                    DebugGemotestGui("AUTO_INSERT skip: biomaterial collect service is disabled by system option: id=" + (service.id ?? ""));
                     continue;
                 }
 
                 if (ProductOrServiceExistsInModel(model, service.id))
                 {
-                    DebugGemotestGui("AUTO_INSERT skip: service already exists in model: id=" + (service.id ?? ""));
                     continue;
                 }
 
@@ -4572,8 +4477,6 @@ namespace Laboratory.Gemotest
                 else
                     model.ProductsInfo.Add(productForGui);
 
-                DebugGemotestGui("AUTO_INSERT add: id=" + (service.id ?? "") +
-                    "; target=" + (isCollectService ? "ServicesInfo" : "ProductsInfo"));
             }
         }
 

@@ -7,14 +7,14 @@ namespace Laboratory.Gemotest
     public sealed class SampleServiceRow
     {
         public string ServiceId { get; set; }
-        public string ComplexId { get; set; } 
+        public string ComplexId { get; set; }
 
         public int ExecutionSampleId { get; set; }
         public string ExecutionSampleName { get; set; }
         public string ExecutionTransportId { get; set; }
         public bool ExecutionUtilize { get; set; }
 
-        public int? PrimarySampleId { get; set; } 
+        public int? PrimarySampleId { get; set; }
         public string PrimarySampleName { get; set; }
         public string PrimaryTransportId { get; set; }
         public bool PrimaryUtilize { get; set; }
@@ -23,7 +23,7 @@ namespace Laboratory.Gemotest
         public string MicroBioBiomaterialId { get; set; }
         public string LocalizationId { get; set; }
 
-        public int ServiceCount { get; set; } 
+        public int ServiceCount { get; set; }
 
         public SampleServiceRow()
         {
@@ -49,8 +49,8 @@ namespace Laboratory.Gemotest
         public string ServiceId { get; set; }
         public string ComplexId { get; set; }
 
-        public int UtilizationFlag { get; set; } 
-        public int RefuseFlag { get; set; }      
+        public int UtilizationFlag { get; set; }
+        public int RefuseFlag { get; set; }
 
         public int ServiceCount { get; set; }
         public double SharePercent { get; set; }
@@ -77,7 +77,7 @@ namespace Laboratory.Gemotest
         public string SampleIdentifier { get; set; }
         public string PrimarySampleIdentifier { get; set; }
 
-        public TubePlan Parent { get; set; } 
+        public TubePlan Parent { get; set; }
 
         public double UsedPercent { get; set; }
         public List<TubeServicePlan> Services { get; set; }
@@ -111,7 +111,7 @@ namespace Laboratory.Gemotest
             public string DrawTransportId;
             public bool DrawUtilize;
 
-            public int UtilizationFlag; 
+            public int UtilizationFlag;
 
             public double Share;
         }
@@ -279,104 +279,6 @@ namespace Laboratory.Gemotest
             }
         }
 
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         public static List<TubePlan> Pack(List<SampleServiceRow> rows)
         {
@@ -402,8 +304,7 @@ namespace Laboratory.Gemotest
 
             var result = new List<TubePlan>();
 
-            
-            
+
             var ordinaryRows = new List<SampleServiceRow>();
 
             for (int i = 0; i < cleanRows.Count; i++)
@@ -421,7 +322,7 @@ namespace Laboratory.Gemotest
 
             result.AddRange(PackOrdinaryRows(ordinaryRows));
 
-            
+
             var aliquotRows = new List<SampleServiceRow>();
 
             for (int i = 0; i < cleanRows.Count; i++)
@@ -544,7 +445,7 @@ namespace Laboratory.Gemotest
                 if (string.IsNullOrWhiteSpace(parentTransport))
                     parentTransport = r.PrimaryTransportId ?? "";
 
-                
+
                 if (string.IsNullOrWhiteSpace(parentTransport))
                     parentTransport = r.ExecutionTransportId ?? "";
 
@@ -587,8 +488,7 @@ namespace Laboratory.Gemotest
                         UsedPercent = parentBin.Used
                     };
 
-                    
-                    
+
                     foreach (var it in parentBin.Items)
                     {
                         AddTubeServiceIfMissing(
@@ -601,7 +501,7 @@ namespace Laboratory.Gemotest
 
                     result.Add(parentTube);
 
-                    
+
                     var childGroups = parentBin.Items
                         .GroupBy(x => new AliquotPackKey(
                             x.Src.ExecutionSampleId,
@@ -790,8 +690,7 @@ namespace Laboratory.Gemotest
             if (!SameText(candidateParent.LocalizationId, aliquotRow.LocalizationId))
                 return false;
 
-            
-            
+
             if (!string.IsNullOrWhiteSpace(aliquotRow.PrimaryTransportId))
             {
                 if (!SameText(candidateParent.ExecutionTransportId, aliquotRow.PrimaryTransportId))
@@ -861,13 +760,11 @@ namespace Laboratory.Gemotest
         {
             if (it == null) return 0;
 
-            
-            
+
             if (it.UtilizationFlag == 1)
                 return 1;
 
-            
-            
+
             if (it.DrawUtilize)
                 return 1;
 
@@ -878,8 +775,7 @@ namespace Laboratory.Gemotest
         {
             if (it == null || it.Src == null) return 0;
 
-            
-            
+
             return it.Src.ExecutionUtilize ? 1 : 0;
         }
 
@@ -894,7 +790,7 @@ namespace Laboratory.Gemotest
         private static string ResolveBiomaterialId(BioKey key)
         {
             if (key.Kind == "BM") return key.Value;
-            return ""; 
+            return "";
         }
 
         private static string ResolveMicroBioId(BioKey key)

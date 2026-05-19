@@ -757,8 +757,8 @@ namespace Laboratory.Gemotest
                     }
                     catch (Exception ex)
                     {
-                        
-                        
+
+
                         SiMed.Clinic.Logger.LogEvent.SaveErrorToLog("Гемотест: настройки сохранены, но обновить справочники после сохранения не удалось: " + ex.Message, "Gemotest");
                     }
                 }
@@ -1612,7 +1612,7 @@ namespace Laboratory.Gemotest
         }
 
         private void SaveResultsToOrderDetail( GemotestOrderDetail details, GemotestAnalysisResultResponse response, bool saveAttachments)
-        { 
+        {
             if (details == null || response == null)
                 return;
 
