@@ -402,7 +402,9 @@ namespace Laboratory.Gemotest
             {
                 details.Dicts = Dicts;
                 ApplyPriceListToDetails(details);
-                RebuildBiomaterialsKeepSelection(details);
+
+                if (_Order.State == OrderState.NotSended)
+                    RebuildBiomaterialsKeepSelection(details);
             }
 
             details.DeleteObsoleteDetails();
@@ -466,7 +468,10 @@ namespace Laboratory.Gemotest
 
             details.Dicts = Dicts;
             ApplyPriceListToDetails(details);
-            RebuildBiomaterialsKeepSelection(details);
+
+            if (_Order.State == OrderState.NotSended)
+                RebuildBiomaterialsKeepSelection(details);
+
             details.DeleteObsoleteDetails();
 
             bool readOnly = _bReadOnly || _Order.State != OrderState.NotSended;
@@ -534,6 +539,12 @@ namespace Laboratory.Gemotest
                 if (details.Products == null || details.Products.Count == 0)
                     throw new InvalidOperationException("В заказе нет ни одной услуги (details.Products пуст).");
 
+                if (details.Samples == null || details.Samples.Count == 0)
+                    throw new InvalidOperationException("В заказе нет сформированных проб. Откройте заказ, сохраните его и заново выполните подготовку к отправке.");
+
+                if (details.Samples.Any(x => x == null || string.IsNullOrWhiteSpace(x.SampleId)))
+                    throw new InvalidOperationException("В заказе есть пробы без SampleId. Откройте заказ, сохраните его и заново выполните подготовку к отправке.");
+
                 string errorMessage;
                 if (!sender.CreateOrder(_Order, out errorMessage))
                 {
@@ -570,173 +581,6 @@ namespace Laboratory.Gemotest
                 return false;
             }
         }
-
-        private void SelectAllBiomaterialsForProduct(GemotestOrderDetail details, int productIndex)
-        {
-            if (details == null || details.BioMaterials == null)
-                return;
-
-            foreach (GemotestBioMaterial biomaterial in details.BioMaterials)
-            {
-                if (biomaterial == null)
-                    continue;
-
-                bool belongsToProduct =
-                    (biomaterial.Chosen != null && biomaterial.Chosen.Contains(productIndex)) ||
-                    (biomaterial.Another != null && biomaterial.Another.Contains(productIndex)) ||
-                    (biomaterial.Mandatory != null && biomaterial.Mandatory.Contains(productIndex));
-
-                if (!belongsToProduct)
-                    continue;
-
-                if (biomaterial.Chosen == null)
-                    biomaterial.Chosen = new List<int>();
-                if (biomaterial.Another == null)
-                    biomaterial.Another = new List<int>();
-
-                if (!biomaterial.Chosen.Contains(productIndex))
-                    biomaterial.Chosen.Add(productIndex);
-
-                while (biomaterial.Another.Contains(productIndex))
-                    biomaterial.Another.Remove(productIndex);
-            }
-        }
-
-        private void AddDefaultSupplementalsForTest(GemotestOrderDetail details, DictionaryService service, int productIndex)
-        {
-            if (details == null || service == null || Dicts == null || Dicts.ServicesSupplementals == null)
-                return;
-
-            foreach (DictionaryServicesSupplementals supplemental in Dicts.ServicesSupplementalsAll)
-            {
-                if (supplemental == null)
-                    continue;
-
-                if (!SameGemotestId(supplemental.parent_id, service.id))
-                    continue;
-
-                string value = BuildDefaultSupplementalValueForTest(supplemental);
-                if (string.IsNullOrWhiteSpace(value))
-                    continue;
-
-                var detail = new GemotestDetail
-                {
-                    Code = supplemental.test_id ?? string.Empty,
-                    SoapCode = supplemental.test_id ?? string.Empty,
-                    Name = supplemental.name ?? string.Empty,
-                    Value = value,
-                    DisplayValue = value
-                };
-
-                if (supplemental.required)
-                    detail.MandatoryProducts.Add(productIndex);
-                else
-                    detail.OptionalProducts.Add(productIndex);
-
-                details.Details.Add(detail);
-            }
-        }
-
-        private static string BuildDefaultSupplementalValueForTest(DictionaryServicesSupplementals supplemental)
-        {
-            if (supplemental == null)
-                return string.Empty;
-
-            if (!string.IsNullOrWhiteSpace(supplemental.value))
-            {
-                string[] parts = supplemental.value.Split(new char[] { ';', ',', '|' }, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length > 0)
-                    return parts[0].Trim();
-            }
-
-            string name = (supplemental.name ?? string.Empty).ToLowerInvariant();
-            string testId = (supplemental.test_id ?? string.Empty).ToLowerInvariant();
-
-            if (name.Contains("моч") || name.Contains("объем") || name.Contains("объём") || testId.Contains("volume"))
-                return "1000";
-
-            return "1";
-        }
-
-        private static string BuildTestExternalNumber(Order order, string serviceId, int number)
-        {
-            string baseNumber = null;
-            if (order != null && !string.IsNullOrWhiteSpace(order.Number))
-                baseNumber = order.Number.Trim();
-
-            if (string.IsNullOrWhiteSpace(baseNumber))
-                baseNumber = "SiMedTest" + DateTime.Now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture);
-
-            return baseNumber + "_TEST_" + number.ToString(CultureInfo.InvariantCulture) + "_" + SanitizeExtNumPart(serviceId);
-        }
-
-        private static string SanitizeExtNumPart(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                return "service";
-
-            var sb = new StringBuilder();
-            foreach (char ch in value)
-            {
-                if (char.IsLetterOrDigit(ch) || ch == '-' || ch == '_')
-                    sb.Append(ch);
-                else
-                    sb.Append('_');
-            }
-
-            string result = sb.ToString().Trim('_');
-            return string.IsNullOrEmpty(result) ? "service" : result;
-        }
-
-        private static bool SameGemotestId(string left, string right)
-        {
-            return string.Equals((left ?? string.Empty).Trim(), (right ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static bool CsvContains(string csv, string value)
-        {
-            if (string.IsNullOrEmpty(csv) || string.IsNullOrEmpty(value))
-                return false;
-
-            return csv.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                .Any(x => string.Equals(x.Trim(), value, StringComparison.OrdinalIgnoreCase));
-        }
-
-        private static string AddToCsv(string csv, string value)
-        {
-            if (string.IsNullOrEmpty(value))
-                return csv ?? string.Empty;
-
-            var list = new List<string>();
-            if (!string.IsNullOrEmpty(csv))
-                list.AddRange(csv.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).Where(x => x.Length > 0));
-
-            if (!list.Any(x => string.Equals(x, value, StringComparison.OrdinalIgnoreCase)))
-                list.Add(value);
-
-            return string.Join(",", list.ToArray());
-        }
-
-        private static string RemoveFromCsv(string csv, string value)
-        {
-            if (string.IsNullOrEmpty(csv) || string.IsNullOrEmpty(value))
-                return csv ?? string.Empty;
-
-            var list = csv.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(x => x.Trim())
-                .Where(x => x.Length > 0 && !string.Equals(x, value, StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-
-            return string.Join(",", list);
-        }
-
-        public void PrintOrderForms(Order _Order)
-        {
-            ResultsCollection resultsCollection = new ResultsCollection();
-            OrderModelForGUI orderModelForGUI = new OrderModelForGUI();
-            laboratoryGUI.CreateOrderModelForGUI(true, _Order, ref resultsCollection, ref orderModelForGUI);
-        }
-
 
         public bool ShowSystemOptions(ref string _SystemOptions)
         {
@@ -789,7 +633,7 @@ namespace Laboratory.Gemotest
                 details.Products = new List<GemotestOrderDetail.GemotestProductDetail>();
 
             if (details.BioMaterials == null)
-                details.BioMaterials = new List<GemotestBioMaterial>();
+                details.BioMaterials = new List<GemotestProductBioMaterial>();
 
             var oldSelectedByProductIndex = new Dictionary<int, HashSet<string>>();
 
@@ -802,7 +646,10 @@ namespace Laboratory.Gemotest
                     if (bio == null || string.IsNullOrWhiteSpace(bio.Id))
                         continue;
 
-                    if (bio.Chosen.Contains(productIndex) || bio.Mandatory.Contains(productIndex))
+                    if (bio.ProductIndex != productIndex)
+                        continue;
+
+                    if (bio.Chosen)
                         selectedIds.Add(bio.Id);
                 }
 
@@ -821,7 +668,7 @@ namespace Laboratory.Gemotest
                 if (productIndex < 0 || productIndex >= details.Products.Count)
                     continue;
 
-                var linkedForProduct = details.BioMaterials.Where(b => b != null && (b.Mandatory.Contains(productIndex) || b.Chosen.Contains(productIndex) || b.Another.Contains(productIndex))).ToList();
+                var linkedForProduct = details.BioMaterials.Where(b => b.ProductIndex == productIndex).ToList();
 
                 if (linkedForProduct.Count == 0)
                     continue;
@@ -836,26 +683,10 @@ namespace Laboratory.Gemotest
                     if (bio == null)
                         continue;
 
-                    if (bio.Mandatory.Contains(productIndex))
-                    {
-                        bio.Chosen.Remove(productIndex);
-                        bio.Another.Remove(productIndex);
-                        continue;
-                    }
-
-                    bio.Chosen.Remove(productIndex);
-                    bio.Another.Remove(productIndex);
-
                     if (validSelectedIds.Contains(bio.Id))
-                    {
-                        if (!bio.Chosen.Contains(productIndex))
-                            bio.Chosen.Add(productIndex);
-                    }
+                        bio.Chosen = true;
                     else
-                    {
-                        if (!bio.Another.Contains(productIndex))
-                            bio.Another.Add(productIndex);
-                    }
+                        bio.Chosen = false;
                 }
             }
         }
@@ -2188,5 +2019,11 @@ namespace Laboratory.Gemotest
                 .Replace("'", "&apos;");
         }
 
+        public void PrintOrderForms(Order _Order)
+        {
+            ResultsCollection resultsCollection = new ResultsCollection();
+            OrderModelForGUI orderModelForGUI = new OrderModelForGUI();
+            laboratoryGUI.CreateOrderModelForGUI(true, _Order, ref resultsCollection, ref orderModelForGUI);
+        }
     }
 }

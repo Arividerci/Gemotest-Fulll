@@ -1,27 +1,25 @@
-﻿using Laboratory.Gemotest.Options;
-using SiMed.Laboratory;
-using Laboratory.Gemotest.SourseClass;
+﻿using Laboratory.Gemotest.GemotestRequests;
+using Laboratory.Gemotest.Options;
 using Laboratory.Gemotest.Reports;
+using Laboratory.Gemotest.SourseClass;
+using PrintCommon;
+using SiMed.Clinic;
+using SiMed.Laboratory;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Windows.Forms;
-using StatisticsCollectionSystemClient;
-using static Laboratory.Gemotest.SourseClass.GemotestOrderDetail;
-using Laboratory.Gemotest.GemotestRequests;
-using SiMed.Clinic;
-using PrintCommon;
 using System.Data;
-using System.Drawing.Printing;
-using System.Text;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Drawing.Printing;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using ZXing;
 using ZXing.Common;
-using System.Globalization;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using static Laboratory.Gemotest.SourseClass.GemotestOrderDetail;
 
 namespace Laboratory.Gemotest
 {
@@ -61,7 +59,7 @@ namespace Laboratory.Gemotest
         public Exception GetLastException() => LastException;
 
 
-        public bool GetGuiOptions(out List<GuiOption> _Options)
+public bool GetGuiOptions(out List<GuiOption> _Options)
         {
             _Options = new List<GuiOption>
             {
@@ -633,7 +631,7 @@ namespace Laboratory.Gemotest
                 if (!_ReadOnly && _Order != null && _Order.State == OrderState.NotSended)
                     RemoveDisabledBiomaterialCollectServicesFromDetails(details, "CreateOrderModelForGUI: before build model");
 
-                if (_ReadOnly)
+                if (_ReadOnly || (_Order != null && _Order.State != OrderState.NotSended))
                     return BuildReadOnlyModelFromDetails(_Order, details, _Model);
 
                 FillPriceListsForModel(false, details, _Model);
@@ -677,12 +675,8 @@ namespace Laboratory.Gemotest
                     }
 
                     if (details.BioMaterials == null)
-                        details.BioMaterials = new List<GemotestBioMaterial>();
+                        details.BioMaterials = new List<GemotestProductBioMaterial>();
 
-                    var savedBiomaterialSelectionState = CaptureBiomaterialSelectionState(details.BioMaterials);
-                    details.BioMaterials.Clear();
-                    details.AddBiomaterialsFromProducts();
-                    RestoreBiomaterialSelectionState(details.BioMaterials, savedBiomaterialSelectionState);
                     EnsureRequiredSampleBiomaterialsInDetails(details);
                 }
 
@@ -769,7 +763,8 @@ namespace Laboratory.Gemotest
 
                 if (groups == null || groups.Count == 0)
                 {
-                    groups = BuildBiomaterialGroupsForProduct(details, productIndex);
+                    groups = BuildBiomaterialGroupsForProduct_new(details, productIndex);
+                    //groups = BuildBiomaterialGroupsForProduct(details, productIndex);
                 }
 
                 if (groups == null)
@@ -792,6 +787,67 @@ namespace Laboratory.Gemotest
             }
         }
 
+        private static string ResolveSampleDisplayBiomaterialId(GemotestSampleDetail sampleInfo)
+        {
+            if (sampleInfo == null)
+                return string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(sampleInfo.BiomId))
+                return sampleInfo.BiomId.Trim();
+
+            if (!string.IsNullOrWhiteSpace(sampleInfo.BiomCode))
+                return sampleInfo.BiomCode.Trim();
+
+            if (!string.IsNullOrWhiteSpace(sampleInfo.MicrobiologyBiomaterialId))
+                return sampleInfo.MicrobiologyBiomaterialId.Trim();
+
+            return string.Empty;
+        }
+
+        private static string ResolveSampleDisplayBiomaterialName(GemotestSampleDetail sampleInfo)
+        {
+            if (sampleInfo == null)
+                return string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(sampleInfo.BiomName))
+                return sampleInfo.BiomName.Trim();
+
+            string id = ResolveSampleDisplayBiomaterialId(sampleInfo);
+            return id;
+        }
+
+        private static string ResolveSampleDisplayContainerId(GemotestSampleDetail sampleInfo)
+        {
+            if (sampleInfo == null)
+                return string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(sampleInfo.ContId))
+                return sampleInfo.ContId.Trim();
+
+            if (!string.IsNullOrWhiteSpace(sampleInfo.ContCode))
+                return sampleInfo.ContCode.Trim();
+
+            if (!string.IsNullOrWhiteSpace(sampleInfo.TransportId))
+                return sampleInfo.TransportId.Trim();
+
+            return string.Empty;
+        }
+
+        private static string ResolveSampleDisplayContainerName(GemotestSampleDetail sampleInfo)
+        {
+            if (sampleInfo == null)
+                return string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(sampleInfo.ContName))
+                return sampleInfo.ContName.Trim();
+
+            if (!string.IsNullOrWhiteSpace(sampleInfo.TransportName))
+                return sampleInfo.TransportName.Trim();
+
+            string id = ResolveSampleDisplayContainerId(sampleInfo);
+            return id;
+        }
+
         private List<BiomaterialGroupForGUI> BuildReadOnlySampleBiomaterialGroupsFromDetails(GemotestOrderDetail details, string orderProductGuid)
         {
             var result = new List<BiomaterialGroupForGUI>();
@@ -809,16 +865,21 @@ namespace Laboratory.Gemotest
                 if (!sampleInfo.OrderProductGuidList.Any(x => string.Equals(x ?? string.Empty, orderProductGuid, StringComparison.OrdinalIgnoreCase)))
                     continue;
 
+                string displayBiomaterialId = ResolveSampleDisplayBiomaterialId(sampleInfo);
+
                 var biomInfo = new BiomaterialInfoForGUI
                 {
-                    BiomaterialId = sampleInfo.BiomId ?? string.Empty,
-                    BiomaterialCode = sampleInfo.BiomCode ?? string.Empty,
-                    BiomaterialName = sampleInfo.BiomName ?? string.Empty,
+                    BiomaterialId = displayBiomaterialId,
+                    BiomaterialCode = displayBiomaterialId,
+                    BiomaterialName = ResolveSampleDisplayBiomaterialName(sampleInfo),
 
-                    ContainerId = sampleInfo.ContId ?? string.Empty,
-                    ContainerCode = sampleInfo.ContCode ?? string.Empty,
-                    ContainerName = sampleInfo.ContName ?? string.Empty
+                    ContainerId = ResolveSampleDisplayContainerId(sampleInfo),
+                    ContainerCode = ResolveSampleDisplayContainerId(sampleInfo),
+                    ContainerName = ResolveSampleDisplayContainerName(sampleInfo)
                 };
+
+                if (IsEmptyBiomaterialInfo(biomInfo))
+                    continue;
 
                 string key = BuildBiomaterialInfoDuplicateKey(biomInfo);
                 if (string.IsNullOrWhiteSpace(key))
@@ -980,7 +1041,7 @@ namespace Laboratory.Gemotest
             }
 
             if (transport == null)
-                TryResolveTransportFromSamplesServices(service.id, biomId, out transport);
+                laboratory.Dicts.TryResolveTransportFromSamplesServices(service.id, biomId, out transport);
 
             return new BiomaterialInfoForGUI
             {
@@ -995,8 +1056,10 @@ namespace Laboratory.Gemotest
         }
         private void BuildReadOnlySamplesFromDetails(GemotestOrderDetail details, OrderModelForGUI model)
         {
-            if (details.Samples == null)
+            if (details == null || details.Samples == null)
                 return;
+
+            GemotestOrderSender.NormalizeOrderDetailSamples(details);
 
             foreach (var sampleInfo in details.Samples)
             {
@@ -1009,12 +1072,12 @@ namespace Laboratory.Gemotest
                     Barcode = sampleInfo.Barcode ?? string.Empty,
                     Biomaterial = new BiomaterialInfoForGUI
                     {
-                        BiomaterialId = sampleInfo.BiomId ?? string.Empty,
-                        BiomaterialCode = sampleInfo.BiomCode ?? string.Empty,
-                        BiomaterialName = sampleInfo.BiomName ?? string.Empty,
-                        ContainerId = sampleInfo.ContId ?? string.Empty,
-                        ContainerCode = sampleInfo.ContCode ?? string.Empty,
-                        ContainerName = sampleInfo.ContName ?? string.Empty
+                        BiomaterialId = ResolveSampleDisplayBiomaterialId(sampleInfo),
+                        BiomaterialCode = ResolveSampleDisplayBiomaterialId(sampleInfo),
+                        BiomaterialName = ResolveSampleDisplayBiomaterialName(sampleInfo),
+                        ContainerId = ResolveSampleDisplayContainerId(sampleInfo),
+                        ContainerCode = ResolveSampleDisplayContainerId(sampleInfo),
+                        ContainerName = ResolveSampleDisplayContainerName(sampleInfo)
                     },
                     OrderProductGuids = sampleInfo.OrderProductGuidList != null
                         ? new List<string>(sampleInfo.OrderProductGuidList)
@@ -1023,6 +1086,20 @@ namespace Laboratory.Gemotest
 
                 model.Samples.Add(sampleNew);
             }
+        }
+
+        private void RefreshModelSamplesFromDetails(GemotestOrderDetail details, OrderModelForGUI model)
+        {
+            if (model == null)
+                return;
+
+            model.Samples.Clear();
+
+            if (details == null)
+                return;
+
+            GemotestOrderSender.NormalizeOrderDetailSamples(details);
+            BuildReadOnlySamplesFromDetails(details, model);
         }
 
         private void BuildReadOnlyFieldsFromDetails(GemotestOrderDetail details, OrderModelForGUI model)
@@ -1204,57 +1281,15 @@ namespace Laboratory.Gemotest
 
                 RebuildBiomaterialGroups(details, _Model);
 
-                var oldSamples = details.Samples != null ? new List<GemotestSampleDetail>(details.Samples) : new List<GemotestSampleDetail>();
+                SaveFieldsToDetails(details, _Model);
 
                 if (_Order.State == OrderState.NotSended || _Order.State == OrderState.Prepared)
                 {
-                    details.Samples.Clear();
-
-                    if (_Model.Samples != null)
-                    {
-                        foreach (var sampleFromModel in _Model.Samples)
-                        {
-                            if (sampleFromModel == null || sampleFromModel.Biomaterial == null)
-                                continue;
-
-                            var oldSample = oldSamples.FirstOrDefault(x =>
-                                x != null &&
-                                x.OrderSampleGuid == sampleFromModel.OrderSampleGuid);
-
-                            details.Samples.Add(new GemotestSampleDetail()
-                            {
-                                OrderSampleGuid = sampleFromModel.OrderSampleGuid,
-                                Barcode = oldSample != null ? oldSample.Barcode : sampleFromModel.Barcode,
-
-                                SampleId = oldSample != null ? oldSample.SampleId : string.Empty,
-                                SampleIdentifier = oldSample != null ? oldSample.SampleIdentifier : string.Empty,
-                                SampleDescription = oldSample != null ? oldSample.SampleDescription : string.Empty,
-
-                                BiomId = sampleFromModel.Biomaterial.BiomaterialId,
-                                BiomCode = sampleFromModel.Biomaterial.BiomaterialCode,
-                                BiomName = sampleFromModel.Biomaterial.BiomaterialName,
-
-                                ContId = sampleFromModel.Biomaterial.ContainerId,
-                                ContCode = sampleFromModel.Biomaterial.ContainerCode,
-                                ContName = sampleFromModel.Biomaterial.ContainerName,
-
-                                LocalizationId = oldSample != null ? oldSample.LocalizationId : string.Empty,
-                                LocalizationName = oldSample != null ? oldSample.LocalizationName : string.Empty,
-
-                                TransportId = oldSample != null ? oldSample.TransportId : sampleFromModel.Biomaterial.ContainerId,
-                                TransportName = oldSample != null ? oldSample.TransportName : sampleFromModel.Biomaterial.ContainerName,
-
-                                LabCenterId = oldSample != null ? oldSample.LabCenterId : string.Empty,
-
-                                OrderProductGuidList = sampleFromModel.OrderProductGuids != null ? new List<string>(sampleFromModel.OrderProductGuids) : new List<string>()
-
-
-                            });
-                        }
-                    }
+                    var sampleBuilder = new GemotestOrderSender(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
+                    sampleBuilder.BuildAndSaveSamplesToOrderDetail(details);
+                    RefreshModelSamplesFromDetails(details, _Model);
                 }
 
-                SaveFieldsToDetails(details, _Model);
                 details.DeleteObsoleteDetails();
                 details.PriceListCode = details.PriceListCode ?? string.Empty;
                 details.PriceListName = details.PriceListName ?? string.Empty;
@@ -1266,6 +1301,62 @@ namespace Laboratory.Gemotest
                 LastException = exc;
                 return false;
             }
+        }
+
+        private bool SaveOrderModelForPrepareWithoutSampleRebuild(Order order, OrderModelForGUI model)
+        {
+            LastException = null;
+
+            try
+            {
+                GemotestOrderDetail details = order != null ? order.OrderDetail as GemotestOrderDetail : null;
+                if (details == null)
+                    return true;
+
+                details.Dicts = laboratory.Dicts;
+
+                SavePriceListToDetails(details, model);
+                ApplyBiomaterialSelectionFromModel(details, model);
+                SaveFieldsToDetails(details, model);
+                GemotestOrderSender.NormalizeOrderDetailSamples(details);
+                RefreshModelSamplesFromDetails(details, model);
+
+                details.DeleteObsoleteDetails();
+                details.PriceListCode = details.PriceListCode ?? string.Empty;
+                details.PriceListName = details.PriceListName ?? string.Empty;
+                details.PriceList = details.PriceList ?? string.Empty;
+
+                return true;
+            }
+            catch (Exception exc)
+            {
+                LastException = exc;
+                return false;
+            }
+        }
+
+        private static string ValidatePreparedOrderSamples(GemotestOrderDetail details)
+        {
+            if (details == null)
+                return "Не удалось получить детали заказа Gemotest.";
+
+            if (details.Samples == null || details.Samples.Count == 0)
+                return "В заказе нет сформированных проб. Сначала сохраните заказ, чтобы пробы были сформированы и записаны в OrderDetail.Samples.";
+
+            for (int i = 0; i < details.Samples.Count; i++)
+            {
+                GemotestSampleDetail sample = details.Samples[i];
+                if (sample == null)
+                    return "В заказе есть пустая запись пробы. Сохраните заказ заново.";
+
+                if (string.IsNullOrWhiteSpace(sample.SampleId))
+                    return "В заказе есть проба без SampleId. Сохраните заказ заново.";
+
+                if (sample.Services == null || sample.Services.Count == 0)
+                    return "В заказе есть проба без привязанных услуг. Сохраните заказ заново.";
+            }
+
+            return string.Empty;
         }
 
         public bool ProcessOrderGUIAction(eOrderAction _Action, Order _Order, ref OrderModelForGUI _OrderModel, ProductInfoForGUI _Product)
@@ -1418,10 +1509,6 @@ namespace Laboratory.Gemotest
                             details.Products[i].OrderProductGuid = i.ToString();
                     }
 
-                    var savedBiomaterialSelectionState = CaptureBiomaterialSelectionState(details.BioMaterials);
-                    details.BioMaterials.Clear();
-                    details.AddBiomaterialsFromProducts();
-                    RestoreBiomaterialSelectionState(details.BioMaterials, savedBiomaterialSelectionState);
                     EnsureRequiredSampleBiomaterialsInDetails(details);
 
                     RebuildBiomaterialGroups(details, _OrderModel);
@@ -1458,8 +1545,20 @@ namespace Laboratory.Gemotest
                     if (!ValidateGUIModel(_OrderModel))
                         return false;
 
-                    if (!SaveOrderModelForGUIToDetails(_Order, _OrderModel))
+                    if (!SaveOrderModelForPrepareWithoutSampleRebuild(_Order, _OrderModel))
                         return false;
+
+                    string samplesValidationError = ValidatePreparedOrderSamples(details);
+                    if (!string.IsNullOrWhiteSpace(samplesValidationError))
+                    {
+                        MessageBox.Show(
+                            samplesValidationError,
+                            "Гемотест",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+
+                        return false;
+                    }
 
                     details.DeleteObsoleteDetails();
 
@@ -1478,10 +1577,11 @@ namespace Laboratory.Gemotest
                         if (nextNum <= 0)
                             throw new Exception("Не удалось получить номер заказа Gemotest через numerator.");
 
-                        _Order.Number = nextNum.ToString();
+                        _Order.Number = $"{priceListCode}_{nextNum}";
                     }
 
                     _Order.State = OrderState.Prepared;
+                    RefreshModelSamplesFromDetails(details, _OrderModel);
                     return true;
                 }
 
@@ -1519,12 +1619,8 @@ namespace Laboratory.Gemotest
                     details.DeleteObsoleteDetails();
 
                     if (details.BioMaterials == null)
-                        details.BioMaterials = new List<GemotestBioMaterial>();
+                        details.BioMaterials = new List<GemotestProductBioMaterial>();
 
-                    var savedBiomaterialSelectionState = CaptureBiomaterialSelectionState(details.BioMaterials);
-                    details.BioMaterials.Clear();
-                    details.AddBiomaterialsFromProducts();
-                    RestoreBiomaterialSelectionState(details.BioMaterials, savedBiomaterialSelectionState);
                     EnsureRequiredSampleBiomaterialsInDetails(details);
 
                     RebuildBiomaterialGroups(details, _OrderModel);
@@ -2673,6 +2769,31 @@ namespace Laboratory.Gemotest
             }
         }
 
+        private static string BuildBiomaterialModelSelectionKey(BiomaterialInfoForGUI biomaterial)
+        {
+            if (biomaterial == null)
+                return string.Empty;
+
+            return string.Join("|", new string[]
+            {
+                (biomaterial.BiomaterialId ?? string.Empty).Trim(),
+                (biomaterial.ContainerCode ?? string.Empty).Trim()
+            });
+        }
+
+        private static string BuildBiomaterialDetailSelectionKey(GemotestProductBioMaterial biomaterial)
+        {
+            if (biomaterial == null)
+                return string.Empty;
+
+            return string.Join("|", new string[]
+            {
+                (biomaterial.Id ?? string.Empty).Trim(),
+                (biomaterial.ContainerId ?? string.Empty).Trim()
+            });
+        }
+
+
         private void ApplyBiomaterialSelectionFromModel(GemotestOrderDetail details, OrderModelForGUI model)
         {
             if (details == null || model == null || model.ProductsInfo == null || details.BioMaterials == null)
@@ -2682,27 +2803,33 @@ namespace Laboratory.Gemotest
             {
                 var product = model.ProductsInfo[productIndex];
 
-                var selectedIds = new HashSet<string>(
-                    (product?.BiomaterialGroups ?? new List<BiomaterialGroupForGUI>())
-                        .Where(g => g != null && g.BiomaterialsSelected != null)
-                        .SelectMany(g => g.BiomaterialsSelected)
-                        .Where(x => x != null && !string.IsNullOrWhiteSpace(x.BiomaterialId))
+                var selectedInfos = (product?.BiomaterialGroups ?? new List<BiomaterialGroupForGUI>())
+                    .Where(g => g != null && g.BiomaterialsSelected != null)
+                    .SelectMany(g => g.BiomaterialsSelected)
+                    .Where(x => x != null && !string.IsNullOrWhiteSpace(x.BiomaterialId))
+                    .ToList();
+
+                var selectedExactKeys = new HashSet<string>(
+                    selectedInfos.Select(BuildBiomaterialModelSelectionKey),
+                    StringComparer.OrdinalIgnoreCase);
+
+                var selectedIdsWithoutContainer = new HashSet<string>(
+                    selectedInfos
+                        .Where(x => string.IsNullOrWhiteSpace(x.ContainerCode))
                         .Select(x => x.BiomaterialId),
                     StringComparer.OrdinalIgnoreCase);
 
-                foreach (var biom in details.BioMaterials.Where(b =>
-                             b != null &&
-                             (b.Mandatory.Contains(productIndex) ||
-                              b.Chosen.Contains(productIndex) ||
-                              b.Another.Contains(productIndex))))
+                foreach (var biom in details.BioMaterials)
                 {
-                    biom.Chosen.Remove(productIndex);
-                    biom.Another.Remove(productIndex);
+                    if (biom.ProductIndex != productIndex)
+                        continue;
 
-                    if (selectedIds.Contains(biom.Id))
-                        biom.Chosen.Add(productIndex);
+                    string detailKey = BuildBiomaterialDetailSelectionKey(biom);
+
+                    if (selectedExactKeys.Contains(detailKey) || selectedIdsWithoutContainer.Contains(biom.Id))
+                        biom.Chosen = true;
                     else
-                        biom.Another.Add(productIndex);
+                        biom.Chosen = false;
                 }
             }
         }
@@ -2808,39 +2935,6 @@ namespace Laboratory.Gemotest
                 return "не указан";
 
             return raw.Trim();
-        }
-
-        private List<DictionaryMarketingComplex> GetMarketingComplexItems(DictionaryService service)
-        {
-            var result = new List<DictionaryMarketingComplex>();
-
-            if (service == null || laboratory?.Dicts == null)
-                return result;
-
-            if (laboratory.Dicts.MarketingComplexByComplexId != null &&
-                laboratory.Dicts.MarketingComplexByComplexId.TryGetValue(service.id, out var byComplex) &&
-                byComplex != null)
-            {
-                result.AddRange(byComplex.Where(x => x != null));
-            }
-
-            if (laboratory.Dicts.MarketingComplexByServiceId != null &&
-                laboratory.Dicts.MarketingComplexByServiceId.TryGetValue(service.id, out var byService) &&
-                byService != null)
-            {
-                foreach (var item in byService.Where(x => x != null))
-                {
-                    if (!result.Any(r =>
-                        string.Equals(r.complex_id, item.complex_id, StringComparison.OrdinalIgnoreCase) &&
-                        string.Equals(r.service_id, item.service_id, StringComparison.OrdinalIgnoreCase) &&
-                        string.Equals(r.main_service, item.main_service, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        result.Add(item);
-                    }
-                }
-            }
-
-            return result;
         }
 
         private void AddBiomaterialsFromBaseService(DictionaryService service, List<DictionaryBiomaterials> result)
@@ -3002,7 +3096,7 @@ namespace Laboratory.Gemotest
                 return result;
 
             var dicts = laboratory.Dicts;
-            var complexItems = GetMarketingComplexItems(service);
+            var complexItems = laboratory.Dicts.GetMarketingComplexItems(service);
 
             if (complexItems.Count > 0)
             {
@@ -3065,10 +3159,8 @@ namespace Laboratory.Gemotest
                 }
             }
 
-            var expanded = ExpandSelectedBiomaterialsForRequiredSampleRows(productInfo.Id, selected, all);
-
             var result = new List<BiomaterialInfoForGUI>();
-            foreach (var biomaterial in expanded)
+            foreach (var biomaterial in selected)
                 AddUniqueBiomaterialInfo(result, biomaterial);
 
             return result;
@@ -3171,7 +3263,7 @@ namespace Laboratory.Gemotest
 
         private static void AddUniqueBiomaterialInfo(List<BiomaterialInfoForGUI> target, BiomaterialInfoForGUI item)
         {
-            if (target == null || item == null)
+            if (target == null || item == null || IsEmptyBiomaterialInfo(item))
                 return;
 
             bool exists = target.Any(x => x != null &&
@@ -3201,68 +3293,7 @@ namespace Laboratory.Gemotest
             return int.TryParse(text.Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out result) ? result : defaultValue;
         }
 
-        private sealed class BiomaterialSelectionState
-        {
-            public readonly List<int> Chosen = new List<int>();
-            public readonly List<int> Another = new List<int>();
-        }
-
-        private static Dictionary<string, BiomaterialSelectionState> CaptureBiomaterialSelectionState(IEnumerable<GemotestBioMaterial> biomaterials)
-        {
-            var result = new Dictionary<string, BiomaterialSelectionState>(StringComparer.OrdinalIgnoreCase);
-
-            if (biomaterials == null)
-                return result;
-
-            foreach (var biomaterial in biomaterials)
-            {
-                var key = BuildBiomaterialSelectionStateKey(biomaterial);
-                if (string.IsNullOrWhiteSpace(key))
-                    continue;
-
-                BiomaterialSelectionState state;
-                if (!result.TryGetValue(key, out state))
-                {
-                    state = new BiomaterialSelectionState();
-                    result[key] = state;
-                }
-
-                AddDistinctValues(state.Chosen, biomaterial.Chosen);
-                AddDistinctValues(state.Another, biomaterial.Another);
-            }
-
-            return result;
-        }
-
-        private static void RestoreBiomaterialSelectionState(IEnumerable<GemotestBioMaterial> biomaterials, Dictionary<string, BiomaterialSelectionState> savedState)
-        {
-            if (biomaterials == null || savedState == null || savedState.Count == 0)
-                return;
-
-            foreach (var biomaterial in biomaterials)
-            {
-                var key = BuildBiomaterialSelectionStateKey(biomaterial);
-                if (string.IsNullOrWhiteSpace(key))
-                    continue;
-
-                BiomaterialSelectionState state;
-                if (!savedState.TryGetValue(key, out state))
-                    continue;
-
-                if (biomaterial.Chosen == null)
-                    biomaterial.Chosen = new List<int>();
-
-                if (biomaterial.Another == null)
-                    biomaterial.Another = new List<int>();
-
-                biomaterial.Chosen.Clear();
-                biomaterial.Another.Clear();
-                AddDistinctValues(biomaterial.Chosen, state.Chosen);
-                AddDistinctValues(biomaterial.Another, state.Another);
-            }
-        }
-
-        private static string BuildBiomaterialSelectionStateKey(GemotestBioMaterial biomaterial)
+        private static string BuildBiomaterialSelectionStateKey(GemotestProductBioMaterial biomaterial)
         {
             if (biomaterial == null)
                 return string.Empty;
@@ -3276,7 +3307,7 @@ namespace Laboratory.Gemotest
             if (!string.IsNullOrWhiteSpace(code))
                 return code.Trim();
 
-            return Convert.ToString(biomaterial.Name, CultureInfo.InvariantCulture) ?? string.Empty;
+            return Convert.ToString(biomaterial.BiomaterialName, CultureInfo.InvariantCulture) ?? string.Empty;
         }
 
         private static void AddDistinctValues(List<int> target, IEnumerable<int> source)
@@ -3321,108 +3352,6 @@ namespace Laboratory.Gemotest
                 return true;
 
             return allRows.Any(x => x != null && !object.ReferenceEquals(x, row) && ToInt(x.primary_sample_id, 0) == sampleId);
-        }
-
-        private bool TryResolveTransportFromSamplesServices(string serviceId, string biomaterialId, out DictionaryTransport transport)
-        {
-            transport = null;
-
-            if (string.IsNullOrEmpty(serviceId) || laboratory?.Dicts == null)
-                return false;
-
-            if (laboratory.Dicts.SamplesServices == null || !laboratory.Dicts.SamplesServices.TryGetValue(serviceId, out var rows) || rows == null || rows.Count == 0)
-                return false;
-
-            var row = rows.FirstOrDefault(r => r != null && string.Equals(r.service_id, serviceId, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(r.biomaterial_id ?? string.Empty, biomaterialId ?? string.Empty, StringComparison.OrdinalIgnoreCase) && r.sample_id > 0);
-
-            if (row == null)
-            {
-                row = rows.FirstOrDefault(r => r != null && string.Equals(r.service_id, serviceId, StringComparison.OrdinalIgnoreCase) && r.sample_id > 0);
-            }
-
-            if (row == null || laboratory.Dicts.Samples == null)
-                return false;
-
-            if (!laboratory.Dicts.Samples.TryGetValue(row.sample_id.ToString(), out var sample) || sample == null)
-                return false;
-
-            if (string.IsNullOrEmpty(sample.transport_id) || laboratory.Dicts.Transport == null)
-                return false;
-
-            return laboratory.Dicts.Transport.TryGetValue(sample.transport_id, out transport) && transport != null;
-        }
-
-        private bool TryResolveBaseTransport(string serviceId, string biomaterialId, out DictionaryTransport transport)
-        {
-            transport = null;
-
-            if (string.IsNullOrEmpty(serviceId) || laboratory?.Dicts == null)
-                return false;
-
-            if (laboratory.Dicts.ServiceParameters != null && laboratory.Dicts.ServiceParameters.TryGetValue(serviceId, out var paramsList) &&
-                paramsList != null && paramsList.Count > 0)
-            {
-                var param = paramsList.FirstOrDefault(p => p != null && string.Equals(p.service_id, serviceId, StringComparison.OrdinalIgnoreCase) &&
-                    string.Equals(p.biomaterial_id ?? string.Empty, biomaterialId ?? string.Empty, StringComparison.OrdinalIgnoreCase));
-
-                if (param != null && !string.IsNullOrEmpty(param.transport_id) && laboratory.Dicts.Transport != null &&
-                    laboratory.Dicts.Transport.TryGetValue(param.transport_id, out transport) && transport != null)
-                {
-                    return true;
-                }
-            }
-
-            if (laboratory.Dicts.Directory != null && laboratory.Dicts.Directory.TryGetValue(serviceId, out var svc) && svc != null && !string.IsNullOrEmpty(svc.transport_id) &&
-                laboratory.Dicts.Transport != null && laboratory.Dicts.Transport.TryGetValue(svc.transport_id, out transport) && transport != null)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private DictionaryTransport ResolveTransport(string serviceId, string biomaterialId)
-        {
-            DictionaryTransport transport = null;
-
-            if (string.IsNullOrEmpty(serviceId) || laboratory?.Dicts == null || laboratory.Dicts.Directory == null)
-                return null;
-
-            if (!laboratory.Dicts.Directory.TryGetValue(serviceId, out var svc) || svc == null)
-                return null;
-
-            var complexItems = GetMarketingComplexItems(svc);
-
-            if (complexItems.Count > 0)
-            {
-                var mcItem = complexItems.FirstOrDefault(m => m != null && !string.IsNullOrEmpty(m.transport_id) &&
-                    (string.Equals(m.biomaterial_id ?? string.Empty, biomaterialId ?? string.Empty, StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(m.biomaterial_id)));
-
-                if (mcItem != null && laboratory.Dicts.Transport != null && laboratory.Dicts.Transport.TryGetValue(mcItem.transport_id, out transport) && transport != null)
-                {
-                    return transport;
-                }
-
-                var mainServiceIds = complexItems.Select(m => m?.main_service).Where(x => !string.IsNullOrEmpty(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-
-                foreach (var mainServiceId in mainServiceIds)
-                {
-                    if (TryResolveTransportFromSamplesServices(mainServiceId, biomaterialId, out transport))
-                        return transport;
-
-                    if (TryResolveBaseTransport(mainServiceId, biomaterialId, out transport))
-                        return transport;
-                }
-            }
-
-            if (TryResolveTransportFromSamplesServices(serviceId, biomaterialId, out transport))
-                return transport;
-
-            if (TryResolveBaseTransport(serviceId, biomaterialId, out transport))
-                return transport;
-
-            return null;
         }
 
         private bool IsMarketingComplex(string serviceId)
@@ -3480,10 +3409,7 @@ namespace Laboratory.Gemotest
 
         private bool ShouldAllowMultipleBiomaterialSelection(List<BiomaterialInfoForGUI> biomaterials)
         {
-            if (biomaterials == null || biomaterials.Count <= 1)
-                return false;
-
-            return BuildDefaultBiomaterialSelection(biomaterials).Count > 1;
+            return biomaterials != null && biomaterials.Count > 1;
         }
 
         private void SetDefaultBiomaterialSelection(BiomaterialGroupForGUI group, List<string> validSelectedIds)
@@ -3516,25 +3442,43 @@ namespace Laboratory.Gemotest
             if (group.BiomaterialsSelected.Count > 0)
                 return;
 
-            if (group.SelectOnlyOne)
+            AddDefaultBiomaterialSelectionIfUnambiguous(group);
+        }
+
+        private static void AddDefaultBiomaterialSelectionIfUnambiguous(BiomaterialGroupForGUI group)
+        {
+            if (group == null || group.Biomaterials == null || group.Biomaterials.Count == 0)
+                return;
+
+            if (group.Biomaterials.Count == 1)
             {
                 group.BiomaterialsSelected.Add(group.Biomaterials[0]);
                 return;
             }
 
+            HashSet<string> biomaterialIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (BiomaterialInfoForGUI biomaterial in group.Biomaterials)
+            {
+                if (biomaterial == null)
+                    continue;
+
+                string key = SafeTrim(biomaterial.BiomaterialId);
+                if (string.IsNullOrWhiteSpace(key))
+                    key = SafeTrim(biomaterial.BiomaterialCode);
+                if (string.IsNullOrWhiteSpace(key))
+                    key = SafeTrim(biomaterial.BiomaterialName);
+
+                if (!string.IsNullOrWhiteSpace(key))
+                    biomaterialIds.Add(key);
+            }
+
+            if (biomaterialIds.Count != 1)
+                return;
+
             foreach (BiomaterialInfoForGUI biomaterial in BuildDefaultBiomaterialSelection(group.Biomaterials))
                 group.BiomaterialsSelected.Add(biomaterial);
         }
 
-        private static string SafeTrim(string value)
-        {
-            return (value ?? string.Empty).Trim();
-        }
-
-        private static bool SameIdForGui(string left, string right)
-        {
-            return string.Equals(SafeTrim(left), SafeTrim(right), StringComparison.OrdinalIgnoreCase);
-        }
 
         private List<BiomaterialGroupForGUI> BuildBiomaterialGroupsForService(string serviceId, List<string> validSelectedIds)
         {
@@ -3632,13 +3576,69 @@ namespace Laboratory.Gemotest
             return groups;
         }
 
+        private List<BiomaterialGroupForGUI> BuildBiomaterialGroupsForProduct_new(GemotestOrderDetail details, int productIndex)
+        {
+            var groups = new List<BiomaterialGroupForGUI>();
+
+            List<GemotestProductBioMaterial> productBiomaterials = details.BioMaterials.Where(x => x.ProductIndex == productIndex).ToList();
+
+            foreach (var productBiomaterial in productBiomaterials)
+            {
+                if (groups.Find(x => x.GroupNum == productBiomaterial.GroupNum) != null)
+                    continue;
+
+                List<GemotestProductBioMaterial> productBiomaterialsOneGroup = productBiomaterials.Where(x => x.GroupNum == productBiomaterial.GroupNum).ToList();
+
+                BiomaterialGroupForGUI groupNew = new BiomaterialGroupForGUI()
+                {
+                    RefreshFieldsOnSelectionSet = true,
+                    RefreshFieldsOnSelectionRemove = true,
+                    GroupNum = productBiomaterial.GroupNum,
+                    SelectOnlyOne = true,
+                    Optional = false,
+                    Biomaterials = new List<BiomaterialInfoForGUI>(),
+                    BiomaterialsSelected = new List<BiomaterialInfoForGUI>()
+                };
+
+                groups.Add(groupNew);
+
+                foreach (var productBiomaterialOneGroup in productBiomaterialsOneGroup)
+                {
+                    if (productBiomaterialOneGroup == null ||
+                        (string.IsNullOrWhiteSpace(productBiomaterialOneGroup.Id) &&
+                         string.IsNullOrWhiteSpace(productBiomaterialOneGroup.BiomaterialName) &&
+                         string.IsNullOrWhiteSpace(productBiomaterialOneGroup.ContainerId)))
+                    {
+                        continue;
+                    }
+
+                    BiomaterialInfoForGUI bioGuiNew = new BiomaterialInfoForGUI()
+                    {
+                        BiomaterialId = productBiomaterialOneGroup.Id,
+                        BiomaterialCode = productBiomaterialOneGroup.Id,
+                        BiomaterialName = productBiomaterialOneGroup.BiomaterialName,
+                        ContainerId = productBiomaterialOneGroup.ContainerId,
+                        ContainerCode = productBiomaterialOneGroup.ContainerId,
+                        ContainerName = productBiomaterialOneGroup.ContainerName,
+                    };
+
+                    groupNew.Biomaterials.Add(bioGuiNew);
+
+                    if (productBiomaterialOneGroup.Chosen)
+                        groupNew.BiomaterialsSelected.Add(bioGuiNew);
+                }
+            }
+
+            return groups;
+        }
+
         private void EnsureRequiredSampleBiomaterialsInDetails(GemotestOrderDetail details)
         {
             if (details == null || details.Products == null || laboratory?.Dicts?.SamplesServices == null)
                 return;
 
             if (details.BioMaterials == null)
-                details.BioMaterials = new List<GemotestBioMaterial>();
+                details.BioMaterials = new List<GemotestProductBioMaterial>();
 
             for (int productIndex = 0; productIndex < details.Products.Count; productIndex++)
             {
@@ -3646,10 +3646,15 @@ namespace Laboratory.Gemotest
                 if (product == null || string.IsNullOrWhiteSpace(product.ProductId))
                     continue;
 
+                DictionaryService service;
+                if (!laboratory.Dicts.Directory.TryGetValue(product.ProductId, out service) || service == null)
+                    continue;
+
                 List<DictionarySamplesServices> rows;
                 if (!laboratory.Dicts.SamplesServices.TryGetValue(product.ProductId, out rows) || rows == null || rows.Count == 0)
                     continue;
 
+                int nextMarketingGroupNum = 1;
                 foreach (var row in rows)
                 {
                     if (row == null || ToInt(row.sample_id, 0) <= 0)
@@ -3659,7 +3664,14 @@ namespace Laboratory.Gemotest
                     if (string.IsNullOrWhiteSpace(biomaterialId))
                         continue;
 
-                    var existing = details.BioMaterials.FirstOrDefault(b => b != null && SameIdForGui(b.Id, biomaterialId));
+                    int groupNum = service.service_type == 2 ? nextMarketingGroupNum : 1;
+
+                    var existing = details.BioMaterials.FirstOrDefault(b =>
+                        b != null &&
+                        b.ProductIndex == productIndex &&
+                        SameIdForGui(b.ServiceId, service.id) &&
+                        SameIdForGui(b.Id, biomaterialId));
+
                     if (existing == null)
                     {
                         string biomaterialName = biomaterialId;
@@ -3672,28 +3684,57 @@ namespace Laboratory.Gemotest
                             biomaterialName = dictionaryBiomaterial.name;
                         }
 
-                        existing = new GemotestBioMaterial
+                        string containerId = ResolveTransportIdFromSampleRequirement(row);
+                        string containerName = ResolveTransportNameForGui(containerId);
+
+                        existing = new GemotestProductBioMaterial
                         {
                             Id = biomaterialId,
                             Code = biomaterialId,
-                            Name = biomaterialName
+                            BiomaterialName = biomaterialName,
+                            ContainerId = containerId,
+                            ContainerName = containerName,
+                            GroupNum = groupNum,
+                            ProductIndex = productIndex,
+                            ServiceId = service.id
                         };
 
                         details.BioMaterials.Add(existing);
                     }
 
-                    existing.Chosen = existing.Chosen ?? new List<int>();
-                    existing.Another = existing.Another ?? new List<int>();
-                    existing.Mandatory = existing.Mandatory ?? new List<int>();
-
-                    if (!existing.Chosen.Contains(productIndex) &&
-                        !existing.Mandatory.Contains(productIndex) &&
-                        !existing.Another.Contains(productIndex))
-                    {
-                        existing.Another.Add(productIndex);
-                    }
+                    if (service.service_type == 2)
+                        nextMarketingGroupNum++;
                 }
             }
+        }
+
+        private void SelectSingleBiomaterialGroupsInDetails(GemotestOrderDetail details)
+        {
+            if (details == null || details.BioMaterials == null)
+                return;
+
+            var groups = details.BioMaterials
+                .Where(x => x != null)
+                .GroupBy(x => x.ProductIndex.ToString(CultureInfo.InvariantCulture) + "|" + x.GroupNum.ToString(CultureInfo.InvariantCulture));
+
+            foreach (var group in groups)
+            {
+                var items = group.ToList();
+                if (items.Count == 1)
+                    items[0].Chosen = true;
+            }
+        }
+
+        private string ResolveTransportNameForGui(string transportId)
+        {
+            if (string.IsNullOrWhiteSpace(transportId) || laboratory?.Dicts?.Transport == null)
+                return string.Empty;
+
+            DictionaryTransport transport;
+            if (laboratory.Dicts.Transport.TryGetValue(transportId, out transport) && transport != null)
+                return transport.name ?? string.Empty;
+
+            return string.Empty;
         }
 
         private static List<string> GetSelectedBiomaterialIdsFromDetails(GemotestOrderDetail details, int productIndex)
@@ -3708,10 +3749,10 @@ namespace Laboratory.Gemotest
                 if (biom == null || string.IsNullOrWhiteSpace(biom.Id))
                     continue;
 
-                bool selected =
-                    (biom.Mandatory != null && biom.Mandatory.Contains(productIndex)) ||
-                    (biom.Chosen != null && biom.Chosen.Contains(productIndex));
+                if (biom.ProductIndex != productIndex)
+                    continue;
 
+                bool selected = biom.Chosen;
                 if (!selected)
                     continue;
 
@@ -3720,6 +3761,16 @@ namespace Laboratory.Gemotest
             }
 
             return result;
+        }
+
+        private static bool SameIdForGui(string left, string right)
+        {
+            return string.Equals(SafeTrim(left), SafeTrim(right), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string SafeTrim(string value)
+        {
+            return (value ?? string.Empty).Trim();
         }
 
         private BiomaterialGroupForGUI BuildLegacyBiomaterialGroupFromDetails(GemotestOrderDetail details, int productIndex, List<string> validSelectedIds)
@@ -3743,15 +3794,7 @@ namespace Laboratory.Gemotest
                 if (biom == null || string.IsNullOrWhiteSpace(biom.Id))
                     continue;
 
-                bool linked =
-                    (biom.Mandatory != null && biom.Mandatory.Contains(productIndex)) ||
-                    (biom.Chosen != null && biom.Chosen.Contains(productIndex)) ||
-                    (biom.Another != null && biom.Another.Contains(productIndex));
-
-                if (!linked)
-                    continue;
-
-                var dictBiom = ResolveDictionaryBiomaterial(biom.Id, biom.Name);
+                var dictBiom = ResolveDictionaryBiomaterial(biom.Id, biom.BiomaterialName);
                 var info = BuildBiomaterialInfoForGui(serviceId, dictBiom, null);
                 AddBiomaterialInfoToGroup(group, info);
             }
@@ -3791,17 +3834,7 @@ namespace Laboratory.Gemotest
                 RemoveDuplicateBiomaterialInfosFromGroup(group);
 
                 if (group.BiomaterialsSelected.Count == 0 && group.Biomaterials.Count > 0)
-                {
-                    if (group.SelectOnlyOne)
-                    {
-                        group.BiomaterialsSelected.Add(group.Biomaterials[0]);
-                    }
-                    else
-                    {
-                        foreach (var biomaterial in BuildDefaultBiomaterialSelection(group.Biomaterials))
-                            group.BiomaterialsSelected.Add(biomaterial);
-                    }
-                }
+                    AddDefaultBiomaterialSelectionIfUnambiguous(group);
 
                 if (group.SelectOnlyOne && group.BiomaterialsSelected.Count > 1)
                 {
@@ -3926,7 +3959,7 @@ namespace Laboratory.Gemotest
 
             foreach (var biomaterial in group.Biomaterials)
             {
-                if (biomaterial == null)
+                if (biomaterial == null || IsEmptyBiomaterialInfo(biomaterial))
                     continue;
 
                 string key = BuildBiomaterialInfoDuplicateKey(biomaterial);
@@ -3947,6 +3980,19 @@ namespace Laboratory.Gemotest
                 if (!string.IsNullOrWhiteSpace(key) && selectedKeys.Contains(key))
                     group.BiomaterialsSelected.Add(biomaterial);
             }
+        }
+
+        private static bool IsEmptyBiomaterialInfo(BiomaterialInfoForGUI biomaterial)
+        {
+            if (biomaterial == null)
+                return true;
+
+            return string.IsNullOrWhiteSpace(biomaterial.BiomaterialId) &&
+                   string.IsNullOrWhiteSpace(biomaterial.BiomaterialCode) &&
+                   string.IsNullOrWhiteSpace(biomaterial.BiomaterialName) &&
+                   string.IsNullOrWhiteSpace(biomaterial.ContainerId) &&
+                   string.IsNullOrWhiteSpace(biomaterial.ContainerCode) &&
+                   string.IsNullOrWhiteSpace(biomaterial.ContainerName);
         }
 
         private static string BuildBiomaterialInfoDuplicateKey(BiomaterialInfoForGUI biomaterial)
@@ -3971,7 +4017,13 @@ namespace Laboratory.Gemotest
 
         private List<BiomaterialGroupForGUI> BuildRequiredSampleBiomaterialGroupsForService(string serviceId, List<string> validSelectedIds)
         {
-            var groupsByBiomaterial = new Dictionary<string, BiomaterialGroupForGUI>(StringComparer.OrdinalIgnoreCase);
+            var group = new BiomaterialGroupForGUI
+            {
+                SelectOnlyOne = false,
+                Optional = false,
+                Biomaterials = new List<BiomaterialInfoForGUI>(),
+                BiomaterialsSelected = new List<BiomaterialInfoForGUI>()
+            };
 
             if (string.IsNullOrWhiteSpace(serviceId) || laboratory?.Dicts?.SamplesServices == null)
                 return new List<BiomaterialGroupForGUI>();
@@ -3979,6 +4031,8 @@ namespace Laboratory.Gemotest
             List<DictionarySamplesServices> rows;
             if (!laboratory.Dicts.SamplesServices.TryGetValue(serviceId, out rows) || rows == null || rows.Count == 0)
                 return new List<BiomaterialGroupForGUI>();
+
+            HashSet<string> addedBiomaterials = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var row in rows)
             {
@@ -3989,34 +4043,24 @@ namespace Laboratory.Gemotest
                 if (string.IsNullOrWhiteSpace(biomaterialId))
                     continue;
 
-                string key = biomaterialId.Trim();
-                if (groupsByBiomaterial.ContainsKey(key))
+                if (!addedBiomaterials.Add(biomaterialId.Trim()))
                     continue;
-
-                var group = new BiomaterialGroupForGUI
-                {
-                    SelectOnlyOne = true,
-                    Optional = false,
-                    Biomaterials = new List<BiomaterialInfoForGUI>(),
-                    BiomaterialsSelected = new List<BiomaterialInfoForGUI>()
-                };
 
                 var biom = ResolveDictionaryBiomaterial(biomaterialId, biomaterialId);
                 string forcedTransportId = ResolveTransportIdFromSampleRequirement(row);
                 var info = BuildBiomaterialInfoForGui(serviceId, biom, forcedTransportId);
                 AddBiomaterialInfoToGroupByBiomaterialOnly(group, info);
-
-                if (group.Biomaterials.Count == 0)
-                    continue;
-
-                SetDefaultBiomaterialSelection(group, validSelectedIds);
-                groupsByBiomaterial[key] = group;
             }
 
-            return groupsByBiomaterial.Values
-                .Where(g => g != null && g.Biomaterials != null && g.Biomaterials.Count > 0)
-                .ToList();
+            if (group.Biomaterials.Count == 0)
+                return new List<BiomaterialGroupForGUI>();
+
+            group.SelectOnlyOne = group.Biomaterials.Count == 1;
+            SetDefaultBiomaterialSelection(group, validSelectedIds);
+
+            return new List<BiomaterialGroupForGUI> { group };
         }
+
 
         private static string GetBiomaterialIdFromSampleRequirement(DictionarySamplesServices row)
         {
@@ -4054,7 +4098,7 @@ namespace Laboratory.Gemotest
         {
             var resultByKey = new Dictionary<string, BiomaterialGroupForGUI>(StringComparer.OrdinalIgnoreCase);
 
-            var items = GetMarketingComplexItemsForServiceId(serviceId);
+            var items = laboratory.Dicts.GetMarketingComplexItemsForServiceId(serviceId);
             if (items == null || items.Count == 0)
                 return new List<BiomaterialGroupForGUI>();
 
@@ -4141,49 +4185,6 @@ namespace Laboratory.Gemotest
                 return item.main_service.Trim();
 
             return SafeTrim(fallbackServiceId);
-        }
-
-        private List<DictionaryMarketingComplex> GetMarketingComplexItemsForServiceId(string serviceId)
-        {
-            var result = new List<DictionaryMarketingComplex>();
-
-            if (string.IsNullOrWhiteSpace(serviceId) || laboratory?.Dicts == null)
-                return result;
-
-            List<DictionaryMarketingComplex> byComplexId = null;
-            if (laboratory.Dicts.MarketingComplexByComplexId != null &&
-                laboratory.Dicts.MarketingComplexByComplexId.TryGetValue(serviceId, out byComplexId) &&
-                byComplexId != null)
-            {
-                result.AddRange(byComplexId.Where(x => x != null));
-            }
-
-            List<DictionaryMarketingComplex> byServiceId = null;
-            if (laboratory.Dicts.MarketingComplexByServiceId != null &&
-                laboratory.Dicts.MarketingComplexByServiceId.TryGetValue(serviceId, out byServiceId) &&
-                byServiceId != null)
-            {
-                foreach (var item in byServiceId.Where(x => x != null))
-                {
-                    if (!result.Any(x => SameMarketingComplexItem(x, item)))
-                        result.Add(item);
-                }
-            }
-
-            return result;
-        }
-
-        private static bool SameMarketingComplexItem(DictionaryMarketingComplex left, DictionaryMarketingComplex right)
-        {
-            if (left == null || right == null)
-                return false;
-
-            return SameIdForGui(left.complex_id, right.complex_id) &&
-                   SameIdForGui(left.service_id, right.service_id) &&
-                   SameIdForGui(left.main_service, right.main_service) &&
-                   SameIdForGui(left.biomaterial_id, right.biomaterial_id) &&
-                   SameIdForGui(left.localization_id, right.localization_id) &&
-                   SameIdForGui(left.transport_id, right.transport_id);
         }
 
         private List<DictionarySamplesServices> GetSampleRowsForMarketingComplexItem(DictionaryMarketingComplex item, string itemServiceId)
@@ -4277,7 +4278,7 @@ namespace Laboratory.Gemotest
                 laboratory.Dicts.Transport.TryGetValue(forcedTransportId.Trim(), out transport);
 
             if (transport == null)
-                transport = ResolveTransport(serviceId, biom.id);
+                transport = laboratory.Dicts.ResolveTransport(serviceId, biom.id);
 
             string containerName = transport != null ? NormalizeContainerName(transport.name) : "не указан";
             string transportId = transport != null ? transport.id : string.Empty;
@@ -4295,7 +4296,7 @@ namespace Laboratory.Gemotest
 
         private static void AddBiomaterialInfoToGroup(BiomaterialGroupForGUI group, BiomaterialInfoForGUI info)
         {
-            if (group == null || info == null || string.IsNullOrWhiteSpace(info.BiomaterialId))
+            if (group == null || info == null || IsEmptyBiomaterialInfo(info) || string.IsNullOrWhiteSpace(info.BiomaterialId))
                 return;
 
             group.Biomaterials = group.Biomaterials ?? new List<BiomaterialInfoForGUI>();
@@ -4310,7 +4311,7 @@ namespace Laboratory.Gemotest
 
         private static void AddBiomaterialInfoToGroupByBiomaterialOnly(BiomaterialGroupForGUI group, BiomaterialInfoForGUI info)
         {
-            if (group == null || info == null || string.IsNullOrWhiteSpace(info.BiomaterialId))
+            if (group == null || info == null || IsEmptyBiomaterialInfo(info) || string.IsNullOrWhiteSpace(info.BiomaterialId))
                 return;
 
             group.Biomaterials = group.Biomaterials ?? new List<BiomaterialInfoForGUI>();
@@ -4318,18 +4319,6 @@ namespace Laboratory.Gemotest
             bool exists = group.Biomaterials.Any(x => x != null && SameIdForGui(x.BiomaterialId, info.BiomaterialId));
             if (!exists)
                 group.Biomaterials.Add(info);
-        }
-
-        private BiomaterialGroupForGUI BuildBiomaterialGroupForService(string serviceId)
-        {
-            var groups = BuildBiomaterialGroupsForService(serviceId, null);
-            return groups.FirstOrDefault() ?? CreateEmptyRequiredBiomaterialGroup();
-        }
-
-        private BiomaterialGroupForGUI BuildBiomaterialGroupForProduct(GemotestOrderDetail details, int productIndex)
-        {
-            var groups = BuildBiomaterialGroupsForProduct(details, productIndex);
-            return groups.FirstOrDefault() ?? CreateEmptyRequiredBiomaterialGroup();
         }
 
         private void RebuildBiomaterialGroups(GemotestOrderDetail details, OrderModelForGUI model)
@@ -4351,9 +4340,25 @@ namespace Laboratory.Gemotest
 
                 var groups = BuildBiomaterialGroupsForProduct(details, i);
                 NormalizeBiomaterialGroups(groups);
+                NormalizeSelectOnlyOneByGroupSize(groups);
 
                 foreach (var group in groups)
                     productInfo.BiomaterialGroups.Add(group);
+            }
+        }
+
+        private static void NormalizeSelectOnlyOneByGroupSize(List<BiomaterialGroupForGUI> groups)
+        {
+            if (groups == null)
+                return;
+
+            foreach (var group in groups)
+            {
+                if (group == null || group.Biomaterials == null)
+                    continue;
+
+                if (group.Biomaterials.Count > 1)
+                    group.SelectOnlyOne = false;
             }
         }
 
@@ -4370,6 +4375,7 @@ namespace Laboratory.Gemotest
                 product.BiomaterialGroups.Clear();
                 var groups = BuildBiomaterialGroupsForService(product.Id, null);
                 NormalizeBiomaterialGroups(groups);
+                NormalizeSelectOnlyOneByGroupSize(groups);
 
                 foreach (var group in groups)
                     product.BiomaterialGroups.Add(group);

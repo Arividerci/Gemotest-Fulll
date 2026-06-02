@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Xml;
-using System.Globalization;
 
 namespace Laboratory.Gemotest.GemotestRequests
 {
@@ -211,6 +209,194 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                 return false;
             }
+        }
+
+        public DictionaryTransport ResolveTransport(string serviceId, string biomaterialId)
+        {
+            DictionaryTransport transport = null;
+
+            if (string.IsNullOrEmpty(serviceId) || Directory == null)
+                return null;
+
+            if (!Directory.TryGetValue(serviceId, out var svc) || svc == null)
+                return null;
+
+            var complexItems = GetMarketingComplexItems(svc);
+
+            if (complexItems.Count > 0)
+            {
+                var mcItem = complexItems.FirstOrDefault(m => m != null && !string.IsNullOrEmpty(m.transport_id) &&
+                    (string.Equals(m.biomaterial_id ?? string.Empty, biomaterialId ?? string.Empty, StringComparison.OrdinalIgnoreCase) || string.IsNullOrEmpty(m.biomaterial_id)));
+
+                if (mcItem != null && Transport != null && Transport.TryGetValue(mcItem.transport_id, out transport) && transport != null)
+                {
+                    return transport;
+                }
+
+                var mainServiceIds = complexItems.Select(m => m?.main_service).Where(x => !string.IsNullOrEmpty(x)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+                foreach (var mainServiceId in mainServiceIds)
+                {
+                    if (TryResolveTransportFromSamplesServices(mainServiceId, biomaterialId, out transport))
+                        return transport;
+
+                    if (TryResolveBaseTransport(mainServiceId, biomaterialId, out transport))
+                        return transport;
+                }
+            }
+
+            if (TryResolveTransportFromSamplesServices(serviceId, biomaterialId, out transport))
+                return transport;
+
+            if (TryResolveBaseTransport(serviceId, biomaterialId, out transport))
+                return transport;
+
+            return null;
+        }
+
+        public bool TryResolveTransportFromSamplesServices(string serviceId, string biomaterialId, out DictionaryTransport transport)
+        {
+            transport = null;
+
+            if (string.IsNullOrEmpty(serviceId))
+                return false;
+
+            if (SamplesServices == null || !SamplesServices.TryGetValue(serviceId, out var rows) || rows == null || rows.Count == 0)
+                return false;
+
+            var row = rows.FirstOrDefault(r => r != null && string.Equals(r.service_id, serviceId, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(r.biomaterial_id ?? string.Empty, biomaterialId ?? string.Empty, StringComparison.OrdinalIgnoreCase) && r.sample_id > 0);
+
+            if (row == null)
+            {
+                row = rows.FirstOrDefault(r => r != null && string.Equals(r.service_id, serviceId, StringComparison.OrdinalIgnoreCase) && r.sample_id > 0);
+            }
+
+            if (row == null || Samples == null)
+                return false;
+
+            if (!Samples.TryGetValue(row.sample_id.ToString(), out var sample) || sample == null)
+                return false;
+
+            if (string.IsNullOrEmpty(sample.transport_id) || Transport == null)
+                return false;
+
+            return Transport.TryGetValue(sample.transport_id, out transport) && transport != null;
+        }
+
+        private bool TryResolveBaseTransport(string serviceId, string biomaterialId, out DictionaryTransport transport)
+        {
+            transport = null;
+
+            if (string.IsNullOrEmpty(serviceId))
+                return false;
+
+            if (ServiceParameters != null && ServiceParameters.TryGetValue(serviceId, out var paramsList) &&
+                paramsList != null && paramsList.Count > 0)
+            {
+                var param = paramsList.FirstOrDefault(p => p != null && string.Equals(p.service_id, serviceId, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(p.biomaterial_id ?? string.Empty, biomaterialId ?? string.Empty, StringComparison.OrdinalIgnoreCase));
+
+                if (param != null && !string.IsNullOrEmpty(param.transport_id) && Transport != null &&
+                    Transport.TryGetValue(param.transport_id, out transport) && transport != null)
+                {
+                    return true;
+                }
+            }
+
+            if (Directory != null && Directory.TryGetValue(serviceId, out var svc) && svc != null && !string.IsNullOrEmpty(svc.transport_id) &&
+                Transport != null && Transport.TryGetValue(svc.transport_id, out transport) && transport != null)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public List<DictionaryMarketingComplex> GetMarketingComplexItems(DictionaryService service)
+        {
+            var result = new List<DictionaryMarketingComplex>();
+
+            if (service == null)
+                return result;
+
+            if (MarketingComplexByComplexId != null &&
+                MarketingComplexByComplexId.TryGetValue(service.id, out var byComplex) &&
+                byComplex != null)
+            {
+                result.AddRange(byComplex.Where(x => x != null));
+            }
+
+            if (MarketingComplexByServiceId != null &&
+                MarketingComplexByServiceId.TryGetValue(service.id, out var byService) &&
+                byService != null)
+            {
+                foreach (var item in byService.Where(x => x != null))
+                {
+                    if (!result.Any(r =>
+                        string.Equals(r.complex_id, item.complex_id, StringComparison.OrdinalIgnoreCase) &&
+                        string.Equals(r.service_id, item.service_id, StringComparison.OrdinalIgnoreCase) &&
+                        string.Equals(r.main_service, item.main_service, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        result.Add(item);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public List<DictionaryMarketingComplex> GetMarketingComplexItemsForServiceId(string serviceId)
+        {
+            var result = new List<DictionaryMarketingComplex>();
+
+            if (string.IsNullOrWhiteSpace(serviceId))
+                return result;
+
+            List<DictionaryMarketingComplex> byComplexId = null;
+            if (MarketingComplexByComplexId != null &&
+                MarketingComplexByComplexId.TryGetValue(serviceId, out byComplexId) &&
+                byComplexId != null)
+            {
+                result.AddRange(byComplexId.Where(x => x != null));
+            }
+
+            List<DictionaryMarketingComplex> byServiceId = null;
+            if (MarketingComplexByServiceId != null &&
+                MarketingComplexByServiceId.TryGetValue(serviceId, out byServiceId) &&
+                byServiceId != null)
+            {
+                foreach (var item in byServiceId.Where(x => x != null))
+                {
+                    if (!result.Any(x => SameMarketingComplexItem(x, item)))
+                        result.Add(item);
+                }
+            }
+
+            return result;
+        }
+
+        private static bool SameMarketingComplexItem(DictionaryMarketingComplex left, DictionaryMarketingComplex right)
+        {
+            if (left == null || right == null)
+                return false;
+
+            return SameIdForGui(left.complex_id, right.complex_id) &&
+                   SameIdForGui(left.service_id, right.service_id) &&
+                   SameIdForGui(left.main_service, right.main_service) &&
+                   SameIdForGui(left.biomaterial_id, right.biomaterial_id) &&
+                   SameIdForGui(left.localization_id, right.localization_id) &&
+                   SameIdForGui(left.transport_id, right.transport_id);
+        }
+
+        private static bool SameIdForGui(string left, string right)
+        {
+            return string.Equals(SafeTrim(left), SafeTrim(right), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string SafeTrim(string value)
+        {
+            return (value ?? string.Empty).Trim();
         }
     }
 

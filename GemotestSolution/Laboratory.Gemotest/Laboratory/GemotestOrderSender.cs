@@ -10,6 +10,7 @@ using System.Text;
 using System.Xml;
 using System;
 using System.Security;
+using static Laboratory.Gemotest.SourseClass.GemotestOrderDetail;
 
 namespace Laboratory.Gemotest.GemotestRequests
 {
@@ -33,6 +34,227 @@ namespace Laboratory.Gemotest.GemotestRequests
         }
 
 
+public static void NormalizeOrderDetailSamples(GemotestOrderDetail details)
+        {
+            if (details == null || details.Samples == null || details.Samples.Count < 2)
+                return;
+
+            List<GemotestSampleDetail> clean = new List<GemotestSampleDetail>();
+            Dictionary<string, GemotestSampleDetail> byKey = new Dictionary<string, GemotestSampleDetail>(StringComparer.OrdinalIgnoreCase);
+
+            for (int i = 0; i < details.Samples.Count; i++)
+            {
+                GemotestSampleDetail sample = details.Samples[i];
+                if (sample == null)
+                    continue;
+
+                NormalizeSampleServices(sample);
+
+                string key = BuildSavedSampleIdentityKey(sample);
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    clean.Add(sample);
+                    continue;
+                }
+
+                GemotestSampleDetail existing;
+                if (!byKey.TryGetValue(key, out existing) || existing == null)
+                {
+                    byKey[key] = sample;
+                    clean.Add(sample);
+                    continue;
+                }
+
+                MergeSampleDetails(existing, sample);
+            }
+
+            details.Samples = clean;
+        }
+
+        private static void NormalizeSampleServices(GemotestSampleDetail sample)
+        {
+            if (sample == null)
+                return;
+
+            if (sample.Services == null)
+            {
+                sample.Services = new List<GemotestSampleServiceDetail>();
+                return;
+            }
+
+            List<GemotestSampleServiceDetail> clean = new List<GemotestSampleServiceDetail>();
+            HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            for (int i = 0; i < sample.Services.Count; i++)
+            {
+                GemotestSampleServiceDetail service = sample.Services[i];
+                if (service == null || string.IsNullOrWhiteSpace(service.ServiceId))
+                    continue;
+
+                string key = BuildSampleServiceDetailKey(service);
+                if (!seen.Add(key))
+                    continue;
+
+                clean.Add(service);
+            }
+
+            sample.Services = clean;
+        }
+
+        private static string BuildSavedSampleIdentityKey(GemotestSampleDetail sample)
+        {
+            if (sample == null)
+                return string.Empty;
+
+            string servicesKey = BuildSampleServicesIdentityKey(sample.Services);
+
+            return string.Join("|", new string[]
+            {
+                NormalizeKey(sample.SampleId),
+                NormalizeKey(sample.ParentSampleId),
+                NormalizeKey(sample.ParentOrderSampleGuid),
+                NormalizeKey(sample.BiomId),
+                NormalizeKey(sample.BiomCode),
+                NormalizeKey(sample.MicrobiologyBiomaterialId),
+                NormalizeKey(sample.LocalizationId),
+                NormalizeKey(sample.TransportId),
+                NormalizeKey(sample.ContId),
+                NormalizeKey(sample.ContCode),
+                sample.IsAliquot ? "1" : "0",
+                sample.IsUtilize ? "1" : "0",
+                sample.HasUtilizationService ? "1" : "0",
+                sample.HasRefusedService ? "1" : "0",
+                sample.UsedPercent.ToString("G17", CultureInfo.InvariantCulture),
+                servicesKey
+            });
+        }
+
+        private static string BuildSampleServicesIdentityKey(List<GemotestSampleServiceDetail> services)
+        {
+            if (services == null || services.Count == 0)
+                return string.Empty;
+
+            List<string> keys = new List<string>();
+
+            for (int i = 0; i < services.Count; i++)
+            {
+                GemotestSampleServiceDetail service = services[i];
+                if (service == null || string.IsNullOrWhiteSpace(service.ServiceId))
+                    continue;
+
+                keys.Add(BuildSampleServiceDetailKey(service));
+            }
+
+            keys.Sort(StringComparer.OrdinalIgnoreCase);
+            return string.Join(";", keys);
+        }
+
+        private static string BuildSampleServiceDetailKey(GemotestSampleServiceDetail service)
+        {
+            if (service == null)
+                return string.Empty;
+
+            return string.Join("/", new string[]
+            {
+                NormalizeKey(service.ServiceId),
+                NormalizeKey(NormalizeComplexId(service.ServiceId, service.ComplexId)),
+                service.UtilizationFlag.ToString(CultureInfo.InvariantCulture),
+                service.RefuseFlag.ToString(CultureInfo.InvariantCulture),
+                service.ServiceCount.ToString(CultureInfo.InvariantCulture),
+                service.SharePercent.ToString("G17", CultureInfo.InvariantCulture)
+            });
+        }
+
+        private static string NormalizeComplexId(string serviceId, string complexId)
+        {
+            serviceId = NormalizeKey(serviceId);
+            complexId = NormalizeKey(complexId);
+
+            if (string.IsNullOrWhiteSpace(complexId))
+                return string.Empty;
+
+            if (string.Equals(serviceId, complexId, StringComparison.OrdinalIgnoreCase))
+                return string.Empty;
+
+            return complexId;
+        }
+
+        private static string NormalizeKey(string value)
+        {
+            return (value ?? string.Empty).Trim();
+        }
+
+        private static void MergeSampleDetails(GemotestSampleDetail target, GemotestSampleDetail source)
+        {
+            if (target == null || source == null)
+                return;
+
+            CopyIfEmpty(ref target.OrderSampleGuid, source.OrderSampleGuid);
+            CopyIfEmpty(ref target.Barcode, source.Barcode);
+            CopyIfEmpty(ref target.SampleIdentifier, source.SampleIdentifier);
+            CopyIfEmpty(ref target.PrimarySampleIdentifier, source.PrimarySampleIdentifier);
+            CopyIfEmpty(ref target.SampleDescription, source.SampleDescription);
+            CopyIfEmpty(ref target.BiomId, source.BiomId);
+            CopyIfEmpty(ref target.BiomCode, source.BiomCode);
+            CopyIfEmpty(ref target.BiomName, source.BiomName);
+            CopyIfEmpty(ref target.ContId, source.ContId);
+            CopyIfEmpty(ref target.ContCode, source.ContCode);
+            CopyIfEmpty(ref target.ContName, source.ContName);
+            CopyIfEmpty(ref target.LocalizationId, source.LocalizationId);
+            CopyIfEmpty(ref target.LocalizationName, source.LocalizationName);
+            CopyIfEmpty(ref target.TransportId, source.TransportId);
+            CopyIfEmpty(ref target.TransportName, source.TransportName);
+            CopyIfEmpty(ref target.LabCenterId, source.LabCenterId);
+
+            MergeStringList(target.OrderProductGuidList, source.OrderProductGuidList);
+            MergeServiceList(target.Services, source.Services);
+        }
+
+        private static void CopyIfEmpty(ref string target, string source)
+        {
+            if (string.IsNullOrWhiteSpace(target) && !string.IsNullOrWhiteSpace(source))
+                target = source;
+        }
+
+        private static void MergeStringList(List<string> target, List<string> source)
+        {
+            if (target == null || source == null)
+                return;
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                string value = source[i];
+                if (string.IsNullOrWhiteSpace(value))
+                    continue;
+
+                if (!target.Any(x => string.Equals(x ?? string.Empty, value, StringComparison.OrdinalIgnoreCase)))
+                    target.Add(value);
+            }
+        }
+
+        private static void MergeServiceList(List<GemotestSampleServiceDetail> target, List<GemotestSampleServiceDetail> source)
+        {
+            if (target == null || source == null)
+                return;
+
+            HashSet<string> existing = new HashSet<string>(
+                target.Where(x => x != null && !string.IsNullOrWhiteSpace(x.ServiceId)).Select(BuildSampleServiceDetailKey),
+                StringComparer.OrdinalIgnoreCase);
+
+            for (int i = 0; i < source.Count; i++)
+            {
+                GemotestSampleServiceDetail service = source[i];
+                if (service == null || string.IsNullOrWhiteSpace(service.ServiceId))
+                    continue;
+
+                string key = BuildSampleServiceDetailKey(service);
+                if (!existing.Add(key))
+                    continue;
+
+                target.Add(service);
+            }
+        }
+
         private sealed class SoapTopServiceItem
         {
             public string Id;
@@ -41,6 +263,12 @@ namespace Laboratory.Gemotest.GemotestRequests
             public string TransportId;
             public string SampleId;
             public string MicrobiologyBiomaterialId;
+        }
+
+        private sealed class ChosenBiomaterialSelection
+        {
+            public string BiomaterialId;
+            public string TransportId;
         }
 
         private sealed class SoapSupplementalItem
@@ -90,15 +318,10 @@ namespace Laboratory.Gemotest.GemotestRequests
                 string createHash = BuildCreateOrderHash( extNum, orderNum, _contractor, patient.Surname ?? "", birthDate, _salt);
 
 
-                var rows = BuildSampleServiceRows(details);
-
-                if (rows == null || rows.Count == 0)
-                    throw new InvalidOperationException("Не удалось определить пробы для выбранных услуг (rows=0).");
-
-                var tubes = GemotestSamplePacker.Pack(rows);
+                var tubes = BuildTubesFromOrderDetailSamples(details);
                 NormalizeTubeServices(tubes);
                 if (tubes == null || tubes.Count == 0)
-                    throw new InvalidOperationException("Упаковка не дала ни одной пробирки (tubes=0).");
+                    throw new InvalidOperationException("OrderDetail.Samples пуст: перед отправкой заказ должен быть сохранен, чтобы пробы были сформированы заранее.");
 
                 long rangeStart;
                 long rangeEnd;
@@ -176,6 +399,31 @@ namespace Laboratory.Gemotest.GemotestRequests
             }
         }
 
+        public void BuildAndSaveSamplesToOrderDetail(GemotestOrderDetail details)
+        {
+            if (details == null)
+                throw new ArgumentNullException(nameof(details));
+
+            _dictionaries = details.Dicts;
+            if (_dictionaries == null)
+                throw new InvalidOperationException("Dictionaries не назначены: невозможно сформировать пробы заказа.");
+
+            if (details.Products == null || details.Products.Count == 0)
+                throw new InvalidOperationException("В заказе нет ни одной услуги: невозможно сформировать пробы.");
+
+            var rows = BuildSampleServiceRows(details);
+            if (rows == null || rows.Count == 0)
+                throw new InvalidOperationException("Не удалось определить пробы для выбранных услуг (rows=0).");
+
+            var tubes = GemotestSamplePacker.Pack(rows);
+            NormalizeTubeServices(tubes);
+
+            if (tubes == null || tubes.Count == 0)
+                throw new InvalidOperationException("Упаковка не дала ни одной пробирки (tubes=0).");
+
+            FillDetailsSamplesFromTubes(details, tubes);
+        }
+
         private static void NormalizeTubeServices(List<TubePlan> tubes)
         {
             if (tubes == null)
@@ -198,6 +446,8 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                     if (string.IsNullOrWhiteSpace(svc.ServiceId))
                         continue;
+
+                    svc.ComplexId = NormalizeComplexId(svc.ServiceId, svc.ComplexId);
 
                     string key = (svc.ServiceId ?? "") + "|" + (svc.ComplexId ?? "") + "|" + svc.UtilizationFlag.ToString(CultureInfo.InvariantCulture) + "|" +
                         svc.RefuseFlag.ToString(CultureInfo.InvariantCulture);
@@ -398,6 +648,10 @@ namespace Laboratory.Gemotest.GemotestRequests
             if (details == null)
                 return;
 
+            List<GemotestSampleDetail> oldSamples = details.Samples != null
+                ? new List<GemotestSampleDetail>(details.Samples)
+                : new List<GemotestSampleDetail>();
+
             if (details.Samples == null)
                 details.Samples = new List<GemotestSampleDetail>();
             else
@@ -406,28 +660,50 @@ namespace Laboratory.Gemotest.GemotestRequests
             if (tubes == null)
                 return;
 
+            AssignOrderSampleGuids(details, tubes, oldSamples);
+
             for (int i = 0; i < tubes.Count; i++)
             {
                 var t = tubes[i];
                 if (t == null)
                     continue;
 
+                List<string> productGuids = BuildOrderProductGuidListForTube(details, t);
+                List<GemotestSampleServiceDetail> services = BuildSampleServiceDetailsForTube(t);
+
+                string displayBiomaterialId = !string.IsNullOrWhiteSpace(t.BiomaterialId)
+                    ? t.BiomaterialId
+                    : (t.MicroBioBiomaterialId ?? "");
+
+                string transportName = ResolveTransportDisplayName(details, t.TransportId);
+
                 var sample = new GemotestSampleDetail
                 {
-                    OrderSampleGuid = Guid.NewGuid().ToString(),
+                    OrderSampleGuid = !string.IsNullOrWhiteSpace(t.OrderSampleGuid) ? t.OrderSampleGuid : Guid.NewGuid().ToString(),
+                    ParentOrderSampleGuid = t.Parent != null ? (t.Parent.OrderSampleGuid ?? "") : (t.ParentOrderSampleGuid ?? ""),
                     Barcode = "",
                     SampleIdentifier = t.SampleIdentifier ?? "",
                     SampleId = t.SampleId.ToString(CultureInfo.InvariantCulture),
+                    SampleDescription = t.SampleName ?? "",
 
-                    BiomId = t.BiomaterialId ?? "",
-                    BiomCode = t.BiomaterialId ?? "",
-                    BiomName = "",
+                    BiomId = displayBiomaterialId,
+                    BiomCode = displayBiomaterialId,
+                    BiomName = ResolveBiomaterialDisplayName(details, displayBiomaterialId),
+                    MicrobiologyBiomaterialId = t.MicroBioBiomaterialId ?? "",
 
                     ContId = t.TransportId ?? "",
                     ContCode = t.TransportId ?? "",
-                    ContName = "",
+                    ContName = transportName,
 
-                    IsAliquot = t.Parent != null,
+                    LocalizationId = t.LocalizationId ?? "",
+                    LocalizationName = ResolveLocalizationDisplayName(details, t.LocalizationId),
+
+                    TransportId = t.TransportId ?? "",
+                    TransportName = transportName,
+
+                    LabCenterId = "",
+
+                    IsAliquot = t.Parent != null || !string.IsNullOrWhiteSpace(t.ParentOrderSampleGuid),
                     IsUtilize = t.Utilize,
                     HasUtilizationService = t.Services != null && t.Services.Any(x => x != null && x.UtilizationFlag == 1),
                     HasRefusedService = t.Services != null && t.Services.Any(x => x != null && x.RefuseFlag == 1),
@@ -437,27 +713,422 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                     SampleRole = BuildSampleRole(t),
                     SampleAction = BuildSampleAction(t),
+                    UsedPercent = t.UsedPercent,
 
-                    OrderProductGuidList = new List<string>()
+                    OrderProductGuidList = productGuids,
+                    Services = services
                 };
 
-                if (t.Services != null)
+                GemotestSampleDetail old = FindOldSampleForTube(oldSamples, t, productGuids);
+                if (old != null)
                 {
-                    for (int k = 0; k < t.Services.Count; k++)
-                    {
-                        var s = t.Services[k];
-                        if (s == null || string.IsNullOrWhiteSpace(s.ServiceId))
-                            continue;
+                    sample.Barcode = old.Barcode ?? "";
 
-                        var prod = details.Products.FirstOrDefault(p =>  p != null && ( string.Equals(p.ProductId ?? "", s.ServiceId ?? "", StringComparison.OrdinalIgnoreCase) ||
-                            string.Equals(p.ProductId ?? "", s.ComplexId ?? "", StringComparison.OrdinalIgnoreCase)));
-                        if (prod != null && !string.IsNullOrWhiteSpace(prod.OrderProductGuid))
-                            sample.OrderProductGuidList.Add(prod.OrderProductGuid);
-                    }
+                    if (!string.IsNullOrWhiteSpace(old.BiomName))
+                        sample.BiomName = old.BiomName;
+
+                    if (!string.IsNullOrWhiteSpace(old.ContName))
+                        sample.ContName = old.ContName;
+
+                    if (!string.IsNullOrWhiteSpace(old.LocalizationName))
+                        sample.LocalizationName = old.LocalizationName;
+
+                    if (!string.IsNullOrWhiteSpace(old.TransportName))
+                        sample.TransportName = old.TransportName;
+
+                    if (!string.IsNullOrWhiteSpace(old.LabCenterId))
+                        sample.LabCenterId = old.LabCenterId;
                 }
 
                 details.Samples.Add(sample);
             }
+
+            NormalizeOrderDetailSamples(details);
+        }
+
+        private static string ResolveBiomaterialDisplayName(GemotestOrderDetail details, string biomaterialId)
+        {
+            biomaterialId = (biomaterialId ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(biomaterialId))
+                return string.Empty;
+
+            if (details != null && details.BioMaterials != null)
+            {
+                GemotestProductBioMaterial biomaterial = details.BioMaterials.FirstOrDefault(x =>
+                    x != null &&
+                    string.Equals((x.Id ?? string.Empty).Trim(), biomaterialId, StringComparison.OrdinalIgnoreCase) &&
+                    !string.IsNullOrWhiteSpace(x.BiomaterialName));
+
+                if (biomaterial != null)
+                    return biomaterial.BiomaterialName ?? string.Empty;
+            }
+
+            if (details != null && details.Dicts != null && details.Dicts.Biomaterials != null)
+            {
+                DictionaryBiomaterials dictionaryBiomaterial;
+                if (details.Dicts.Biomaterials.TryGetValue(biomaterialId, out dictionaryBiomaterial) &&
+                    dictionaryBiomaterial != null &&
+                    !string.IsNullOrWhiteSpace(dictionaryBiomaterial.name))
+                {
+                    return dictionaryBiomaterial.name;
+                }
+            }
+
+            return biomaterialId;
+        }
+
+        private static string ResolveTransportDisplayName(GemotestOrderDetail details, string transportId)
+        {
+            transportId = (transportId ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(transportId))
+                return string.Empty;
+
+            if (details != null && details.BioMaterials != null)
+            {
+                GemotestProductBioMaterial biomaterial = details.BioMaterials.FirstOrDefault(x =>
+                    x != null &&
+                    string.Equals((x.ContainerId ?? string.Empty).Trim(), transportId, StringComparison.OrdinalIgnoreCase) &&
+                    !string.IsNullOrWhiteSpace(x.ContainerName));
+
+                if (biomaterial != null)
+                    return biomaterial.ContainerName ?? string.Empty;
+            }
+
+            if (details != null && details.Dicts != null && details.Dicts.Transport != null)
+            {
+                DictionaryTransport transport;
+                if (details.Dicts.Transport.TryGetValue(transportId, out transport) &&
+                    transport != null &&
+                    !string.IsNullOrWhiteSpace(transport.name))
+                {
+                    return transport.name;
+                }
+            }
+
+            return transportId;
+        }
+
+        private static string ResolveLocalizationDisplayName(GemotestOrderDetail details, string localizationId)
+        {
+            localizationId = (localizationId ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(localizationId))
+                return string.Empty;
+
+            if (details != null && details.Dicts != null && details.Dicts.Localization != null)
+            {
+                DictionaryLocalization localization;
+                if (details.Dicts.Localization.TryGetValue(localizationId, out localization) &&
+                    localization != null &&
+                    !string.IsNullOrWhiteSpace(localization.name))
+                {
+                    return localization.name;
+                }
+            }
+
+            return localizationId;
+        }
+
+        private static void AssignOrderSampleGuids(GemotestOrderDetail details, List<TubePlan> tubes, List<GemotestSampleDetail> oldSamples)
+        {
+            if (tubes == null)
+                return;
+
+            for (int i = 0; i < tubes.Count; i++)
+            {
+                TubePlan tube = tubes[i];
+                if (tube == null)
+                    continue;
+
+                if (!string.IsNullOrWhiteSpace(tube.OrderSampleGuid))
+                    continue;
+
+                List<string> productGuids = BuildOrderProductGuidListForTube(details, tube);
+                GemotestSampleDetail old = FindOldSampleForTube(oldSamples, tube, productGuids);
+
+                tube.OrderSampleGuid = old != null && !string.IsNullOrWhiteSpace(old.OrderSampleGuid)
+                    ? old.OrderSampleGuid
+                    : Guid.NewGuid().ToString();
+            }
+
+            for (int i = 0; i < tubes.Count; i++)
+            {
+                TubePlan tube = tubes[i];
+                if (tube == null || tube.Parent == null)
+                    continue;
+
+                tube.ParentOrderSampleGuid = tube.Parent.OrderSampleGuid ?? "";
+            }
+        }
+
+        private static GemotestSampleDetail FindOldSampleForTube(List<GemotestSampleDetail> oldSamples, TubePlan tube, List<string> productGuids)
+        {
+            if (oldSamples == null || tube == null)
+                return null;
+
+            for (int i = 0; i < oldSamples.Count; i++)
+            {
+                GemotestSampleDetail old = oldSamples[i];
+                if (old == null)
+                    continue;
+
+                if (!SameId(old.SampleId, tube.SampleId.ToString(CultureInfo.InvariantCulture)))
+                    continue;
+
+                if (!SameId(ResolveSampleTransportId(old), tube.TransportId))
+                    continue;
+
+                if (!SameId(old.LocalizationId, tube.LocalizationId))
+                    continue;
+
+                if (!SameId(old.MicrobiologyBiomaterialId, tube.MicroBioBiomaterialId))
+                    continue;
+
+                if (!SameId(old.BiomId, tube.BiomaterialId))
+                    continue;
+
+                if (!SameStringSet(old.OrderProductGuidList, productGuids))
+                    continue;
+
+                return old;
+            }
+
+            for (int i = 0; i < oldSamples.Count; i++)
+            {
+                GemotestSampleDetail old = oldSamples[i];
+                if (old == null)
+                    continue;
+
+                if (!SameId(ResolveSampleTransportId(old), tube.TransportId))
+                    continue;
+
+                if (!SameId(old.MicrobiologyBiomaterialId, tube.MicroBioBiomaterialId))
+                    continue;
+
+                if (!SameId(old.BiomId, tube.BiomaterialId))
+                    continue;
+
+                if (!SameStringSet(old.OrderProductGuidList, productGuids))
+                    continue;
+
+                return old;
+            }
+
+            return null;
+        }
+
+        private static List<string> BuildOrderProductGuidListForTube(GemotestOrderDetail details, TubePlan tube)
+        {
+            List<string> result = new List<string>();
+
+            if (details == null || details.Products == null || tube == null || tube.Services == null)
+                return result;
+
+            for (int i = 0; i < tube.Services.Count; i++)
+            {
+                TubeServicePlan service = tube.Services[i];
+                if (service == null)
+                    continue;
+
+                for (int j = 0; j < details.Products.Count; j++)
+                {
+                    var product = details.Products[j];
+                    if (product == null || string.IsNullOrWhiteSpace(product.OrderProductGuid))
+                        continue;
+
+                    bool matchService = !string.IsNullOrWhiteSpace(service.ServiceId) && SameId(product.ProductId, service.ServiceId);
+                    bool matchComplex = !string.IsNullOrWhiteSpace(service.ComplexId) && SameId(product.ProductId, service.ComplexId);
+
+                    if ((matchService || matchComplex) && !result.Contains(product.OrderProductGuid))
+                        result.Add(product.OrderProductGuid);
+                }
+            }
+
+            return result;
+        }
+
+        private static List<GemotestSampleServiceDetail> BuildSampleServiceDetailsForTube(TubePlan tube)
+        {
+            List<GemotestSampleServiceDetail> result = new List<GemotestSampleServiceDetail>();
+
+            if (tube == null || tube.Services == null)
+                return result;
+
+            for (int i = 0; i < tube.Services.Count; i++)
+            {
+                TubeServicePlan service = tube.Services[i];
+                if (service == null || string.IsNullOrWhiteSpace(service.ServiceId))
+                    continue;
+
+                result.Add(new GemotestSampleServiceDetail
+                {
+                    ServiceId = service.ServiceId ?? "",
+                    ComplexId = NormalizeComplexId(service.ServiceId, service.ComplexId),
+                    UtilizationFlag = service.UtilizationFlag,
+                    RefuseFlag = service.RefuseFlag,
+                    ServiceCount = service.ServiceCount <= 0 ? 1 : service.ServiceCount,
+                    SharePercent = service.SharePercent
+                });
+            }
+
+            return result;
+        }
+
+        private static bool SameStringSet(List<string> left, List<string> right)
+        {
+            List<string> a = left != null ? left.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).OrderBy(x => x).ToList() : new List<string>();
+            List<string> b = right != null ? right.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).OrderBy(x => x).ToList() : new List<string>();
+
+            if (a.Count != b.Count)
+                return false;
+
+            for (int i = 0; i < a.Count; i++)
+            {
+                if (!string.Equals(a[i], b[i], StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private List<TubePlan> BuildTubesFromOrderDetailSamples(GemotestOrderDetail details)
+        {
+            if (details == null)
+                throw new ArgumentNullException(nameof(details));
+
+            NormalizeOrderDetailSamples(details);
+
+            if (details.Samples == null || details.Samples.Count == 0)
+                throw new InvalidOperationException("OrderDetail.Samples пуст: пробы должны быть сформированы на этапе сохранения заказа.");
+
+            List<TubePlan> result = new List<TubePlan>();
+            Dictionary<string, TubePlan> byGuid = new Dictionary<string, TubePlan>(StringComparer.OrdinalIgnoreCase);
+
+            for (int i = 0; i < details.Samples.Count; i++)
+            {
+                GemotestSampleDetail sample = details.Samples[i];
+                if (sample == null)
+                    continue;
+
+                int sampleId = ToInt(sample.SampleId, 0);
+                if (sampleId <= 0)
+                    throw new InvalidOperationException("В OrderDetail.Samples есть проба без SampleId. Заказ нужно пересохранить перед отправкой.");
+
+                TubePlan tube = new TubePlan
+                {
+                    OrderSampleGuid = sample.OrderSampleGuid ?? "",
+                    ParentOrderSampleGuid = sample.ParentOrderSampleGuid ?? "",
+                    SampleId = sampleId,
+                    SampleName = sample.SampleDescription ?? "",
+                    TransportId = ResolveSampleTransportId(sample),
+                    Utilize = sample.IsUtilize,
+                    BiomaterialId = sample.BiomId ?? "",
+                    MicroBioBiomaterialId = sample.MicrobiologyBiomaterialId ?? "",
+                    LocalizationId = sample.LocalizationId ?? "",
+                    SampleIdentifier = sample.SampleIdentifier ?? "",
+                    PrimarySampleIdentifier = sample.PrimarySampleIdentifier ?? "",
+                    UsedPercent = sample.UsedPercent
+                };
+
+                tube.Services = BuildTubeServicesFromSampleDetail(details, sample);
+                if (tube.Services == null || tube.Services.Count == 0)
+                    throw new InvalidOperationException("В OrderDetail.Samples есть проба без привязанных услуг. Заказ нужно пересохранить перед отправкой.");
+
+                result.Add(tube);
+
+                if (!string.IsNullOrWhiteSpace(tube.OrderSampleGuid) && !byGuid.ContainsKey(tube.OrderSampleGuid))
+                    byGuid.Add(tube.OrderSampleGuid, tube);
+            }
+
+            for (int i = 0; i < result.Count; i++)
+            {
+                TubePlan tube = result[i];
+                if (tube == null || string.IsNullOrWhiteSpace(tube.ParentOrderSampleGuid))
+                    continue;
+
+                TubePlan parent;
+                if (byGuid.TryGetValue(tube.ParentOrderSampleGuid, out parent))
+                {
+                    tube.Parent = parent;
+                    if (string.IsNullOrWhiteSpace(tube.PrimarySampleIdentifier))
+                        tube.PrimarySampleIdentifier = parent.SampleIdentifier ?? "";
+                }
+            }
+
+            return result;
+        }
+
+        private static string ResolveSampleTransportId(GemotestSampleDetail sample)
+        {
+            if (sample == null)
+                return "";
+
+            if (!string.IsNullOrWhiteSpace(sample.TransportId))
+                return sample.TransportId.Trim();
+
+            if (!string.IsNullOrWhiteSpace(sample.ContId))
+                return sample.ContId.Trim();
+
+            if (!string.IsNullOrWhiteSpace(sample.ContCode))
+                return sample.ContCode.Trim();
+
+            return "";
+        }
+
+        private List<TubeServicePlan> BuildTubeServicesFromSampleDetail(GemotestOrderDetail details, GemotestSampleDetail sample)
+        {
+            List<TubeServicePlan> result = new List<TubeServicePlan>();
+
+            if (sample == null)
+                return result;
+
+            if (sample.Services != null && sample.Services.Count > 0)
+            {
+                for (int i = 0; i < sample.Services.Count; i++)
+                {
+                    GemotestSampleServiceDetail service = sample.Services[i];
+                    if (service == null || string.IsNullOrWhiteSpace(service.ServiceId))
+                        continue;
+
+                    result.Add(new TubeServicePlan
+                    {
+                        ServiceId = service.ServiceId ?? "",
+                        ComplexId = NormalizeComplexId(service.ServiceId, service.ComplexId),
+                        UtilizationFlag = service.UtilizationFlag,
+                        RefuseFlag = service.RefuseFlag,
+                        ServiceCount = service.ServiceCount <= 0 ? 1 : service.ServiceCount,
+                        SharePercent = service.SharePercent
+                    });
+                }
+            }
+
+            if (result.Count > 0)
+                return result;
+
+            if (details == null || details.Products == null || sample.OrderProductGuidList == null)
+                return result;
+
+            for (int i = 0; i < sample.OrderProductGuidList.Count; i++)
+            {
+                string guid = sample.OrderProductGuidList[i];
+                if (string.IsNullOrWhiteSpace(guid))
+                    continue;
+
+                var product = details.Products.FirstOrDefault(x => x != null && string.Equals(x.OrderProductGuid ?? "", guid, StringComparison.OrdinalIgnoreCase));
+                if (product == null || string.IsNullOrWhiteSpace(product.ProductId))
+                    continue;
+
+                result.Add(new TubeServicePlan
+                {
+                    ServiceId = product.ProductId,
+                    ComplexId = "",
+                    UtilizationFlag = sample.HasUtilizationService || sample.IsUtilize ? 1 : 0,
+                    RefuseFlag = sample.HasRefusedService ? 1 : 0,
+                    ServiceCount = 1,
+                    SharePercent = 100.0
+                });
+            }
+
+            return result;
         }
 
         private static string BuildSampleRole(TubePlan tube)
@@ -528,7 +1199,363 @@ namespace Laboratory.Gemotest.GemotestRequests
             if (details == null || details.Products == null)
                 return res;
 
-            Dictionary<int, string> chosenBioByProductIndex = BuildChosenBiomaterialByProductIndex(details);
+            Dictionary<int, List<string>> chosenBioByProductIndex = BuildChosenBiomaterialByProductIndex(details);
+            HashSet<string> added = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            for (int productIndex = 0; productIndex < details.Products.Count; productIndex++)
+            {
+                var prod = details.Products[productIndex];
+                if (prod == null || string.IsNullOrWhiteSpace(prod.ProductId))
+                    continue;
+
+                DictionaryService svc;
+                if (_dictionaries.Directory == null || !_dictionaries.Directory.TryGetValue(prod.ProductId, out svc) || svc == null)
+                    continue;
+
+                int? serviceType = svc.service_type;
+                if (serviceType == 3 || serviceType == 4)
+                    continue;
+
+                List<TubePlan> productTubes = FindTopServiceTubes(prod.ProductId, tubes);
+                List<string> chosenBioIds = chosenBioByProductIndex.ContainsKey(productIndex)
+                    ? chosenBioByProductIndex[productIndex]
+                    : new List<string>();
+
+                bool addedForProduct = false;
+
+                if (chosenBioIds != null && chosenBioIds.Count > 0)
+                {
+                    for (int bioIndex = 0; bioIndex < chosenBioIds.Count; bioIndex++)
+                    {
+                        string chosenBioId = chosenBioIds[bioIndex];
+                        if (string.IsNullOrWhiteSpace(chosenBioId))
+                            continue;
+
+                        List<TubePlan> byBio = productTubes.Where(t => TubeMatchesBiomaterial(t, chosenBioId)).ToList();
+                        for (int tubeIndex = 0; tubeIndex < byBio.Count; tubeIndex++)
+                        {
+                            if (AddTopServiceFromTube(res, added, prod.ProductId, byBio[tubeIndex]))
+                                addedForProduct = true;
+                        }
+                    }
+                }
+
+                if (!addedForProduct)
+                {
+                    for (int tubeIndex = 0; tubeIndex < productTubes.Count; tubeIndex++)
+                    {
+                        if (AddTopServiceFromTube(res, added, prod.ProductId, productTubes[tubeIndex]))
+                            addedForProduct = true;
+                    }
+                }
+
+                if (!addedForProduct)
+                {
+                    AddTopServiceItem(res, added, new SoapTopServiceItem
+                    {
+                        Id = prod.ProductId,
+                        BiomaterialId = "",
+                        LocalizationId = "",
+                        TransportId = "",
+                        SampleId = "",
+                        MicrobiologyBiomaterialId = ""
+                    });
+                }
+            }
+
+            AddMissingMicrobiologyServiceRowsToTopServices(res, tubes, added);
+            return res;
+        }
+
+        private List<TubePlan> FindTopServiceTubes(string productId, List<TubePlan> tubes)
+        {
+            if (string.IsNullOrWhiteSpace(productId) || tubes == null || tubes.Count == 0)
+                return new List<TubePlan>();
+
+            return tubes
+                .Where(t =>
+                    t != null &&
+                    t.Services != null &&
+                    t.Services.Any(s =>
+                        s != null &&
+                        (
+                            string.Equals(s.ServiceId ?? string.Empty, productId ?? string.Empty, StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(s.ComplexId ?? string.Empty, productId ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+                        )))
+                .ToList();
+        }
+
+        private static bool TubeMatchesBiomaterial(TubePlan tube, string biomaterialId)
+        {
+            if (tube == null || string.IsNullOrWhiteSpace(biomaterialId))
+                return false;
+
+            return string.Equals(tube.MicroBioBiomaterialId ?? string.Empty, biomaterialId, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(tube.BiomaterialId ?? string.Empty, biomaterialId, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool AddTopServiceFromTube(List<SoapTopServiceItem> services, HashSet<string> added, string serviceId, TubePlan tube)
+        {
+            if (tube == null || string.IsNullOrWhiteSpace(serviceId))
+                return false;
+
+            string biomaterialId = !string.IsNullOrWhiteSpace(tube.MicroBioBiomaterialId)
+                ? (tube.MicroBioBiomaterialId ?? string.Empty)
+                : (tube.BiomaterialId ?? string.Empty);
+
+            string microbiologyBiomaterialId = !string.IsNullOrWhiteSpace(tube.MicroBioBiomaterialId)
+                ? (tube.MicroBioBiomaterialId ?? string.Empty)
+                : string.Empty;
+
+            return AddTopServiceItem(services, added, new SoapTopServiceItem
+            {
+                Id = serviceId,
+                BiomaterialId = biomaterialId,
+                LocalizationId = tube.LocalizationId ?? string.Empty,
+                TransportId = tube.TransportId ?? string.Empty,
+                SampleId = tube.SampleId > 0 ? tube.SampleId.ToString(CultureInfo.InvariantCulture) : string.Empty,
+                MicrobiologyBiomaterialId = microbiologyBiomaterialId
+            });
+        }
+
+        private static bool AddTopServiceItem(List<SoapTopServiceItem> services, HashSet<string> added, SoapTopServiceItem item)
+        {
+            if (services == null || item == null || string.IsNullOrWhiteSpace(item.Id))
+                return false;
+
+            string key = BuildTopServiceKey(item);
+            if (added != null && !added.Add(key))
+                return false;
+
+            services.Add(item);
+            return true;
+        }
+
+        private static string BuildTopServiceKey(SoapTopServiceItem item)
+        {
+            if (item == null)
+                return string.Empty;
+
+            return (item.Id ?? string.Empty).Trim();
+        }
+
+        private void AddMissingMicrobiologyServiceRowsToTopServices(List<SoapTopServiceItem> services, List<TubePlan> tubes, HashSet<string> added)
+        {
+            if (services == null || tubes == null)
+                return;
+
+            if (added == null)
+            {
+                added = new HashSet<string>(
+                    services.Where(x => x != null && !string.IsNullOrWhiteSpace(x.Id)).Select(BuildTopServiceKey),
+                    StringComparer.OrdinalIgnoreCase);
+            }
+
+            for (int i = 0; i < tubes.Count; i++)
+            {
+                TubePlan tube = tubes[i];
+                if (tube == null || string.IsNullOrWhiteSpace(tube.MicroBioBiomaterialId) || tube.Services == null)
+                    continue;
+
+                for (int j = 0; j < tube.Services.Count; j++)
+                {
+                    TubeServicePlan tubeService = tube.Services[j];
+                    if (tubeService == null || string.IsNullOrWhiteSpace(tubeService.ServiceId))
+                        continue;
+
+                    AddTopServiceItem(services, added, new SoapTopServiceItem
+                    {
+                        Id = tubeService.ServiceId.Trim(),
+                        BiomaterialId = tube.MicroBioBiomaterialId ?? string.Empty,
+                        LocalizationId = tube.LocalizationId ?? string.Empty,
+                        TransportId = tube.TransportId ?? string.Empty,
+                        SampleId = tube.SampleId > 0 ? tube.SampleId.ToString(CultureInfo.InvariantCulture) : string.Empty,
+                        MicrobiologyBiomaterialId = tube.MicroBioBiomaterialId ?? string.Empty
+                    });
+                }
+            }
+        }
+
+        private TubePlan FindTopServiceTube(string productId, int productIndex, Dictionary<int, List<string>> chosenBioByProductIndex, List<TubePlan> tubes)
+        {
+            if (string.IsNullOrWhiteSpace(productId) || tubes == null || tubes.Count == 0)
+                return null;
+
+            Func<TubePlan, bool> belongsToProduct = t =>
+                t != null &&
+                t.Services != null &&
+                t.Services.Any(s =>
+                    s != null &&
+                    (
+                        string.Equals(s.ServiceId ?? "", productId ?? "", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(s.ComplexId ?? "", productId ?? "", StringComparison.OrdinalIgnoreCase)
+                    ));
+
+            List<string> chosenBioIds = chosenBioByProductIndex != null && chosenBioByProductIndex.ContainsKey(productIndex)
+                ? chosenBioByProductIndex[productIndex]
+                : new List<string>();
+
+            if (chosenBioIds != null)
+            {
+                for (int i = 0; i < chosenBioIds.Count; i++)
+                {
+                    string chosenBioId = chosenBioIds[i];
+                    if (string.IsNullOrWhiteSpace(chosenBioId))
+                        continue;
+
+                    TubePlan byChosenMicro = tubes.FirstOrDefault(t =>
+                        belongsToProduct(t) &&
+                        !string.IsNullOrWhiteSpace(t.MicroBioBiomaterialId) &&
+                        string.Equals(t.MicroBioBiomaterialId ?? "", chosenBioId, StringComparison.OrdinalIgnoreCase));
+
+                    if (byChosenMicro != null)
+                        return byChosenMicro;
+
+                    TubePlan byChosenBio = tubes.FirstOrDefault(t =>
+                        belongsToProduct(t) &&
+                        !string.IsNullOrWhiteSpace(t.BiomaterialId) &&
+                        string.Equals(t.BiomaterialId ?? "", chosenBioId, StringComparison.OrdinalIgnoreCase));
+
+                    if (byChosenBio != null)
+                        return byChosenBio;
+                }
+            }
+
+            TubePlan microNotOther = tubes.FirstOrDefault(t =>
+                belongsToProduct(t) &&
+                !string.IsNullOrWhiteSpace(t.MicroBioBiomaterialId) &&
+                !string.Equals(t.MicroBioBiomaterialId ?? "", "Drugoe", StringComparison.OrdinalIgnoreCase));
+
+            if (microNotOther != null)
+                return microNotOther;
+
+            TubePlan anyMicro = tubes.FirstOrDefault(t =>
+                belongsToProduct(t) &&
+                !string.IsNullOrWhiteSpace(t.MicroBioBiomaterialId));
+
+            if (anyMicro != null)
+                return anyMicro;
+
+            TubePlan anyBio = tubes.FirstOrDefault(t =>
+                belongsToProduct(t) &&
+                !string.IsNullOrWhiteSpace(t.BiomaterialId));
+
+            if (anyBio != null)
+                return anyBio;
+
+            return tubes.FirstOrDefault(t => belongsToProduct(t));
+        }
+
+        private Dictionary<int, List<string>> BuildChosenBiomaterialByProductIndex(GemotestOrderDetail details)
+        {
+            var map = new Dictionary<int, List<string>>();
+
+            for (int b = 0; b < details.BioMaterials.Count; b++)
+            {
+                var bio = details.BioMaterials[b];
+                if (bio == null) continue;
+
+                if (!map.ContainsKey(bio.ProductIndex))
+                    map.Add(bio.ProductIndex, new List<string>());
+
+                if (bio.Chosen)
+                    map[bio.ProductIndex].Add(bio.Id);
+            }
+
+            return map;
+        }
+
+        private Dictionary<int, List<string>> BuildChosenBiomaterialsByProductIndex(GemotestOrderDetail details)
+        {
+            var map = new Dictionary<int, List<string>>();
+
+            if (details == null || details.BioMaterials == null)
+                return map;
+
+            for (int b = 0; b < details.BioMaterials.Count; b++)
+            {
+                var bio = details.BioMaterials[b];
+                if (bio == null || !bio.Chosen || string.IsNullOrWhiteSpace(bio.Id))
+                    continue;
+
+                List<string> list;
+                if (!map.TryGetValue(bio.ProductIndex, out list) || list == null)
+                {
+                    list = new List<string>();
+                    map[bio.ProductIndex] = list;
+                }
+
+                if (!list.Any(x => string.Equals(x ?? "", bio.Id ?? "", StringComparison.OrdinalIgnoreCase)))
+                    list.Add(bio.Id);
+            }
+
+            return map;
+        }
+
+
+        private Dictionary<int, List<ChosenBiomaterialSelection>> BuildChosenBiomaterialSelectionsByProductIndex(GemotestOrderDetail details)
+        {
+            var map = new Dictionary<int, List<ChosenBiomaterialSelection>>();
+
+            if (details == null || details.BioMaterials == null)
+                return map;
+
+            for (int b = 0; b < details.BioMaterials.Count; b++)
+            {
+                var bio = details.BioMaterials[b];
+                if (bio == null || !bio.Chosen || string.IsNullOrWhiteSpace(bio.Id))
+                    continue;
+
+                List<ChosenBiomaterialSelection> list;
+                if (!map.TryGetValue(bio.ProductIndex, out list) || list == null)
+                {
+                    list = new List<ChosenBiomaterialSelection>();
+                    map[bio.ProductIndex] = list;
+                }
+
+                string biomaterialId = (bio.Id ?? string.Empty).Trim();
+                string transportId = (bio.ContainerId ?? string.Empty).Trim();
+
+                bool exists = list.Any(x =>
+                    x != null &&
+                    SameId(x.BiomaterialId, biomaterialId) &&
+                    SameId(x.TransportId, transportId));
+
+                if (!exists)
+                {
+                    list.Add(new ChosenBiomaterialSelection
+                    {
+                        BiomaterialId = biomaterialId,
+                        TransportId = transportId
+                    });
+                }
+            }
+
+            return map;
+        }
+
+
+        private static string BuildChosenBiomaterialSelectionKey(ChosenBiomaterialSelection selection)
+        {
+            if (selection == null)
+                return string.Empty;
+
+            return string.Join("|", new string[]
+            {
+                (selection.BiomaterialId ?? string.Empty).Trim(),
+                (selection.TransportId ?? string.Empty).Trim()
+            });
+        }
+
+
+        private List<SampleServiceRow> BuildSampleServiceRows(GemotestOrderDetail details)
+        {
+            if (_dictionaries == null)
+                throw new InvalidOperationException("Dictionaries не инициализированы в GemotestOrderSender.");
+
+            var rows = new List<SampleServiceRow>();
+            var chosenBioByProductIndex = BuildChosenBiomaterialsByProductIndex(details);
+            var chosenBioSelectionByProductIndex = BuildChosenBiomaterialSelectionsByProductIndex(details);
 
             for (int i = 0; i < details.Products.Count; i++)
             {
@@ -544,300 +1571,119 @@ namespace Laboratory.Gemotest.GemotestRequests
                 if (serviceType == 3 || serviceType == 4)
                     continue;
 
-                string biomaterialId = "";
-                string localizationId = "";
-                string transportId = "";
-                string sampleId = "";
-                string microbiologyBiomaterialId = "";
+                List<ChosenBiomaterialSelection> selectedBiomaterialSelections;
+                if (!chosenBioSelectionByProductIndex.TryGetValue(i, out selectedBiomaterialSelections) || selectedBiomaterialSelections == null)
+                    selectedBiomaterialSelections = new List<ChosenBiomaterialSelection>();
 
+                selectedBiomaterialSelections = selectedBiomaterialSelections
+                    .Where(x => x != null && !string.IsNullOrWhiteSpace(x.BiomaterialId))
+                    .GroupBy(x => BuildChosenBiomaterialSelectionKey(x), StringComparer.OrdinalIgnoreCase)
+                    .Select(g => g.First())
+                    .ToList();
 
-                {
-                    TubePlan microTube = null;
+                List<string> selectedBiomaterialIds = selectedBiomaterialSelections
+                    .Select(x => x.BiomaterialId)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
 
-                    string chosenBioId = chosenBioByProductIndex.ContainsKey(i)
-                        ? (chosenBioByProductIndex[i] ?? "")
-                        : "";
-
-                    if (tubes != null)
-                    {
-                        if (!string.IsNullOrWhiteSpace(chosenBioId))
-                        {
-                            microTube = tubes.FirstOrDefault(t =>
-                                t != null &&
-                                t.Services != null &&
-                                t.Services.Any(s =>
-                                    s != null &&
-                                    (
-                                        string.Equals(s.ServiceId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase) ||
-                                        string.Equals(s.ComplexId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase)
-                                    )) &&
-                                string.Equals(t.MicroBioBiomaterialId ?? "", chosenBioId, StringComparison.OrdinalIgnoreCase));
-                        }
-
-                        if (microTube == null)
-                        {
-                            microTube = tubes.FirstOrDefault(t =>
-                                t != null &&
-                                t.Services != null &&
-                                t.Services.Any(s =>
-                                    s != null &&
-                                    (
-                                        string.Equals(s.ServiceId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase) ||
-                                        string.Equals(s.ComplexId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase)
-                                    )) &&
-                                !string.IsNullOrWhiteSpace(t.MicroBioBiomaterialId) &&
-                                !string.Equals(t.MicroBioBiomaterialId ?? "", "Drugoe", StringComparison.OrdinalIgnoreCase));
-                        }
-
-                        if (microTube == null)
-                        {
-                            microTube = tubes.FirstOrDefault(t =>
-                                t != null &&
-                                t.Services != null &&
-                                t.Services.Any(s =>
-                                    s != null &&
-                                    (
-                                        string.Equals(s.ServiceId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase) ||
-                                        string.Equals(s.ComplexId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase)
-                                    )) &&
-                                !string.IsNullOrWhiteSpace(t.MicroBioBiomaterialId));
-                        }
-                    }
-
-                    if (microTube != null)
-                    {
-                        microbiologyBiomaterialId = microTube.MicroBioBiomaterialId ?? "";
-                        biomaterialId = microbiologyBiomaterialId;
-
-                        localizationId = microTube.LocalizationId ?? "";
-                        transportId = microTube.TransportId ?? "";
-                        sampleId = microTube.SampleId > 0 ? microTube.SampleId.ToString(CultureInfo.InvariantCulture) : "";
-                    }
-                }
-
-                res.Add(new SoapTopServiceItem
-                {
-                    Id = prod.ProductId,
-                    BiomaterialId = biomaterialId,
-                    LocalizationId = localizationId,
-                    TransportId = transportId,
-                    SampleId = sampleId,
-                    MicrobiologyBiomaterialId = microbiologyBiomaterialId
-                });
-            }
-            return res;
-        }
-
-        private Dictionary<int, string> BuildChosenBiomaterialByProductIndex(GemotestOrderDetail details)
-        {
-            var map = new Dictionary<int, string>();
-
-            for (int b = 0; b < details.BioMaterials.Count; b++)
-            {
-                var bio = details.BioMaterials[b];
-                if (bio == null) continue;
-
-                for (int i = 0; i < bio.Mandatory.Count; i++)
-                {
-                    int idx = ToInt(bio.Mandatory[i], -1);
-                    if (idx < 0) continue;
-                    map[idx] = bio.Id ?? "";
-                }
-            }
-
-            for (int b = 0; b < details.BioMaterials.Count; b++)
-            {
-                var bio = details.BioMaterials[b];
-                if (bio == null) continue;
-
-                for (int i = 0; i < bio.Chosen.Count; i++)
-                {
-                    int idx = ToInt(bio.Chosen[i], -1);
-                    if (idx < 0) continue;
-
-                    if (!map.ContainsKey(idx))
-                        map[idx] = bio.Id ?? "";
-                }
-            }
-
-            return map;
-        }
-
-        private Dictionary<int, List<string>> BuildChosenBiomaterialsByProductIndex(GemotestOrderDetail details)
-        {
-            var map = new Dictionary<int, List<string>>();
-
-            if (details == null || details.BioMaterials == null)
-                return map;
-
-            Action<int, string> add = (productIndex, biomaterialId) =>
-            {
-                if (productIndex < 0 || string.IsNullOrWhiteSpace(biomaterialId))
-                    return;
-
-                List<string> list;
-                if (!map.TryGetValue(productIndex, out list) || list == null)
-                {
-                    list = new List<string>();
-                    map[productIndex] = list;
-                }
-
-                if (!list.Any(x => string.Equals(x ?? "", biomaterialId ?? "", StringComparison.OrdinalIgnoreCase)))
-                    list.Add(biomaterialId);
-            };
-
-            for (int b = 0; b < details.BioMaterials.Count; b++)
-            {
-                var bio = details.BioMaterials[b];
-                if (bio == null)
+                if (selectedBiomaterialIds.Count == 0)
                     continue;
-
-                if (bio.Mandatory != null)
-                {
-                    for (int i = 0; i < bio.Mandatory.Count; i++)
-                        add(ToInt(bio.Mandatory[i], -1), bio.Id ?? "");
-                }
-
-                if (bio.Chosen != null)
-                {
-                    for (int i = 0; i < bio.Chosen.Count; i++)
-                        add(ToInt(bio.Chosen[i], -1), bio.Id ?? "");
-                }
-            }
-
-            return map;
-        }
-
-        private List<SampleServiceRow> BuildSampleServiceRows(GemotestOrderDetail details)
-        {
-            if (_dictionaries == null)
-                throw new InvalidOperationException("Dictionaries не инициализированы в GemotestOrderSender.");
-
-            var rows = new List<SampleServiceRow>();
-            var chosenBio = BuildChosenBiomaterialByProductIndex(details);
-            var chosenBioMulti = BuildChosenBiomaterialsByProductIndex(details);
-
-            for (int i = 0; i < details.Products.Count; i++)
-            {
-                var prod = details.Products[i];
-                if (prod == null || string.IsNullOrEmpty(prod.ProductId)) continue;
-
-                DictionaryService svc;
-                if (!_dictionaries.Directory.TryGetValue(prod.ProductId, out svc) || svc == null)
-                    continue;
-
-                int? serviceType = svc.service_type;
-                if (serviceType == 3 || serviceType == 4)
-                    continue;
-
-                string biomaterialId = chosenBio.ContainsKey(i) ? chosenBio[i] : "";
 
                 if (svc.type == 2)
                 {
-                    AddRowsForMicrobiologyComplex(prod.ProductId, biomaterialId, rows);
-
-                    for (int r = 0; r < rows.Count; r++)
+                    foreach (string biomaterialId in selectedBiomaterialIds)
                     {
-                        var row = rows[r];
-                        if (row == null)
-                            continue;
-
-                        if (string.Equals(row.ServiceId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase) &&
-                            string.IsNullOrWhiteSpace(row.ComplexId))
-                        {
-                            row.ComplexId = prod.ProductId ?? "";
-                        }
+                        int startIndex = rows.Count;
+                        AddRowsForMicrobiologyComplex(prod.ProductId, biomaterialId, rows);
+                        NormalizeStandaloneMicrobiologyRowsForSelectedBio(prod.ProductId, biomaterialId, rows, startIndex);
                     }
 
-                    if (!string.IsNullOrWhiteSpace(biomaterialId))
-                    {
-                        for (int r = rows.Count - 1; r >= 0; r--)
-                        {
-                            var row = rows[r];
-                            if (row == null)
-                            {
-                                rows.RemoveAt(r);
-                                continue;
-                            }
-
-                            if (string.Equals(row.ServiceId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase) &&
-                                !string.Equals(row.MicroBioBiomaterialId ?? "", biomaterialId, StringComparison.OrdinalIgnoreCase))
-                            {
-                                rows.RemoveAt(r);
-                            }
-                        }
-
-                        for (int r = rows.Count - 1; r >= 0; r--)
-                        {
-                            var row = rows[r];
-                            if (row == null)
-                                continue;
-
-                            if (string.Equals(row.ServiceId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase) &&
-                                row.ExecutionSampleId == 53)
-                            {
-                                rows.RemoveAt(r);
-                            }
-                        }
-
-                    }
-
-                    string selectedLocalizationId = "";
-
-                    var firstRowForService = rows.FirstOrDefault(x => x != null && string.Equals(x.ServiceId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase));
-
-                    if (firstRowForService != null)
-                        selectedLocalizationId = firstRowForService.LocalizationId ?? "";
-
-                    if (!string.IsNullOrWhiteSpace(selectedLocalizationId))
-                    {
-                        for (int r = rows.Count - 1; r >= 0; r--)
-                        {
-                            var row = rows[r];
-                            if (row == null)
-                                continue;
-
-                            if (string.Equals(row.ServiceId ?? "", prod.ProductId ?? "", StringComparison.OrdinalIgnoreCase) &&
-                                !string.Equals(row.LocalizationId ?? "", selectedLocalizationId, StringComparison.OrdinalIgnoreCase))
-                            {
-                                rows.RemoveAt(r);
-                            }
-                        }
-                    }
                     continue;
                 }
 
                 if (serviceType == 2)
                 {
-                    List<string> selectedBiomaterialIds;
-                    if (!chosenBioMulti.TryGetValue(i, out selectedBiomaterialIds) || selectedBiomaterialIds == null)
-                        selectedBiomaterialIds = new List<string>();
-
-
                     AddRowsForMarketingComplex(prod.ProductId, selectedBiomaterialIds, rows);
-
                     continue;
                 }
 
-                List<string> simpleSelectedBiomaterialIds;
-                if (chosenBioMulti.TryGetValue(i, out simpleSelectedBiomaterialIds) && simpleSelectedBiomaterialIds != null && simpleSelectedBiomaterialIds.Count > 0)
-                {
-                    foreach (string simpleBiomaterialId in simpleSelectedBiomaterialIds)
-                    {
-                        if (string.IsNullOrEmpty(simpleBiomaterialId))
-                            continue;
-
-                        AddRowsForSimpleService(prod.ProductId, simpleBiomaterialId, rows, "", "");
-                    }
-                }
-                else
-                {
-                    AddRowsForSimpleService(prod.ProductId, biomaterialId, rows, "", "");
-                }
+                foreach (ChosenBiomaterialSelection biomaterialSelection in selectedBiomaterialSelections)
+                    AddRowsForSimpleService(prod.ProductId, biomaterialSelection, rows, "", "");
             }
 
             return rows;
         }
+
+        private void NormalizeStandaloneMicrobiologyRowsForSelectedBio(string productId, string biomaterialId, List<SampleServiceRow> rows, int startIndex)
+        {
+            if (rows == null || startIndex < 0 || startIndex >= rows.Count)
+                return;
+
+            if (!string.IsNullOrWhiteSpace(biomaterialId))
+            {
+                for (int r = rows.Count - 1; r >= startIndex; r--)
+                {
+                    var row = rows[r];
+                    if (row == null)
+                    {
+                        rows.RemoveAt(r);
+                        continue;
+                    }
+
+                    if (string.Equals(row.ServiceId ?? "", productId ?? "", StringComparison.OrdinalIgnoreCase) &&
+                        !string.IsNullOrWhiteSpace(row.MicroBioBiomaterialId) &&
+                        !string.Equals(row.MicroBioBiomaterialId ?? "", biomaterialId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        rows.RemoveAt(r);
+                    }
+                }
+            }
+
+            for (int r = rows.Count - 1; r >= startIndex; r--)
+            {
+                var row = rows[r];
+                if (row == null)
+                    continue;
+
+                if (string.Equals(row.ServiceId ?? "", productId ?? "", StringComparison.OrdinalIgnoreCase) &&
+                    row.ExecutionSampleId == 53)
+                {
+                    rows.RemoveAt(r);
+                }
+            }
+
+            string selectedLocalizationId = "";
+            for (int r = startIndex; r < rows.Count; r++)
+            {
+                var row = rows[r];
+                if (row == null)
+                    continue;
+
+                if (string.Equals(row.ServiceId ?? "", productId ?? "", StringComparison.OrdinalIgnoreCase))
+                {
+                    selectedLocalizationId = row.LocalizationId ?? "";
+                    break;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(selectedLocalizationId))
+                return;
+
+            for (int r = rows.Count - 1; r >= startIndex; r--)
+            {
+                var row = rows[r];
+                if (row == null)
+                    continue;
+
+                if (string.Equals(row.ServiceId ?? "", productId ?? "", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(row.LocalizationId ?? "", selectedLocalizationId, StringComparison.OrdinalIgnoreCase))
+                {
+                    rows.RemoveAt(r);
+                }
+            }
+        }
+
 
         private void AddRowsForMicrobiologyComplex(string complexId, string chosenBioId, List<SampleServiceRow> rows)
         {
@@ -1042,7 +1888,7 @@ namespace Laboratory.Gemotest.GemotestRequests
                 if (p == null || p.sample_id <= 0)
                     continue;
 
-                if (IsStandalonePrimaryRow(p, list))
+                if (ToInt(p.primary_sample_id, 0) > 0)
                     continue;
 
                 int execSampleId = ToInt(p.sample_id, 0);
@@ -1050,8 +1896,7 @@ namespace Laboratory.Gemotest.GemotestRequests
                     continue;
 
                 int serviceCount = ToInt(p.service_count, 1);
-                int primaryRaw = ToInt(p.primary_sample_id, 0);
-                int? primarySampleId = primaryRaw > 0 ? (int?)primaryRaw : null;
+                int? primarySampleId = null;
 
                 DictionarySamples execSample;
                 _dictionaries.Samples.TryGetValue(execSampleId.ToString(CultureInfo.InvariantCulture), out execSample);
@@ -1064,19 +1909,10 @@ namespace Laboratory.Gemotest.GemotestRequests
                 string primTransport = "";
                 bool primUtilize = false;
 
-                if (primarySampleId.HasValue)
-                {
-                    DictionarySamples primSample;
-                    _dictionaries.Samples.TryGetValue(primarySampleId.Value.ToString(CultureInfo.InvariantCulture), out primSample);
-                    primName = primSample != null ? (primSample.name ?? "") : "";
-                    primTransport = primSample != null ? (primSample.transport_id ?? "") : "";
-                    primUtilize = primSample != null && primSample.utilize;
-                }
-
                 rows.Add(new SampleServiceRow
                 {
                     ServiceId = p.service_id ?? "",
-                    ComplexId = !string.IsNullOrWhiteSpace(row.complex_id) ? row.complex_id : (complexId ?? ""),
+                    ComplexId = NormalizeComplexId(p.service_id ?? "", !string.IsNullOrWhiteSpace(row.complex_id) ? row.complex_id : (complexId ?? "")),
 
                     ExecutionSampleId = execSampleId,
                     ExecutionSampleName = execName,
@@ -1148,7 +1984,12 @@ namespace Laboratory.Gemotest.GemotestRequests
                 AddRowsForSimpleService(c.service_id, bio, rows, complexId, loc);
             }
         }
-        private void AddRowsForSimpleService(  string serviceId, string biomaterialId, List<SampleServiceRow> rows, string complexId, string forcedLocalizationId)
+        private void AddRowsForSimpleService(string serviceId, string biomaterialId, List<SampleServiceRow> rows, string complexId, string forcedLocalizationId)
+        {
+            AddRowsForSimpleService(serviceId, new ChosenBiomaterialSelection { BiomaterialId = biomaterialId ?? string.Empty, TransportId = string.Empty }, rows, complexId, forcedLocalizationId);
+        }
+
+        private void AddRowsForSimpleService(string serviceId, ChosenBiomaterialSelection biomaterialSelection, List<SampleServiceRow> rows, string complexId, string forcedLocalizationId)
         {
             if (string.IsNullOrWhiteSpace(serviceId))
                 return;
@@ -1159,18 +2000,10 @@ namespace Laboratory.Gemotest.GemotestRequests
                 return;
             }
 
+            baseList = baseList.Where(x => x.primary_sample_id == 0).ToList();
+
             bool standaloneService = string.IsNullOrWhiteSpace(complexId);
-            var list = SelectSampleServiceRowsForSending(baseList, biomaterialId, forcedLocalizationId, standaloneService);
-
-
-            bool collapseAliquotChildren = !string.IsNullOrWhiteSpace(complexId);
-
-            if (collapseAliquotChildren)
-            {
-                list = RemoveChildAliquotRowsWhenParentPresent(list);
-
-            }
-
+            var list = SelectSampleServiceRowsForSending(baseList, biomaterialSelection, forcedLocalizationId, standaloneService);
 
             foreach (var p in list)
             {
@@ -1197,7 +2030,7 @@ namespace Laboratory.Gemotest.GemotestRequests
                 rows.Add(new SampleServiceRow
                 {
                     ServiceId = serviceId ?? "",
-                    ComplexId = complexId ?? "",
+                    ComplexId = NormalizeComplexId(serviceId, complexId),
 
                     ExecutionSampleId = execSampleId,
                     ExecutionSampleName = execSample != null ? (execSample.name ?? "") : "",
@@ -1218,244 +2051,80 @@ namespace Laboratory.Gemotest.GemotestRequests
             }
         }
 
-        private static bool IsLinkedSampleRequirementRow(DictionarySamplesServices row, List<DictionarySamplesServices> allRows)
-        {
-            if (row == null || allRows == null || allRows.Count == 0)
-                return false;
-
-            int sampleId = ToInt(row.sample_id, 0);
-            int primarySampleId = ToInt(row.primary_sample_id, 0);
-
-            if (sampleId <= 0)
-                return false;
-
-            if (primarySampleId > 0)
-                return true;
-
-            return allRows.Any(x => x != null && !object.ReferenceEquals(x, row) && ToInt(x.primary_sample_id, 0) == sampleId);
-        }
-
-        private static bool IsIndependentOrdinarySampleRequirementRow(DictionarySamplesServices row, List<DictionarySamplesServices> allRows)
-        {
-            if (row == null || allRows == null || allRows.Count == 0)
-                return false;
-
-            int sampleId = ToInt(row.sample_id, 0);
-            int primarySampleId = ToInt(row.primary_sample_id, 0);
-
-            if (sampleId <= 0 || primarySampleId > 0)
-                return false;
-
-            bool isParentOfLinkedChild = allRows.Any(child => child != null && !object.ReferenceEquals(child, row) && ToInt(child.primary_sample_id, 0) == sampleId);
-            return !isParentOfLinkedChild;
-        }
-
-
-        private static List<DictionarySamplesServices> RemoveChildAliquotRowsWhenParentPresent(List<DictionarySamplesServices> rows)
-        {
-            if (rows == null || rows.Count == 0)
-                return rows ?? new List<DictionarySamplesServices>();
-
-            var result = new List<DictionarySamplesServices>();
-
-            for (int i = 0; i < rows.Count; i++)
-            {
-                DictionarySamplesServices row = rows[i];
-
-                if (row == null)
-                    continue;
-
-                int sampleId = ToInt(row.sample_id, 0);
-                int primarySampleId = ToInt(row.primary_sample_id, 0);
-
-                bool isChildSample = primarySampleId > 0;
-
-                if (!isChildSample)
-                {
-                    result.Add(row);
-                    continue;
-                }
-
-                bool parentSampleExists = rows.Any(parent =>
-                    parent != null &&
-                    !object.ReferenceEquals(parent, row) &&
-                    ToInt(parent.sample_id, 0) == primarySampleId);
-
-                if (parentSampleExists)
-                {
-                    continue;
-                }
-
-                result.Add(row);
-            }
-
-            return result;
-        }
-
-
-        private static string Safe(object value)
+private static string Safe(object value)
         {
             return value == null ? string.Empty : value.ToString();
         }
 
 
-        private List<DictionarySamplesServices> SelectSampleServiceRowsForSending(List<DictionarySamplesServices> source, string selectedBiomaterialId, string forcedLocalizationId, bool allowStandaloneRequiredExpansion)
+        private List<DictionarySamplesServices> SelectSampleServiceRowsForSending(List<DictionarySamplesServices> source, ChosenBiomaterialSelection selection, string forcedLocalizationId, bool allowStandaloneRequiredExpansion)
         {
             var all = source != null ? source.Where(p => p != null).ToList() : new List<DictionarySamplesServices>();
 
             if (all.Count == 0)
                 return all;
 
+            string selectedBiomaterialId = selection != null ? (selection.BiomaterialId ?? string.Empty).Trim() : string.Empty;
+            string selectedTransportId = selection != null ? (selection.TransportId ?? string.Empty).Trim() : string.Empty;
+
             bool hasBiomaterialFilter = !string.IsNullOrWhiteSpace(selectedBiomaterialId);
+            bool hasTransportFilter = !string.IsNullOrWhiteSpace(selectedTransportId);
             bool hasLocalizationFilter = !string.IsNullOrWhiteSpace(forcedLocalizationId);
 
-            if (!hasBiomaterialFilter && !hasLocalizationFilter)
+            if (!hasBiomaterialFilter && !hasTransportFilter && !hasLocalizationFilter)
                 return all;
 
-            var selected = all.Where(p =>
-                    (!hasBiomaterialFilter || RowMatchesBiomaterialFilter(p, selectedBiomaterialId)) &&
-                    (!hasLocalizationFilter || SameId(p.localization_id, forcedLocalizationId))).ToList();
+            Func<DictionarySamplesServices, bool, bool> rowMatches = delegate(DictionarySamplesServices row, bool useTransport)
+            {
+                if (row == null)
+                    return false;
+
+                if (hasBiomaterialFilter && !RowMatchesBiomaterialFilter(row, selectedBiomaterialId))
+                    return false;
+
+                if (hasLocalizationFilter && !SameId(row.localization_id, forcedLocalizationId))
+                    return false;
+
+                if (useTransport && hasTransportFilter && !SameId(ResolveTransportId(row), selectedTransportId))
+                    return false;
+
+                return true;
+            };
+
+            var selected = all.Where(row => rowMatches(row, hasTransportFilter)).ToList();
+
+            if (selected.Count == 0 && hasTransportFilter)
+                selected = all.Where(row => rowMatches(row, false)).ToList();
 
             if (selected.Count == 0)
-            {
-                if (hasLocalizationFilter)
-                    return new List<DictionarySamplesServices>();
-
-                return all;
-            }
+                return new List<DictionarySamplesServices>();
 
             var result = new List<DictionarySamplesServices>();
             AddUniqueSampleServiceRows(result, selected);
 
-
-            bool hasLinkedParentChildPair = HasLinkedParentChildPair(all);
-            bool hasIndependentOrdinaryRequirement = all.Any(delegate(DictionarySamplesServices row)
-            {
-                return IsIndependentOrdinarySampleRequirementRow(row, all);
-            });
-
-            if (allowStandaloneRequiredExpansion && hasLinkedParentChildPair && hasIndependentOrdinaryRequirement)
-            {
-                result = RemoveChildAliquotRowsWhenParentPresent(result);
-
-
-                foreach (var row in all)
-                {
-                    if (hasLocalizationFilter && !SameId(row.localization_id, forcedLocalizationId))
-                        continue;
-
-                    if (!IsIndependentOrdinarySampleRequirementRow(row, all))
-                        continue;
-
-                }
-            }
-            else
-            {
-
-
-                foreach (var row in all)
-                {
-                    if (hasLocalizationFilter && !SameId(row.localization_id, forcedLocalizationId))
-                        continue;
-
-                    if (!IsLinkedSampleRequirementRow(row, all))
-                        continue;
-
-                }
-            }
-
-            if (allowStandaloneRequiredExpansion && ShouldExpandStandaloneCompanionBiomaterialGroup(all, result, selectedBiomaterialId, forcedLocalizationId))
-            {
-
-
-                foreach (var row in all)
-                {
-                    if (row == null)
-                        continue;
-
-                    if (hasLocalizationFilter && !SameId(row.localization_id, forcedLocalizationId))
-                        continue;
-
-                    if (RowMatchesBiomaterialFilter(row, selectedBiomaterialId))
-                        continue;
-
-                    string groupKey = BuildBiomaterialGroupKey(row);
-                    int groupDistinctSamples = all
-                        .Where(x => x != null && SameId(BuildBiomaterialGroupKey(x), groupKey) && ToInt(x.sample_id, 0) > 0)
-                        .Select(x => ToInt(x.sample_id, 0))
-                        .Distinct()
-                        .Count();
-
-                    if (groupDistinctSamples < 2)
-                        continue;
-
-                }
-            }
-
-
             return result;
         }
 
-        private static bool HasLinkedParentChildPair(List<DictionarySamplesServices> rows)
-        {
-            if (rows == null || rows.Count == 0)
-                return false;
-
-            return rows.Any(delegate(DictionarySamplesServices child)
-            {
-                if (child == null)
-                    return false;
-
-                int primarySampleId = ToInt(child.primary_sample_id, 0);
-                if (primarySampleId <= 0)
-                    return false;
-
-                return rows.Any(parent => parent != null && ToInt(parent.sample_id, 0) == primarySampleId);
-            });
-        }
-
-        private static bool ShouldExpandStandaloneCompanionBiomaterialGroup(List<DictionarySamplesServices> allRows, List<DictionarySamplesServices> currentRows, string selectedBiomaterialId, string forcedLocalizationId)
-        {
-            if (allRows == null || currentRows == null || allRows.Count == 0)
-                return false;
-
-            if (string.IsNullOrWhiteSpace(selectedBiomaterialId))
-                return false;
-
-            bool hasSelectedRow = currentRows.Any(row => row != null && RowMatchesBiomaterialFilter(row, selectedBiomaterialId));
-            if (!hasSelectedRow)
-                return false;
-
-            var candidateGroups = allRows
-                .Where(row => row != null && !RowMatchesBiomaterialFilter(row, selectedBiomaterialId))
-                .Where(row => string.IsNullOrWhiteSpace(forcedLocalizationId) || SameId(row.localization_id, forcedLocalizationId))
-                .GroupBy(row => BuildBiomaterialGroupKey(row))
-                .ToList();
-
-            foreach (var group in candidateGroups)
-            {
-                int distinctSamples = group
-                    .Select(row => ToInt(row.sample_id, 0))
-                    .Where(sampleId => sampleId > 0)
-                    .Distinct()
-                    .Count();
-
-                if (distinctSamples >= 2)
-                    return true;
-            }
-
-            return false;
-        }
-
-        private static string BuildBiomaterialGroupKey(DictionarySamplesServices row)
+private string ResolveTransportId(DictionarySamplesServices row)
         {
             if (row == null)
                 return string.Empty;
 
-            return (row.biomaterial_id ?? string.Empty) + "|" +
-                   (row.microbiology_biomaterial_id ?? string.Empty) + "|" +
-                   (row.localization_id ?? string.Empty);
+            string transportId = (row.transport_id ?? string.Empty).Trim();
+            if (!string.IsNullOrWhiteSpace(transportId))
+                return transportId;
+
+            int sampleId = ToInt(row.sample_id, 0);
+            if (sampleId <= 0 || _dictionaries == null || _dictionaries.Samples == null)
+                return string.Empty;
+
+            DictionarySamples sample;
+            if (_dictionaries.Samples.TryGetValue(sampleId.ToString(CultureInfo.InvariantCulture), out sample) && sample != null)
+                return (sample.transport_id ?? string.Empty).Trim();
+
+            return string.Empty;
         }
+
 
         private static bool RowMatchesBiomaterialFilter(DictionarySamplesServices row, string selectedBiomaterialId)
         {
@@ -1509,64 +2178,7 @@ namespace Laboratory.Gemotest.GemotestRequests
             return true;
         }
 
-        private bool IsUtilizeSampleServiceRow(DictionarySamplesServices row)
-        {
-            if (row == null)
-                return false;
-
-            int sampleId = ToInt(row.sample_id, 0);
-            if (sampleId <= 0)
-                return false;
-
-            DictionarySamples sample = null;
-            if (_dictionaries.Samples == null || !_dictionaries.Samples.TryGetValue(sampleId.ToString(CultureInfo.InvariantCulture), out sample) || sample == null)
-            {
-                return false;
-            }
-
-            return sample.utilize;
-        }
-
-        private static List<DictionarySamplesServices> RemoveStandalonePrimaryRows( List<DictionarySamplesServices> rows)
-        {
-            if (rows == null || rows.Count == 0)
-                return rows ?? new List<DictionarySamplesServices>();
-
-            var primaryIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var row in rows)
-            {
-                if (row == null)
-                    continue;
-
-                string primaryId = NormId(row.primary_sample_id.ToString());
-                if (!string.IsNullOrWhiteSpace(primaryId))
-                    primaryIds.Add(primaryId);
-            }
-
-            if (primaryIds.Count == 0)
-                return rows;
-
-            var result = new List<DictionarySamplesServices>();
-
-            foreach (var row in rows)
-            {
-                if (row == null)
-                    continue;
-
-                string sampleId = NormId(row.sample_id.ToString());
-                string primaryId = NormId(row.primary_sample_id.ToString());
-
-                bool isStandalonePrimary = string.IsNullOrWhiteSpace(primaryId) && !string.IsNullOrWhiteSpace(sampleId) && primaryIds.Contains(sampleId);
-
-                if (!isStandalonePrimary)
-                    result.Add(row);
-            }
-
-            return result;
-        }
-
-        private static bool SameId(string a, string b)
+private static bool SameId(string a, string b)
         {
             return string.Equals(NormId(a), NormId(b), StringComparison.OrdinalIgnoreCase);
         }
@@ -1775,7 +2387,9 @@ namespace Laboratory.Gemotest.GemotestRequests
                     sb.Append("<item>");
                     AppendSimpleElement(sb, "id", s.Id, "xsd:string");
 
-                    AppendOptionalStringElement(sb, "biomaterial_id", s.BiomaterialId, "xsd:string");
+                    if (!string.IsNullOrWhiteSpace(s.BiomaterialId))
+                        AppendSimpleElement(sb, "biomaterial_id", s.BiomaterialId, "xsd:string");
+
                     AppendOptionalStringElement(sb, "localization_id", s.LocalizationId, "xsd:string");
                     AppendOptionalStringElement(sb, "transport_id", s.TransportId, "xsd:string");
 
@@ -1833,7 +2447,14 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                     AppendSimpleElement(sb, "microbiology_biomaterial_id", t.MicroBioBiomaterialId, null);
                     AppendSimpleElement(sb, "localization_id", t.LocalizationId, null);
-                    AppendSimpleElement(sb, "biomaterial_id", t.BiomaterialId, null);
+
+                    if (!string.IsNullOrWhiteSpace(t.MicroBioBiomaterialId))
+                        AppendNilElement(sb, "biomaterial_id");
+                    else if (!string.IsNullOrWhiteSpace(t.BiomaterialId))
+                        AppendSimpleElement(sb, "biomaterial_id", t.BiomaterialId, null);
+                    else
+                        AppendSimpleElement(sb, "biomaterial_id", "", null);
+
                     AppendSimpleElement(sb, "transport_id", t.TransportId, null);
 
                     List<TubeServicePlan> sampleServices = new List<TubeServicePlan>();
@@ -1875,7 +2496,13 @@ namespace Laboratory.Gemotest.GemotestRequests
 
                         sb.Append("<item>");
                         AppendSimpleElement(sb, "service_id", ss.ServiceId, "xsd:string");
-                        AppendSimpleElement(sb, "complex_id", ss.ComplexId, "xsd:string");
+
+                        string normalizedComplexId = NormalizeComplexId(ss.ServiceId, ss.ComplexId);
+                        if (!string.IsNullOrWhiteSpace(normalizedComplexId))
+                            AppendSimpleElement(sb, "complex_id", normalizedComplexId, "xsd:string");
+                        else
+                            AppendNilElement(sb, "complex_id");
+
                         sb.Append("<utilization_flag xsi:type=\"xsd:int\">").Append(ss.UtilizationFlag.ToString(CultureInfo.InvariantCulture)).Append("</utilization_flag>");
                         sb.Append("<refuse_flag xsi:type=\"xsd:int\">").Append(ss.RefuseFlag.ToString(CultureInfo.InvariantCulture)).Append("</refuse_flag>");
                         sb.Append("</item>");
@@ -1893,6 +2520,11 @@ namespace Laboratory.Gemotest.GemotestRequests
             sb.Append("</soapenv:Envelope>");
 
             return sb.ToString();
+        }
+
+        private static void AppendNilElement(StringBuilder sb, string name)
+        {
+            sb.Append("<").Append(name).Append(" xsi:nil=\"true\"/>");
         }
 
         private static void AppendOptionalStringElement(StringBuilder sb, string name, string value, string xsiType)
@@ -2460,25 +3092,7 @@ namespace Laboratory.Gemotest.GemotestRequests
             return text.Trim();
         }
 
-        private static bool IsStandalonePrimaryRow(DictionarySamplesServices row, List<DictionarySamplesServices> list)
-        {
-            if (row == null || list == null)
-                return false;
-
-            if (row.primary_sample_id > 0)
-                return false;
-
-            if (row.sample_id <= 0)
-                return false;
-
-            return list.Any(x => x != null && !object.ReferenceEquals(x, row) && x.primary_sample_id == row.sample_id &&
-                string.Equals(x.service_id ?? "", row.service_id ?? "", StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(x.biomaterial_id ?? "", row.biomaterial_id ?? "", StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(x.microbiology_biomaterial_id ?? "", row.microbiology_biomaterial_id ?? "", StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(x.localization_id ?? "", row.localization_id ?? "", StringComparison.OrdinalIgnoreCase));
-        }
-
-        private static string TryGetStringMember(object source, string fallback, params string[] memberNames)
+private static string TryGetStringMember(object source, string fallback, params string[] memberNames)
         {
             if (source == null || memberNames == null)
                 return fallback;
