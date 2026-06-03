@@ -57,8 +57,6 @@ namespace Laboratory.Gemotest
         }
 
         public Exception GetLastException() => LastException;
-
-
 public bool GetGuiOptions(out List<GuiOption> _Options)
         {
             _Options = new List<GuiOption>

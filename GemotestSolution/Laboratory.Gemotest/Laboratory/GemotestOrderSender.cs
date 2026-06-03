@@ -33,8 +33,7 @@ namespace Laboratory.Gemotest.GemotestRequests
             _password = password ?? throw new ArgumentNullException(nameof(password));
         }
 
-
-public static void NormalizeOrderDetailSamples(GemotestOrderDetail details)
+        public static void NormalizeOrderDetailSamples(GemotestOrderDetail details)
         {
             if (details == null || details.Samples == null || details.Samples.Count < 2)
                 return;
@@ -335,6 +334,13 @@ public static void NormalizeOrderDetailSamples(GemotestOrderDetail details)
                 FillDetailsSamplesFromTubes(details, tubes);
 
                 var topServices = BuildTopLevelServices(details, tubes);
+                if (topServices != null)
+                {
+                    for (int tsi = 0; tsi < topServices.Count; tsi++)
+                    {
+                        var ts = topServices[tsi];
+                    }
+                }
                 var supplementals = BuildServiceSupplementals(details);
 
                 string doctor = "";
@@ -412,6 +418,14 @@ public static void NormalizeOrderDetailSamples(GemotestOrderDetail details)
                 throw new InvalidOperationException("В заказе нет ни одной услуги: невозможно сформировать пробы.");
 
             var rows = BuildSampleServiceRows(details);
+            if (rows != null)
+            {
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    var r = rows[i];
+                    if (r == null) continue;
+                }
+            }
             if (rows == null || rows.Count == 0)
                 throw new InvalidOperationException("Не удалось определить пробы для выбранных услуг (rows=0).");
 
@@ -1888,7 +1902,7 @@ public static void NormalizeOrderDetailSamples(GemotestOrderDetail details)
                 if (p == null || p.sample_id <= 0)
                     continue;
 
-                if (ToInt(p.primary_sample_id, 0) > 0)
+                if (IsStandalonePrimaryRow(p, list))
                     continue;
 
                 int execSampleId = ToInt(p.sample_id, 0);
@@ -1896,7 +1910,8 @@ public static void NormalizeOrderDetailSamples(GemotestOrderDetail details)
                     continue;
 
                 int serviceCount = ToInt(p.service_count, 1);
-                int? primarySampleId = null;
+                int primaryRaw = ToInt(p.primary_sample_id, 0);
+                int? primarySampleId = primaryRaw > 0 ? (int?)primaryRaw : null;
 
                 DictionarySamples execSample;
                 _dictionaries.Samples.TryGetValue(execSampleId.ToString(CultureInfo.InvariantCulture), out execSample);
@@ -1908,6 +1923,15 @@ public static void NormalizeOrderDetailSamples(GemotestOrderDetail details)
                 string primName = "";
                 string primTransport = "";
                 bool primUtilize = false;
+
+                if (primarySampleId.HasValue)
+                {
+                    DictionarySamples primSample;
+                    _dictionaries.Samples.TryGetValue(primarySampleId.Value.ToString(CultureInfo.InvariantCulture), out primSample);
+                    primName = primSample != null ? (primSample.name ?? "") : "";
+                    primTransport = primSample != null ? (primSample.transport_id ?? "") : "";
+                    primUtilize = primSample != null && primSample.utilize;
+                }
 
                 rows.Add(new SampleServiceRow
                 {
@@ -2000,10 +2024,21 @@ public static void NormalizeOrderDetailSamples(GemotestOrderDetail details)
                 return;
             }
 
+            //удаление аликвот
             baseList = baseList.Where(x => x.primary_sample_id == 0).ToList();
 
             bool standaloneService = string.IsNullOrWhiteSpace(complexId);
             var list = SelectSampleServiceRowsForSending(baseList, biomaterialSelection, forcedLocalizationId, standaloneService);
+
+
+            bool collapseAliquotChildren = !string.IsNullOrWhiteSpace(complexId);
+
+            if (collapseAliquotChildren)
+            {
+                list = RemoveChildAliquotRowsWhenParentPresent(list);
+
+            }
+
 
             foreach (var p in list)
             {
@@ -2051,7 +2086,82 @@ public static void NormalizeOrderDetailSamples(GemotestOrderDetail details)
             }
         }
 
-private static string Safe(object value)
+        private static bool IsLinkedSampleRequirementRow(DictionarySamplesServices row, List<DictionarySamplesServices> allRows)
+        {
+            if (row == null || allRows == null || allRows.Count == 0)
+                return false;
+
+            int sampleId = ToInt(row.sample_id, 0);
+            int primarySampleId = ToInt(row.primary_sample_id, 0);
+
+            if (sampleId <= 0)
+                return false;
+
+            if (primarySampleId > 0)
+                return true;
+
+            return allRows.Any(x => x != null && !object.ReferenceEquals(x, row) && ToInt(x.primary_sample_id, 0) == sampleId);
+        }
+
+        private static bool IsIndependentOrdinarySampleRequirementRow(DictionarySamplesServices row, List<DictionarySamplesServices> allRows)
+        {
+            if (row == null || allRows == null || allRows.Count == 0)
+                return false;
+
+            int sampleId = ToInt(row.sample_id, 0);
+            int primarySampleId = ToInt(row.primary_sample_id, 0);
+
+            if (sampleId <= 0 || primarySampleId > 0)
+                return false;
+
+            bool isParentOfLinkedChild = allRows.Any(child => child != null && !object.ReferenceEquals(child, row) && ToInt(child.primary_sample_id, 0) == sampleId);
+            return !isParentOfLinkedChild;
+        }
+
+
+        private static List<DictionarySamplesServices> RemoveChildAliquotRowsWhenParentPresent(List<DictionarySamplesServices> rows)
+        {
+            if (rows == null || rows.Count == 0)
+                return rows ?? new List<DictionarySamplesServices>();
+
+            var result = new List<DictionarySamplesServices>();
+
+            for (int i = 0; i < rows.Count; i++)
+            {
+                DictionarySamplesServices row = rows[i];
+
+                if (row == null)
+                    continue;
+
+                int sampleId = ToInt(row.sample_id, 0);
+                int primarySampleId = ToInt(row.primary_sample_id, 0);
+
+                bool isChildSample = primarySampleId > 0;
+
+                if (!isChildSample)
+                {
+                    result.Add(row);
+                    continue;
+                }
+
+                bool parentSampleExists = rows.Any(parent =>
+                    parent != null &&
+                    !object.ReferenceEquals(parent, row) &&
+                    ToInt(parent.sample_id, 0) == primarySampleId);
+
+                if (parentSampleExists)
+                {
+                    continue;
+                }
+
+                result.Add(row);
+            }
+
+            return result;
+        }
+
+
+        private static string Safe(object value)
         {
             return value == null ? string.Empty : value.ToString();
         }
@@ -2072,7 +2182,7 @@ private static string Safe(object value)
             bool hasLocalizationFilter = !string.IsNullOrWhiteSpace(forcedLocalizationId);
 
             if (!hasBiomaterialFilter && !hasTransportFilter && !hasLocalizationFilter)
-                return all;
+                return RemoveChildAliquotRowsWhenParentPresent(all);
 
             Func<DictionarySamplesServices, bool, bool> rowMatches = delegate(DictionarySamplesServices row, bool useTransport)
             {
@@ -2099,20 +2209,79 @@ private static string Safe(object value)
             if (selected.Count == 0)
                 return new List<DictionarySamplesServices>();
 
+            selected = RemoveChildAliquotRowsWhenParentPresent(selected);
+
             var result = new List<DictionarySamplesServices>();
             AddUniqueSampleServiceRows(result, selected);
 
             return result;
         }
 
-private string ResolveTransportId(DictionarySamplesServices row)
+        private static bool HasLinkedParentChildPair(List<DictionarySamplesServices> rows)
+        {
+            if (rows == null || rows.Count == 0)
+                return false;
+
+            return rows.Any(delegate(DictionarySamplesServices child)
+            {
+                if (child == null)
+                    return false;
+
+                int primarySampleId = ToInt(child.primary_sample_id, 0);
+                if (primarySampleId <= 0)
+                    return false;
+
+                return rows.Any(parent => parent != null && ToInt(parent.sample_id, 0) == primarySampleId);
+            });
+        }
+
+        private static bool ShouldExpandStandaloneCompanionBiomaterialGroup(List<DictionarySamplesServices> allRows, List<DictionarySamplesServices> currentRows, string selectedBiomaterialId, string forcedLocalizationId)
+        {
+            if (allRows == null || currentRows == null || allRows.Count == 0)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(selectedBiomaterialId))
+                return false;
+
+            bool hasSelectedRow = currentRows.Any(row => row != null && RowMatchesBiomaterialFilter(row, selectedBiomaterialId));
+            if (!hasSelectedRow)
+                return false;
+
+            var candidateGroups = allRows
+                .Where(row => row != null && !RowMatchesBiomaterialFilter(row, selectedBiomaterialId))
+                .Where(row => string.IsNullOrWhiteSpace(forcedLocalizationId) || SameId(row.localization_id, forcedLocalizationId))
+                .GroupBy(row => BuildBiomaterialGroupKey(row))
+                .ToList();
+
+            foreach (var group in candidateGroups)
+            {
+                int distinctSamples = group
+                    .Select(row => ToInt(row.sample_id, 0))
+                    .Where(sampleId => sampleId > 0)
+                    .Distinct()
+                    .Count();
+
+                if (distinctSamples >= 2)
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static string BuildBiomaterialGroupKey(DictionarySamplesServices row)
         {
             if (row == null)
                 return string.Empty;
 
-            string transportId = (row.transport_id ?? string.Empty).Trim();
-            if (!string.IsNullOrWhiteSpace(transportId))
-                return transportId;
+            return (row.biomaterial_id ?? string.Empty) + "|" +
+                   (row.microbiology_biomaterial_id ?? string.Empty) + "|" +
+                   (row.localization_id ?? string.Empty);
+        }
+
+        private string ResolveTransportId(DictionarySamplesServices row)
+        {
+            if (row == null)
+                return string.Empty;
 
             int sampleId = ToInt(row.sample_id, 0);
             if (sampleId <= 0 || _dictionaries == null || _dictionaries.Samples == null)
@@ -2178,7 +2347,64 @@ private string ResolveTransportId(DictionarySamplesServices row)
             return true;
         }
 
-private static bool SameId(string a, string b)
+        private bool IsUtilizeSampleServiceRow(DictionarySamplesServices row)
+        {
+            if (row == null)
+                return false;
+
+            int sampleId = ToInt(row.sample_id, 0);
+            if (sampleId <= 0)
+                return false;
+
+            DictionarySamples sample = null;
+            if (_dictionaries.Samples == null || !_dictionaries.Samples.TryGetValue(sampleId.ToString(CultureInfo.InvariantCulture), out sample) || sample == null)
+            {
+                return false;
+            }
+
+            return sample.utilize;
+        }
+
+        private static List<DictionarySamplesServices> RemoveStandalonePrimaryRows( List<DictionarySamplesServices> rows)
+        {
+            if (rows == null || rows.Count == 0)
+                return rows ?? new List<DictionarySamplesServices>();
+
+            var primaryIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var row in rows)
+            {
+                if (row == null)
+                    continue;
+
+                string primaryId = NormId(row.primary_sample_id.ToString());
+                if (!string.IsNullOrWhiteSpace(primaryId))
+                    primaryIds.Add(primaryId);
+            }
+
+            if (primaryIds.Count == 0)
+                return rows;
+
+            var result = new List<DictionarySamplesServices>();
+
+            foreach (var row in rows)
+            {
+                if (row == null)
+                    continue;
+
+                string sampleId = NormId(row.sample_id.ToString());
+                string primaryId = NormId(row.primary_sample_id.ToString());
+
+                bool isStandalonePrimary = string.IsNullOrWhiteSpace(primaryId) && !string.IsNullOrWhiteSpace(sampleId) && primaryIds.Contains(sampleId);
+
+                if (!isStandalonePrimary)
+                    result.Add(row);
+            }
+
+            return result;
+        }
+
+        private static bool SameId(string a, string b)
         {
             return string.Equals(NormId(a), NormId(b), StringComparison.OrdinalIgnoreCase);
         }
@@ -3092,7 +3318,25 @@ private static bool SameId(string a, string b)
             return text.Trim();
         }
 
-private static string TryGetStringMember(object source, string fallback, params string[] memberNames)
+        private static bool IsStandalonePrimaryRow(DictionarySamplesServices row, List<DictionarySamplesServices> list)
+        {
+            if (row == null || list == null)
+                return false;
+
+            if (row.primary_sample_id > 0)
+                return false;
+
+            if (row.sample_id <= 0)
+                return false;
+
+            return list.Any(x => x != null && !object.ReferenceEquals(x, row) && x.primary_sample_id == row.sample_id &&
+                string.Equals(x.service_id ?? "", row.service_id ?? "", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(x.biomaterial_id ?? "", row.biomaterial_id ?? "", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(x.microbiology_biomaterial_id ?? "", row.microbiology_biomaterial_id ?? "", StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(x.localization_id ?? "", row.localization_id ?? "", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static string TryGetStringMember(object source, string fallback, params string[] memberNames)
         {
             if (source == null || memberNames == null)
                 return fallback;

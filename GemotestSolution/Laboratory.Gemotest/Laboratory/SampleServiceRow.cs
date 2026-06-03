@@ -309,7 +309,46 @@ namespace Laboratory.Gemotest
             }
         }
 
-private sealed class Bin
+        private struct AliquotPackKey : IEquatable<AliquotPackKey>
+        {
+            public readonly int ExecSampleId;
+            public readonly BioKey Bio;
+            public readonly string Loc;
+            public readonly string Transport;
+
+            public AliquotPackKey(int execSampleId, BioKey bio, string loc, string transport)
+            {
+                ExecSampleId = execSampleId;
+                Bio = bio;
+                Loc = loc ?? "";
+                Transport = transport ?? "";
+            }
+
+            public bool Equals(AliquotPackKey other)
+            {
+                return ExecSampleId == other.ExecSampleId && Bio.Equals(other.Bio) && Loc == other.Loc && Transport == other.Transport;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is AliquotPackKey && Equals((AliquotPackKey)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    int h = 17;
+                    h = h * 31 + ExecSampleId.GetHashCode();
+                    h = h * 31 + Bio.GetHashCode();
+                    h = h * 31 + Loc.GetHashCode();
+                    h = h * 31 + Transport.GetHashCode();
+                    return h;
+                }
+            }
+        }
+
+        private sealed class Bin
         {
             public double Remaining;
             public double Used;
@@ -362,10 +401,24 @@ private sealed class Bin
                 if (HasPrimary(r))
                     continue;
 
+                if (IsDuplicateAliquotParentRow(r, cleanRows))
+                    continue;
+
                 ordinaryRows.Add(r);
             }
 
             result.AddRange(PackOrdinaryRows(ordinaryRows));
+
+
+            var aliquotRows = new List<SampleServiceRow>();
+
+            for (int i = 0; i < cleanRows.Count; i++)
+            {
+                if (HasPrimary(cleanRows[i]))
+                    aliquotRows.Add(cleanRows[i]);
+            }
+
+            result.AddRange(PackAliquotRows(aliquotRows, cleanRows));
 
             return result;
         }
@@ -441,7 +494,150 @@ private sealed class Bin
             return plans;
         }
 
-private static void MergeUtilizeIntoNonUtilize(List<WorkItem> items)
+        private static List<TubePlan> PackAliquotRows(List<SampleServiceRow> aliquotRows, List<SampleServiceRow> allRows)
+        {
+            var result = new List<TubePlan>();
+
+            if (aliquotRows == null || aliquotRows.Count == 0)
+                return result;
+
+            var parentItems = new List<WorkItem>();
+
+            for (int i = 0; i < aliquotRows.Count; i++)
+            {
+                var r = aliquotRows[i];
+
+                if (!HasPrimary(r))
+                    continue;
+
+                var parentRow = FindMatchingParentRow(r, allRows);
+
+                int sc = NormalizeServiceCount(r.ServiceCount);
+                double share = Capacity / sc;
+
+                string parentName = "";
+                string parentTransport = "";
+                bool parentUtilize = r.PrimaryUtilize;
+
+                if (parentRow != null)
+                {
+                    parentName = parentRow.ExecutionSampleName ?? "";
+                    parentTransport = parentRow.ExecutionTransportId ?? "";
+                    parentUtilize = parentRow.ExecutionUtilize;
+                }
+
+                if (string.IsNullOrWhiteSpace(parentName))
+                    parentName = r.PrimarySampleName ?? "";
+
+                if (string.IsNullOrWhiteSpace(parentTransport))
+                    parentTransport = r.PrimaryTransportId ?? "";
+
+
+                if (string.IsNullOrWhiteSpace(parentTransport))
+                    parentTransport = r.ExecutionTransportId ?? "";
+
+                parentItems.Add(new WorkItem
+                {
+                    Src = r,
+                    DrawSampleId = r.PrimarySampleId.Value,
+                    DrawSampleName = parentName,
+                    DrawTransportId = parentTransport,
+                    DrawUtilize = parentUtilize,
+                    UtilizationFlag = parentUtilize ? 1 : 0,
+                    Share = share
+                });
+            }
+
+            var parentGroups = parentItems
+                .GroupBy(x => new PrimaryPackKey(
+                    x.DrawSampleId,
+                    GetBioKey(x.Src),
+                    x.Src.LocalizationId ?? "",
+                    x.DrawTransportId ?? ""))
+                .ToList();
+
+            foreach (var pg in parentGroups)
+            {
+                var parentBins = BestFitDecreasing(pg.ToList());
+
+                foreach (var parentBin in parentBins)
+                {
+                    var parentTube = new TubePlan
+                    {
+                        Parent = null,
+                        SampleId = pg.Key.SampleId,
+                        SampleName = parentBin.Items.Count > 0 ? (parentBin.Items[0].DrawSampleName ?? "") : "",
+                        TransportId = pg.Key.Transport ?? "",
+                        Utilize = parentBin.Items.Count > 0 && parentBin.Items[0].DrawUtilize,
+                        BiomaterialId = ResolveBiomaterialId(pg.Key.Bio),
+                        MicroBioBiomaterialId = ResolveMicroBioId(pg.Key.Bio),
+                        LocalizationId = pg.Key.Loc ?? "",
+                        UsedPercent = parentBin.Used
+                    };
+
+
+                    foreach (var it in parentBin.Items)
+                    {
+                        AddTubeServiceIfMissing(
+                            parentTube.Services,
+                            MakeServicePlan(
+                                it.Src,
+                                ResolvePrimaryUtilizationFlag(it),
+                                1));
+                    }
+
+                    result.Add(parentTube);
+
+
+                    var childGroups = parentBin.Items
+                        .GroupBy(x => new AliquotPackKey(
+                            x.Src.ExecutionSampleId,
+                            GetBioKey(x.Src),
+                            x.Src.LocalizationId ?? "",
+                            x.Src.ExecutionTransportId ?? ""))
+                        .ToList();
+
+                    foreach (var cg in childGroups)
+                    {
+                        var childBins = BestFitDecreasing(cg.ToList());
+
+                        foreach (var childBin in childBins)
+                        {
+                            SampleServiceRow first = childBin.Items.Count > 0 ? childBin.Items[0].Src : null;
+
+                            var childTube = new TubePlan
+                            {
+                                Parent = parentTube,
+                                SampleId = cg.Key.ExecSampleId,
+                                SampleName = first != null ? (first.ExecutionSampleName ?? "") : "",
+                                TransportId = cg.Key.Transport ?? "",
+                                Utilize = childBin.Items.Any(x => x.Src != null && x.Src.ExecutionUtilize),
+                                BiomaterialId = ResolveBiomaterialId(cg.Key.Bio),
+                                MicroBioBiomaterialId = ResolveMicroBioId(cg.Key.Bio),
+                                LocalizationId = cg.Key.Loc ?? "",
+                                UsedPercent = childBin.Used
+                            };
+
+                            foreach (var it in childBin.Items)
+                            {
+                                AddTubeServiceIfMissing(
+                                    childTube.Services,
+                                    MakeServicePlan(
+                                        it.Src,
+                                        ResolveAliquotUtilizationFlag(it),
+                                        0));
+                            }
+
+                            result.Add(childTube);
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private static void MergeUtilizeIntoNonUtilize(List<WorkItem> items)
         {
             var groupsForMerge = items
                 .GroupBy(x => new MergeKey(
@@ -517,7 +713,81 @@ private static void MergeUtilizeIntoNonUtilize(List<WorkItem> items)
             return r != null && r.PrimarySampleId.HasValue && r.PrimarySampleId.Value > 0;
         }
 
-private static int NormalizeServiceCount(int serviceCount)
+        private static bool IsDuplicateAliquotParentRow(SampleServiceRow candidate, List<SampleServiceRow> allRows)
+        {
+            if (candidate == null || allRows == null)
+                return false;
+
+            for (int i = 0; i < allRows.Count; i++)
+            {
+                var a = allRows[i];
+
+                if (!HasPrimary(a))
+                    continue;
+
+                if (IsMatchingAliquotParentRow(candidate, a))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static SampleServiceRow FindMatchingParentRow(SampleServiceRow aliquotRow, List<SampleServiceRow> allRows)
+        {
+            if (aliquotRow == null || allRows == null)
+                return null;
+
+            for (int i = 0; i < allRows.Count; i++)
+            {
+                var candidate = allRows[i];
+
+                if (candidate == null)
+                    continue;
+
+                if (HasPrimary(candidate))
+                    continue;
+
+                if (IsMatchingAliquotParentRow(candidate, aliquotRow))
+                    return candidate;
+            }
+
+            return null;
+        }
+
+        private static bool IsMatchingAliquotParentRow(SampleServiceRow candidateParent, SampleServiceRow aliquotRow)
+        {
+            if (candidateParent == null || aliquotRow == null)
+                return false;
+
+            if (!HasPrimary(aliquotRow))
+                return false;
+
+            if (candidateParent.ExecutionSampleId != aliquotRow.PrimarySampleId.Value)
+                return false;
+
+            if (!SameText(candidateParent.ServiceId, aliquotRow.ServiceId))
+                return false;
+
+            if (!SameText(candidateParent.ComplexId, aliquotRow.ComplexId))
+                return false;
+
+            if (!GetBioKey(candidateParent).Equals(GetBioKey(aliquotRow)))
+                return false;
+
+            if (!SameText(candidateParent.LocalizationId, aliquotRow.LocalizationId))
+                return false;
+
+
+            if (!string.IsNullOrWhiteSpace(aliquotRow.PrimaryTransportId))
+            {
+                if (!SameText(candidateParent.ExecutionTransportId, aliquotRow.PrimaryTransportId))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static int NormalizeServiceCount(int serviceCount)
         {
             return serviceCount <= 0 ? 1 : serviceCount;
         }
@@ -588,7 +858,15 @@ private static int NormalizeServiceCount(int serviceCount)
             return 0;
         }
 
-private static BioKey GetBioKey(SampleServiceRow r)
+        private static int ResolveAliquotUtilizationFlag(WorkItem it)
+        {
+            if (it == null || it.Src == null) return 0;
+
+
+            return it.Src.ExecutionUtilize ? 1 : 0;
+        }
+
+        private static BioKey GetBioKey(SampleServiceRow r)
         {
             if (!string.IsNullOrWhiteSpace(r.MicroBioBiomaterialId))
                 return new BioKey("MB", r.MicroBioBiomaterialId.Trim());
