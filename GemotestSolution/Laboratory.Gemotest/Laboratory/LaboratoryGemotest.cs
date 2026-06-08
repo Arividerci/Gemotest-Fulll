@@ -133,29 +133,47 @@ namespace Laboratory.Gemotest
 
         public void FillDefaultOrderDetail(BaseOrderDetail _OrderDetail, OrderItemsCollection _Items)
         {
-            var details = (GemotestOrderDetail)_OrderDetail;
+            var details = _OrderDetail as GemotestOrderDetail;
+            if (details == null)
+                return;
 
-            details.Products.Clear();
+            if (details.Products == null)
+                details.Products = new List<GemotestProductDetail>();
+            else
+                details.Products.Clear();
 
             int index = 0;
-            foreach (var item in _Items)
+
+            if (_Items != null)
             {
-                var prod = item.Product;
-
-                details.Products.Add(new GemotestProductDetail
+                foreach (var item in _Items)
                 {
-                    OrderProductGuid = index.ToString(),
-                    ProductId = prod.ID,
-                    ProductCode = prod.Code,
-                    ProductName = prod.Name
-                });
+                    var prod = item != null ? item.Product : null;
+                    if (prod == null)
+                        continue;
 
-                index++;
+                    details.Products.Add(new GemotestProductDetail
+                    {
+                        OrderProductGuid = index.ToString(),
+                        ProductId = prod.ID ?? string.Empty,
+                        ProductCode = prod.Code ?? string.Empty,
+                        ProductName = prod.Name ?? string.Empty
+                    });
+
+                    index++;
+                }
             }
 
             details.Dicts = Dicts;
             ApplyPriceListToDetails(details);
-            details.AddBiomaterialsFromProducts();
+
+            if (details.BioMaterials == null)
+                details.BioMaterials = new List<GemotestProductBioMaterial>();
+            else
+                details.BioMaterials.Clear();
+
+            if (details.Products.Count > 0)
+                details.AddBiomaterialsFromProducts();
         }
 
         private bool HasProductsRequiringGemotestBiomaterialCollection(
@@ -416,7 +434,9 @@ namespace Laboratory.Gemotest
 
             if (!laboratoryGUI.CreateOrderModelForGUI(readOnly, _Order, ref currentResults, ref model))
             {
-                MessageBox.Show(GetLastException().Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Exception error = GetGuiOrLastException("Не удалось сформировать модель заказа Gemotest.");
+                last_exception = error;
+                MessageBox.Show(error.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 
@@ -435,7 +455,11 @@ namespace Laboratory.Gemotest
                 if (!readOnly)
                 {
                     if (!laboratoryGUI.SaveOrderModelForGUIToDetails(_Order, model))
-                        MessageBox.Show($"Ошибка сохранения деталей заказа: {GetLastException().Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    {
+                        Exception error = GetGuiOrLastException("Не удалось сохранить детали заказа Gemotest.");
+                        last_exception = error;
+                        MessageBox.Show($"Ошибка сохранения деталей заказа: {error.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
 
@@ -481,7 +505,9 @@ namespace Laboratory.Gemotest
 
             if (!laboratoryGUI.CreateOrderModelForGUI(readOnly, _Order, ref currentResults, ref model))
             {
-                MessageBox.Show(GetLastException().Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Exception error = GetGuiOrLastException("Не удалось сформировать модель заказа Gemotest.");
+                last_exception = error;
+                MessageBox.Show(error.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 
@@ -500,7 +526,9 @@ namespace Laboratory.Gemotest
             {
                 if (!laboratoryGUI.SaveOrderModelForGUIToDetails(_Order, model))
                 {
-                    MessageBox.Show($"Ошибка сохранения деталей заказа: {GetLastException().Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Exception error = GetGuiOrLastException("Не удалось сохранить детали заказа Gemotest.");
+                    last_exception = error;
+                    MessageBox.Show($"Ошибка сохранения деталей заказа: {error.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }
             }
@@ -635,60 +663,7 @@ namespace Laboratory.Gemotest
             if (details.BioMaterials == null)
                 details.BioMaterials = new List<GemotestProductBioMaterial>();
 
-            var oldSelectedByProductIndex = new Dictionary<int, HashSet<string>>();
-
-            for (int productIndex = 0; productIndex < details.Products.Count; productIndex++)
-            {
-                var selectedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                foreach (var bio in details.BioMaterials)
-                {
-                    if (bio == null || string.IsNullOrWhiteSpace(bio.Id))
-                        continue;
-
-                    if (bio.ProductIndex != productIndex)
-                        continue;
-
-                    if (bio.Chosen)
-                        selectedIds.Add(bio.Id);
-                }
-
-                if (selectedIds.Count > 0)
-                    oldSelectedByProductIndex[productIndex] = selectedIds;
-            }
-
-            details.BioMaterials.Clear();
-            details.AddBiomaterialsFromProducts();
-
-            foreach (var pair in oldSelectedByProductIndex)
-            {
-                int productIndex = pair.Key;
-                HashSet<string> oldSelectedIds = pair.Value;
-
-                if (productIndex < 0 || productIndex >= details.Products.Count)
-                    continue;
-
-                var linkedForProduct = details.BioMaterials.Where(b => b.ProductIndex == productIndex).ToList();
-
-                if (linkedForProduct.Count == 0)
-                    continue;
-
-                var validSelectedIds = new HashSet<string>(linkedForProduct.Where(b => b != null && oldSelectedIds.Contains(b.Id)).Select(b => b.Id), StringComparer.OrdinalIgnoreCase);
-
-                if (validSelectedIds.Count == 0)
-                    continue;
-
-                foreach (var bio in linkedForProduct)
-                {
-                    if (bio == null)
-                        continue;
-
-                    if (validSelectedIds.Contains(bio.Id))
-                        bio.Chosen = true;
-                    else
-                        bio.Chosen = false;
-                }
-            }
+            details.RebuildBiomaterialsFromProductsKeepSelection();
         }
 
         public void SetOptions(string _SystemOptions, string _LocalOptions)
@@ -1704,6 +1679,31 @@ namespace Laboratory.Gemotest
         public void SetContainerMarkerList(List<IContainerMarker> _ContainerMarkerList) { }
 
         public Exception GetLastException() { return last_exception; }
+
+        private Exception GetGuiOrLastException(string fallbackMessage)
+        {
+            Exception guiException = null;
+
+            if (laboratoryGUI != null)
+            {
+                try
+                {
+                    guiException = laboratoryGUI.GetLastException();
+                }
+                catch
+                {
+                    guiException = null;
+                }
+            }
+
+            if (guiException != null)
+                return guiException;
+
+            if (last_exception != null)
+                return last_exception;
+
+            return new Exception(string.IsNullOrWhiteSpace(fallbackMessage) ? "Неизвестная ошибка Gemotest." : fallbackMessage);
+        }
 
         public void BeginTransaction(LaboratoryTransactionType _TransactionType) { }
 

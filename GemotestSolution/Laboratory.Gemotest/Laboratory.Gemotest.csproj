@@ -123,6 +123,7 @@
     <Compile Include="Options\GemotestSystemOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SourseClass\ProductGemotest.cs" />
+    <Compile Include="SourseClass\ServiceBiomaterial.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="GUI\GemotestChoiceOfProductForm.resx">
