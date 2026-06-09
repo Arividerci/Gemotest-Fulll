@@ -478,6 +478,9 @@ namespace Laboratory.Gemotest.SourseClass
                 if (row == null || row.sample_id <= 0)
                     continue;
 
+                if (row.primary_sample_id > 0)
+                    continue;
+
                 string biomaterialId = ResolveSampleRowBiomaterialId(row);
                 if (string.IsNullOrWhiteSpace(biomaterialId) || SameId(biomaterialId, "Drugoe"))
                     continue;
@@ -768,10 +771,50 @@ namespace Laboratory.Gemotest.SourseClass
                 .GroupBy(x => new { x.ProductIndex, x.GroupNum }))
             {
                 List<GemotestProductBioMaterial> items = group.ToList();
-                bool hasSelected = items.Any(x => x.Chosen);
+                if (items.Count == 0)
+                    continue;
 
-                if (!hasSelected && items.Count > 0)
-                    items[0].Chosen = true;
+                int distinctBiomaterialsCount = items
+                    .Select(x => NormalizeId(x.Id))
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Count();
+
+                List<string> selectedBiomaterialIds = items
+                    .Where(x => x.Chosen)
+                    .Select(x => NormalizeId(x.Id))
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                if (selectedBiomaterialIds.Count > 0)
+                {
+                    if (distinctBiomaterialsCount <= 1)
+                    {
+                        foreach (GemotestProductBioMaterial item in items)
+                            item.Chosen = true;
+                    }
+                    else
+                    {
+                        foreach (GemotestProductBioMaterial item in items)
+                            item.Chosen = selectedBiomaterialIds.Any(x => SameId(x, item.Id));
+                    }
+
+                    continue;
+                }
+
+                string firstBiomaterialId = NormalizeId(items[0].Id);
+
+                if (distinctBiomaterialsCount <= 1)
+                {
+                    foreach (GemotestProductBioMaterial item in items)
+                        item.Chosen = true;
+                }
+                else
+                {
+                    foreach (GemotestProductBioMaterial item in items)
+                        item.Chosen = SameId(item.Id, firstBiomaterialId);
+                }
             }
         }
 
@@ -835,7 +878,7 @@ namespace Laboratory.Gemotest.SourseClass
             return BioMaterials.Any(x => x != null && x.ProductIndex == productIndex);
         }
 
-        public void RebuildBiomaterialsFromProductsKeepSelection()
+        public void RefreshRequiredBiomaterialsKeepSelection()
         {
             Dictionary<int, HashSet<string>> selectedByProduct = new Dictionary<int, HashSet<string>>();
 

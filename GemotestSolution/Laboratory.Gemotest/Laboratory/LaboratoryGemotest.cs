@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
 using System.Xml;
@@ -663,7 +663,7 @@ namespace Laboratory.Gemotest
             if (details.BioMaterials == null)
                 details.BioMaterials = new List<GemotestProductBioMaterial>();
 
-            details.RebuildBiomaterialsFromProductsKeepSelection();
+            details.RefreshRequiredBiomaterialsKeepSelection();
         }
 
         public void SetOptions(string _SystemOptions, string _LocalOptions)
